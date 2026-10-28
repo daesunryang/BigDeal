@@ -1,0 +1,84 @@
+name: Android APK
+
+# 데모(UI만)와 정식(실제 차단·로그인·동기화) APK 두 개를 만든다.
+# 결과물은 실행 화면의 Artifacts에서 내려받는다.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  apk:
+    needs: check
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [demo, full]
+    env:
+      APP_FLAVOR: ${{ matrix.flavor }}
+      # 정식 빌드용 Firebase 값 (저장소 Settings → Secrets and variables → Actions). 없으면 이 기기에만 저장되는 모드로 빌드된다.
+      EXPO_PUBLIC_FIREBASE_API_KEY: ${{ matrix.flavor == 'full' && secrets.FIREBASE_API_KEY || '' }}
+      EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ matrix.flavor == 'full' && secrets.FIREBASE_AUTH_DOMAIN || '' }}
+      EXPO_PUBLIC_FIREBASE_PROJECT_ID: ${{ matrix.flavor == 'full' && secrets.FIREBASE_PROJECT_ID || '' }}
+      EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ matrix.flavor == 'full' && secrets.FIREBASE_STORAGE_BUCKET || '' }}
+      EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ matrix.flavor == 'full' && secrets.FIREBASE_MESSAGING_SENDER_ID || '' }}
+      EXPO_PUBLIC_FIREBASE_APP_ID: ${{ matrix.flavor == 'full' && secrets.FIREBASE_APP_ID || '' }}
+      EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${{ matrix.flavor == 'full' && secrets.GOOGLE_WEB_CLIENT_ID || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Generate native project
+        run: npx expo prebuild --platform android --no-install
+      - name: Release signing key (optional)
+        # 비밀값 ANDROID_KEYSTORE_BASE64가 있으면 그 키로 서명하고, 없으면 디버그 키로 서명한다 (직접 설치용).
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > android/app/release.keystore
+          cat >> android/gradle.properties <<PROPS
+          JJN_STORE_FILE=release.keystore
+          JJN_STORE_PASSWORD=$KEYSTORE_PASSWORD
+          JJN_KEY_ALIAS=$KEY_ALIAS
+          JJN_KEY_PASSWORD=$KEY_PASSWORD
+          PROPS
+          node scripts/use-release-signing.js
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+      - name: Rename
+        run: mkdir -p out && cp android/app/build/outputs/apk/release/app-release.apk out/jibjungnyang-${{ matrix.flavor }}.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jibjungnyang-${{ matrix.flavor }}-apk
+          path: out/jibjungnyang-${{ matrix.flavor }}.apk
+          if-no-files-found: error

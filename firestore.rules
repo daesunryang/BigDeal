@@ -1,0 +1,21 @@
+rules_version = '2';
+// 집중냥 Firestore 보안 규칙 (정식 빌드)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 게임 데이터: 본인만 읽고 쓴다
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // 친구 비교용 공개 정보: 로그인한 사용자는 읽기, 쓰기는 본인 것만
+    match /public/{code} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.resource.data.uid == request.auth.uid
+        && (resource == null || resource.data.uid == request.auth.uid);
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    // 문의하기: 작성만 가능
+    match /inquiries/{id} {
+      allow create: if request.auth != null;
+    }
+  }
+}
