@@ -15,13 +15,16 @@ Claude Design에서 만든 프로토타입(`집중냥 App.dc.html`)을 React Nat
 | 타이머 | 30배속 (메뉴 → 프로토타입 검토에서 끄기) | 실제 시간 |
 | 시작 데이터 | 프로토타입 예시 수치 | 빈 상태 (웰컴 츄르 20개 우편) |
 
-두 빌드 모두 결제 후원, Plus 구독, 광고 보상은 **화면 데모**입니다 (실제 결제·광고 SDK 없음).
+정식 빌드는 집중 리마인더·목표 달성 알림을 실제로 보내고, 매일 출석 보상 우편이 와요.
+두 빌드 모두 GitHub 릴리스로 새 버전을 확인하고, 영수증·증명서를 PDF로 공유할 수 있어요.
+결제 후원, Plus 구독, 광고 보상은 **화면 데모**입니다 (실제 결제·광고 SDK 없음). 변경 내용은 `CHANGELOG.md`를 보세요.
 
 ## APK 받기
 
 GitHub Actions의 **Android APK** 워크플로가 푸시마다 두 APK를 만듭니다.
 Actions → 실행 하나 선택 → Artifacts에서 `jibjungnyang-demo-apk`, `jibjungnyang-full-apk`를 내려받으세요.
-수동으로 돌리려면 Actions → Android APK → Run workflow.
+수동으로 돌리려면 Actions → Android APK → Run workflow. `release_tag`에 `v1.2.0`처럼 버전을 넣으면 그 태그로 GitHub 릴리스를 만들고 두 APK를 붙여요.
+새 버전을 낼 때는 `app.config.ts`의 `version`과 `android.versionCode`를 올리고, `CHANGELOG.md`와 `docs/release-notes.md`를 고쳐요.
 
 서명 키 비밀값이 없으면 디버그 키로 서명돼서, 직접 설치(사이드로드)는 되지만 Play 스토어에는 올릴 수 없습니다.
 
@@ -48,6 +51,8 @@ npm run web                                   # 브라우저에서 화면 확인
 APP_FLAVOR=demo npx expo run:android          # 데모 빌드를 기기에서
 APP_FLAVOR=full npx expo run:android          # 정식 빌드 (Android SDK 필요)
 npx tsc --noEmit                              # 타입 검사
+npm run lint                                  # ESLint
+npm test                                      # Jest 단위 테스트
 ```
 
 ## 구조
@@ -59,7 +64,7 @@ src/data.ts             고양이·아이템·방·문구 등 상수
 src/screens/            스플래시·로그인·권한, 홈, 탭들, 방 꾸미기, 집중·완료·실패·휴식, 메뉴, 팝업
 src/stage/              고양이 방 장면(가구·창·행동 애니메이션), 우리 집 평면도
 src/ui/                 공통 컴포넌트, CSS @keyframes를 옮긴 애니메이션
-src/services/           blocker(네이티브 차단), auth(Firebase 로그인), sync(Firestore)
+src/services/           blocker(네이티브 차단), auth(Firebase 로그인), sync(Firestore), notify(알림), update(새 버전 확인), pdf
 modules/app-blocker/    Kotlin 네이티브 모듈: 설치 앱 목록, 권한 확인, 차단 서비스와 덮개 화면
 plugins/withAppBlocker.js  정식 빌드에만 붙는 권한·서비스 설정
 ```
@@ -74,6 +79,6 @@ plugins/withAppBlocker.js  정식 빌드에만 붙는 권한·서비스 설정
 ## 아직 예시인 것
 
 - 보호소·파트너 정보, 약관·개인정보 처리방침 문안 (출시 전 교체와 법무 검토 필요)
-- 결제 후원, Plus 구독, 광고 보상, 리마인더 알림, 위젯 (화면만)
+- 결제 후원, Plus 구독, 광고 보상, 위젯 (화면만). 데모 빌드는 리마인더 알림도 화면만
 - 사진 자리(보호소·동물·아이템 그림)는 줄무늬 자리표시로 남아 있음
 - iOS 스크린 타임 차단은 아직 없음 (화면은 iOS에서도 동작)

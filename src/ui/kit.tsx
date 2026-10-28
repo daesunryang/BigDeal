@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, Pressable, PressableProps, StyleProp, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
-import Svg, { Circle, Defs, Line, Pattern, Rect } from 'react-native-svg';
+import Svg, { Circle, Defs, Pattern, Rect } from 'react-native-svg';
 import { Cat, Fill, IMG_H, IMG_W, WIN } from '../data';
 import { tr } from '../i18n';
 import { useApp } from '../store';
@@ -26,7 +26,7 @@ export function Txt({ style, jua, children, ...rest }: TextProps & { jua?: boole
 // 눌렀을 때 살짝 작아지는 버튼
 export function Btn({ style, children, onPress, disabled, ...rest }: PressableProps & { style?: StyleProp<ViewStyle>; children?: React.ReactNode }) {
   return (
-    <Pressable {...rest} disabled={disabled} onPress={onPress}
+    <Pressable accessibilityRole="button" {...rest} disabled={disabled} onPress={onPress}
       style={({ pressed }) => [{ alignItems: 'center', justifyContent: 'center' }, style as any, pressed && onPress ? { transform: [{ scale: 0.98 }], opacity: 0.92 } : null]}>
       {children as any}
     </Pressable>
@@ -49,7 +49,7 @@ export function Seg<T extends string>({ items, value, onPick, h = 34, jua = true
   return (
     <View style={{ flexDirection: 'row', gap: 2, padding: 3, borderRadius: 14, backgroundColor: C.line }}>
       {items.map(([k, label]) => (
-        <Btn key={k} onPress={() => onPick(k)} style={{ flex: 1, height: h, borderRadius: 11, backgroundColor: value === k ? C.bg : 'transparent' }}>
+        <Btn key={k} onPress={() => onPick(k)} accessibilityRole="tab" accessibilityState={{ selected: value === k }} style={{ flex: 1, height: h, borderRadius: 11, backgroundColor: value === k ? C.bg : 'transparent' }}>
           <Txt jua={jua} style={{ fontSize: fs }}>{label}</Txt>
         </Btn>
       ))}
@@ -60,7 +60,7 @@ export function Seg<T extends string>({ items, value, onPick, h = 34, jua = true
 export function Chip({ label, on, onPress, h = 30, fs = 13, jua, style }: { label: string; on: boolean; onPress: () => void; h?: number; fs?: number; jua?: boolean; style?: StyleProp<ViewStyle> }) {
   const C = useC();
   return (
-    <Btn onPress={onPress} style={[{ height: h, paddingHorizontal: 12, borderRadius: h / 2, borderWidth: 1.5, borderColor: C.ink, backgroundColor: on ? C.ink : C.bg }, style]}>
+    <Btn onPress={onPress} accessibilityState={{ selected: on }} style={[{ height: h, paddingHorizontal: 12, borderRadius: h / 2, borderWidth: 1.5, borderColor: C.ink, backgroundColor: on ? C.ink : C.bg }, style]}>
       <Txt jua={jua} style={{ fontSize: fs, color: on ? C.bg : C.ink }}>{label}</Txt>
     </Btn>
   );
@@ -87,7 +87,7 @@ export function Ghost({ label, onPress, h = 46, fs = 15, style, bg }: { label: s
 export function ChuruBadge({ n, small }: { n: number; small?: boolean }) {
   const C = useC();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: small ? 5 : 6, paddingHorizontal: small ? 10 : 12, borderRadius: 16, backgroundColor: C.chip1, borderWidth: 1.5, borderColor: C.ink }}>
+    <View accessible accessibilityLabel={`츄르 ${n}개`} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: small ? 5 : 6, paddingHorizontal: small ? 10 : 12, borderRadius: 16, backgroundColor: C.chip1, borderWidth: 1.5, borderColor: C.ink }}>
       <View style={{ width: 10, height: 10, transform: [{ rotate: '45deg' }], backgroundColor: '#E59A4C', borderWidth: 1.5, borderColor: C.ink }} />
       <Txt jua style={{ fontSize: small ? 13 : 15 }}>{n + ' 츄르'}</Txt>
     </View>
@@ -99,7 +99,7 @@ export function Header({ title, onBack, right, size = 24 }: { title: string; onB
   return (
     <View style={{ height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, flexShrink: 1 }}>
-        {onBack && <Btn onPress={onBack} style={{ width: 36, height: 40 }}><Txt style={{ fontSize: 26 }}>‹</Txt></Btn>}
+        {onBack && <Btn onPress={onBack} accessibilityLabel="뒤로" hitSlop={8} style={{ width: 36, height: 40 }}><Txt style={{ fontSize: 26 }}>‹</Txt></Btn>}
         <Txt jua style={{ fontSize: onBack && size === 24 ? 21 : size }} numberOfLines={1}>{title}</Txt>
       </View>
       {right}
@@ -133,7 +133,7 @@ export function CatScene({ cat, width, style }: { cat: Cat; width: number; style
 // CSS 배경 무늬(줄무늬·도트·체크·격자)를 SVG 패턴으로
 export function FillView({ fill, style, radius = 0 }: { fill: Fill | string; style?: StyleProp<ViewStyle>; radius?: number }) {
   const f: Fill = typeof fill === 'string' ? { t: 'solid', c: fill } : fill;
-  const id = React.useMemo(() => 'p' + Math.random().toString(36).slice(2, 10), []);
+  const id = 'p' + React.useId().replace(/[^a-zA-Z0-9]/g, '');
   if (f.t === 'solid') return <View style={[{ backgroundColor: f.c, borderRadius: radius, overflow: 'hidden' }, style]} />;
   let pat: React.ReactNode = null, bg = 'transparent';
   if (f.t === 'stripesV' || f.t === 'stripesH') {
@@ -187,7 +187,7 @@ export function ListCard({ children, style }: { children: React.ReactNode; style
 export function ToggleRow({ label, desc, on, onPress }: { label: string; desc?: string; on: boolean; onPress: () => void }) {
   const C = useC(); const cb = useApp(s => s.cb);
   return (
-    <Btn onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 58, paddingVertical: 6, paddingHorizontal: 14, justifyContent: 'flex-start' }}>
+    <Btn onPress={onPress} accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: on }} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 58, paddingVertical: 6, paddingHorizontal: 14, justifyContent: 'flex-start' }}>
       <View style={{ flex: 1, gap: 2 }}>
         <Txt style={{ fontSize: 15 }}>{label}</Txt>
         {!!desc && <Txt style={{ fontSize: 11, color: C.sub, lineHeight: 15 }}>{desc}</Txt>}
@@ -205,5 +205,5 @@ export function Bar({ pct, h = 10, color = '#E59A4C', bg }: { pct: number; h?: n
 
 export function Hearts({ n, size = 20 }: { n: number; size?: number }) {
   const C = useC(); const cb = useApp(s => s.cb);
-  return <View style={{ flexDirection: 'row', gap: 2 }}>{[0, 1, 2, 3, 4].map(i => <Text key={i} style={{ fontSize: size, lineHeight: size * 1.1, color: i < n ? '#E07F7F' : C.line }}>{cb && i >= n ? '♡' : '♥'}</Text>)}</View>;
+  return <View accessible accessibilityLabel={`친밀도 하트 ${n}개`} style={{ flexDirection: 'row', gap: 2 }}>{[0, 1, 2, 3, 4].map(i => <Text key={i} style={{ fontSize: size, lineHeight: size * 1.1, color: i < n ? '#E07F7F' : C.line }}>{cb && i >= n ? '♡' : '♥'}</Text>)}</View>;
 }

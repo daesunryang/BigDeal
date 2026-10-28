@@ -21,7 +21,10 @@ import { coachRefs } from './src/screens/coach';
 import { authEnabled, toUser, watchAuth } from './src/services/auth';
 import { blocker } from './src/services/blocker';
 import { pullOnLogin, startSync } from './src/services/sync';
+import { initNotify, notifyGoal, syncReminders } from './src/services/notify';
+import { checkUpdate } from './src/services/update';
 import { initSfx } from './src/sfx';
+import { ErrorBoundary } from './src/screens/ErrorBoundary';
 import { S, getS, hooks, useApp } from './src/store';
 import { useC, useDark } from './src/theme';
 import { Txt } from './src/ui/kit';
@@ -37,6 +40,7 @@ hooks.onStart = s => {
   blocker.start({ endAt: s.endAt, packages: pkgs, names, strict: s.toggles.strict, catName: catById(s.catId).name, catImage: s.catId });
 };
 hooks.onStop = () => blocker.stop();
+hooks.onGoal = (goal, cat) => { notifyGoal(goal, cat); };
 
 // 네이티브 차단 화면에서 쌓인 기록(방해 시도 · 세션 포기)을 반영한다. 포기했으면 true.
 function pullBlockerEvents() {
@@ -51,7 +55,7 @@ function pullBlockerEvents() {
 function Root() {
   const C = useC(), dark = useDark(), ins = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const screen = useApp(s => s.screen), tab = useApp(s => s.tab), offline = useApp(s => s.offline);
+  const screen = useApp(s => s.screen), tab = useApp(s => s.tab), offline = useApp(s => s.offline), coachN = useApp(s => s.coach);
   const ov = useApp(useShallow(s => ({ sheet: s.sheet, house: s.house, pay: !!s.pay, rcpt: !!s.rcpt, ad: s.ad != null, dlg: !!s.dlg, coach: s.coach >= 0, share: s.share && !!s.last, cert: s.cert != null, gacha: !!s.gacha, acct: s.acct })));
   const [hydrated, setHydrated] = useState(useApp.persist.hasHydrated());
   usePermSync();
@@ -78,6 +82,20 @@ function Root() {
       S({ screen: 'tabs', tab: 'home', remain: Math.max(0, (s.endAt - Date.now()) / 1000), dlg: { kind: 'recover' } });
     } else if (s.screen !== 'splash') S({ screen: 'splash' });
     if (blocker.available && !s.apps.some(a => a.pkg)) loadInstalledApps().catch(() => {});
+    getS().dailyMail();
+    checkUpdate().catch(() => {});
+  }, [hydrated]);
+
+  // 리마인더 알림을 설정에 맞춰 다시 예약하고, 앱으로 돌아올 때 새 날의 출석 우편을 확인한다
+  useEffect(() => {
+    if (!hydrated) return;
+    initNotify().then(() => syncReminders(getS())).catch(() => {});
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const un = useApp.subscribe((st, prev) => {
+      if (st.remind !== prev.remind || st.toggles.notif !== prev.toggles.notif || st.catId !== prev.catId) { clearTimeout(t); t = setTimeout(() => syncReminders(getS()).catch(() => {}), 800); }
+    });
+    const c = AppState.addEventListener('change', st => { if (st === 'active') getS().dailyMail(); });
+    return () => { un(); c.remove(); clearTimeout(t); };
   }, [hydrated]);
 
   // 차단 화면에서 이벤트가 오거나 앱으로 돌아올 때마다 기록을 가져온다
@@ -131,7 +149,7 @@ function Root() {
         {ov.pay && <PaySheet />}
         {ov.rcpt && <Receipt />}
         {ov.share && <ShareCard />}
-        {ov.coach && isTabs && tab === 'home' && <Coach height={height - ins.top - ins.bottom} />}
+        {ov.coach && isTabs && tab === 'home' && <Coach key={coachN} height={height - ins.top - ins.bottom} />}
         {ov.ad && <AdView />}
         {ov.dlg && <Dialog />}
         {ov.house && <HouseModal width={width} />}
@@ -146,5 +164,5 @@ export default function App() {
   const [fonts] = useFonts({ Jua_400Regular, GowunDodum_400Regular });
   useEffect(() => { initSfx(); }, []);
   if (!fonts) return <View style={{ flex: 1, backgroundColor: '#FBF6EE' }} />;
-  return <SafeAreaProvider><Root /></SafeAreaProvider>;
+  return <SafeAreaProvider><ErrorBoundary><Root /></ErrorBoundary></SafeAreaProvider>;
 }

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import { Image, PanResponder, Pressable, View } from 'react-native';
 import { BehId, Cat, FLOOR, Fill, WALL } from '../data';
 import { growth } from '../derive';
@@ -96,13 +96,13 @@ function boxPx(b: Box, [pw, ph]: Dims) {
 
 function Item({ id, dims, sc, drag, off }: { id: string; dims: Dims; sc: number; drag: boolean; off: [number, number] }) {
   const sp = ITEMS[id]; const sel = useApp(s => s.dragSel === id);
-  const p0 = useRef<[number, number]>([0, 0]);
-  const pr = useRef(PanResponder.create({
+  // 끌기 시작 위치는 PanResponder 안에만 두는 값이라 상태로 두지 않는다
+  const [pr] = useState(() => { const p0: { current: [number, number] } = { current: [0, 0] }; return PanResponder.create({
     onStartShouldSetPanResponder: () => true, onMoveShouldSetPanResponder: () => true, onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: () => { p0.current = (getS().pos[id] || [0, 0]) as [number, number]; getS().set({ dragSel: id }); },
     onPanResponderMove: (_, g) => { const cl = (v: number) => Math.max(-300, Math.min(300, v)); getS().set(st => ({ pos: { ...st.pos, [id]: [cl(p0.current[0] + g.dx / sc), cl(p0.current[1] + g.dy / sc)] } })); },
     onPanResponderRelease: () => getS().set({ dragSel: null }), onPanResponderTerminate: () => getS().set({ dragSel: null }),
-  })).current;
+  }); });
   const bx = boxPx(sp.box, dims), d: Dims = [bx.width, bx.height], o = sp.outer;
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, top: 0, width: dims[0], height: dims[1], zIndex: sel ? 5 : undefined, transform: [{ translateX: off[0] * sc }, { translateY: off[1] * sc }] }}>
@@ -190,7 +190,7 @@ function Win({ struct, w, H }: { struct: string; w: number; H: number }) {
 export function Stage({ w, H, decor, items, cat, drag = false, pos, showCat = true }: {
   w: number; H: number; decor: { wall: string; floor: string; struct: string; outfit?: string }; items: string[]; cat: Cat; drag?: boolean; pos: Record<string, [number, number]>; showCat?: boolean;
 }) {
-  const beh = useApp(s => { s.msg; s.behOff; s.sulky; s.fedUntil; return s.behavior().id; });
+  const beh = useApp(s => s.behavior().id);
   const ft = Math.round(H * 0.64), sc = w / 360, dims: Dims = [w, H];
   const has = (id: string) => items.includes(id);
   const it = (id: string) => has(id) && ITEMS[id] ? <Item key={id} id={id} dims={dims} sc={sc} drag={drag} off={(pos[id] || [0, 0]) as [number, number]} /> : null;

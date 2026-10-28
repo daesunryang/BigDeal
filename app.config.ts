@@ -10,7 +10,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: full ? '집중냥' : '집중냥 데모',
   slug: 'jibjungnyang',
-  version: '1.0.0',
+  version: '1.1.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
@@ -19,7 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: { supportsTablet: false, bundleIdentifier: full ? 'com.jibjungnyang.app' : 'com.jibjungnyang.demo' },
   android: {
     package: full ? 'com.jibjungnyang.app' : 'com.jibjungnyang.demo',
-    versionCode: 1,
+    versionCode: 2,
     adaptiveIcon: {
       backgroundColor: '#E59A4C',
       foregroundImage: './assets/android-icon-foreground.png',
@@ -38,7 +38,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-audio', { microphonePermission: false, enableBackgroundPlayback: false }],
     'expo-sharing',
     ['expo-build-properties', { android: { minSdkVersion: 26 } }],
-    ...(full ? ['./plugins/withAppBlocker'] : []),
+    ...(full ? ['./plugins/withAppBlocker', ['expo-notifications', { color: '#E59A4C', defaultChannel: 'jjn_remind' }]] : []),
   ] as ExpoConfig['plugins'],
   extra: { flavor },
 });

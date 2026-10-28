@@ -21,6 +21,8 @@ export const dkg = (s: State) => (s.donated / 10 + s.sponsorships.reduce((a, r) 
 export const focusStreak = (s: State) => streakOf([...s.att, ...s.fdays]);
 export const affOf = (s: State) => s.aff[s.catId] || 0;
 export const growth = (s: State) => growthOf(affOf(s));
+// 최근 n일 안에 완료한 세션
+export const recentDone = (s: State, days: number) => { const since = Date.now() - days * 864e5; return s.sessions.filter(x => x.ok && x.at >= since); };
 export const totalMin = (s: State) => s.sessions.filter(x => x.ok).reduce((a, x) => a + x.min, 0);
 
 export const badges = (s: State): [string, string, number[], number, string][] => [

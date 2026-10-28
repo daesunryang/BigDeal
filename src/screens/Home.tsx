@@ -14,6 +14,8 @@ const p2 = (n: number) => String(n).padStart(2, '0');
 function Wheel({ items, idx, onIdx, k }: { items: string[]; idx: number; onIdx: (i: number) => void; k: string }) {
   const C = useC();
   const ref = useRef<ScrollView>(null);
+  // 휠을 열거나 형식을 바꿨을 때만 현재 값으로 맞춘다 (스크롤 중 idx가 바뀔 때는 건드리지 않음)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { setTimeout(() => ref.current?.scrollTo({ y: idx * 40, animated: false }), 0); }, [k]);
   const end = (e: NativeSyntheticEvent<NativeScrollEvent>) => { const i = Math.max(0, Math.min(items.length - 1, Math.round(e.nativeEvent.contentOffset.y / 40))); if (i !== idx) onIdx(i); };
   return (

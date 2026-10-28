@@ -59,7 +59,7 @@ export type State = {
   // 오버레이
   sheet: boolean; gacha: string | null; share: boolean; coach: number; coachSeen: boolean;
   adLeft: number; adDay: string; ad: number | null; dlg: Dlg | null; toastMsg: string; acct: boolean; emailMode: boolean; email: string; pw: string; loginErr: string;
-  lastBack: number;
+  lastBack: number; mailDay: string; update: null | { tag: string; url: string; page: string; notes: string };
 };
 
 const today = () => isoDay(0);
@@ -93,18 +93,18 @@ function initial(): State {
     tries: demo ? { ig: 7, yt: 4, tt: 3, kk: 2 } : {}, att: demo ? [isoDay(3), isoDay(2), isoDay(1)] : [], fdays: demo ? [isoDay(3), isoDay(2), isoDay(1)] : [],
     dexTab: 'cat', openNotice: 0, openFaq: null, openOss: null, inq: { cat: '기능 제안', text: '', sent: false },
     sheet: false, gacha: null, share: false, coach: -1, coachSeen: false, adLeft: 3, adDay: today(), ad: null, dlg: null, toastMsg: '', acct: false, emailMode: false, email: '', pw: '', loginErr: '',
-    lastBack: 0,
+    lastBack: 0, mailDay: '', update: null,
   };
 }
 
 // 저장하지 않는 화면 상태
 const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
-  'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gacha', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'friendErr', 'friendCode', 'offline', 'nick'];
+  'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gacha', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
 
 // 동기화(백업)에 올릴 게임 데이터
 export const SYNC_KEYS: (keyof State)[] = ['user', 'linked', 'churu', 'earnedTotal', 'catId', 'owned', 'aff', 'sulky', 'seenBeh', 'decor', 'ownedDecor', 'items', 'equipped', 'pos', 'rooms', 'catRoom', 'rstore', 'dRoom', 'roomNames', 'extra',
   'donated', 'pick', 'sponsorships', 'mails', 'mailRead', 'claimed', 'plus', 'plusKind', 'toggles', 'themeMode', 'lang', 'big', 'cb', 'haptic', 'goal', 'goalNotify', 'remind', 'avatarCat', 'ledger', 'friends', 'myCode', 'tries', 'att', 'fdays',
-  'sessions', 'blocked', 'tag', 'fmt', 'coachSeen', 'houseHint'];
+  'sessions', 'blocked', 'tag', 'fmt', 'coachSeen', 'houseHint', 'mailDay'];
 
 type Actions = {
   set: (p: Partial<State> | ((s: State) => Partial<State> | null)) => void;
@@ -135,10 +135,11 @@ type Actions = {
   back: () => boolean;
   reset: () => void;
   afterLogin: (u: User, linked: Record<string, boolean>) => void;
+  dailyMail: () => void;
 };
 
 let toastT: ReturnType<typeof setTimeout> | undefined;
-export const hooks: { onStart?: (s: State) => void; onStop?: () => void; sfx?: (n: string) => void } = {};
+export const hooks: { onStart?: (s: State) => void; onStop?: () => void; sfx?: (n: string) => void; onGoal?: (goal: number, catName: string) => void } = {};
 const sfx = (n: string) => hooks.sfx?.(n);
 
 export const useApp = create<State & Actions>()(persist((set, get) => ({
@@ -185,6 +186,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
       last: { grow: growthOf(a1).idx > growthOf(a0).idx, goal: goalNow && s.goalNotify, tag: s.tag, min, churu: rw.churu, aff: rw.aff, up },
       sessions: [{ min, ok: true, tag: s.tag, at: Date.now() }, ...s.sessions].slice(0, 500),
     });
+    if (goalNow && s.goalNotify) hooks.onGoal?.(s.goal, catById(s.catId).name);
   },
   quit: () => {
     sfx('fail'); hooks.onStop?.();
@@ -311,8 +313,15 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     if (Date.now() - s.lastBack < 2000) return false;
     set({ lastBack: Date.now() }); get().toast('한 번 더 누르면 앱이 종료돼요'); return true;
   },
+  // 정식 빌드: 하루에 한 번 출석 보상 우편이 온다 (데모는 프로토타입의 예시 우편 그대로)
+  dailyMail: () => {
+    const s = get(), td = today();
+    if (IS_DEMO || !s.loggedIn || s.mailDay === td) return;
+    const m: Mail = { id: Date.now(), type: 'reward', title: '출석 보상 · 오늘 출석 체크', body: '오늘도 집중냥에 와 줘서 고마워요. 출석 보상 츄르를 받으세요.', churu: 3, date: mmdd(), exp: '7일 후 만료' };
+    set({ mailDay: td, mails: [m, ...s.mails].slice(0, 200) });
+  },
   reset: () => { const keep = { themeMode: get().themeMode, lang: get().lang }; set({ ...initial(), ...keep, screen: 'login' }); },
-  afterLogin: (u, linked) => set(st => ({ user: st.user.uid && st.user.uid === u.uid ? { ...u, name: st.user.name || u.name } : u, linked, loggedIn: true, acct: false, emailMode: false, pw: '', loginErr: '', screen: st.perm.a && st.perm.b && st.coachSeen ? 'tabs' : 'onboard' })),
+  afterLogin: (u, linked) => { set(st => ({ user: st.user.uid && st.user.uid === u.uid ? { ...u, name: st.user.name || u.name } : u, linked, loggedIn: true, acct: false, emailMode: false, pw: '', loginErr: '', screen: st.perm.a && st.perm.b && st.coachSeen ? 'tabs' : 'onboard' })); get().dailyMail(); },
 }), {
   name: 'jjn-state',
   version: 1,

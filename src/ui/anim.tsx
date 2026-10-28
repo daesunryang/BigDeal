@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, Easing, Platform, StyleProp, ViewStyle } from 'react-native';
 
 // 프로토타입의 CSS @keyframes를 옮긴 것. 각 키프레임: [진행(0~1), { y, x, sx, sy, s, r(deg), o }]
@@ -52,7 +52,7 @@ function track(kf: KF, key: keyof P) {
 }
 
 export function useAnim(name: AnimName | null, dur: number, opt: { delay?: number; loop?: boolean; easing?: (t: number) => number; vars?: P } = {}) {
-  const v = useRef(new Animated.Value(0)).current;
+  const [v] = useState(() => new Animated.Value(0));
   const { delay = 0, loop = true } = opt;
   useEffect(() => {
     if (!name) return;
@@ -62,7 +62,7 @@ export function useAnim(name: AnimName | null, dur: number, opt: { delay?: numbe
     const seq = delay ? Animated.sequence([Animated.delay(delay * 1000), anim]) : anim;
     seq.start();
     return () => seq.stop();
-  }, [name, dur, delay, loop]);
+  }, [v, name, dur, delay, loop]);
   if (!name) return {};
   const kf: KF = opt.vars ? K[name].map(([t, p]) => [t, { ...p, ...(t === 1 && opt.vars ? opt.vars : {}) }]) : K[name];
   const ez = opt.easing ?? Easing.inOut(Easing.ease);

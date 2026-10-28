@@ -3,13 +3,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { IS_DEMO, IS_FULL } from '../config';
-import { APPS, DEFAULT_BLOCK_PKGS, MOODS, ROOM_DESC, catById, won } from '../data';
+import { ANIMALS, APPS, DEFAULT_BLOCK_PKGS, MOODS, ROOM_DESC, catById, won } from '../data';
 import { affOf, dkg, focusStreak } from '../derive';
-import { authEnabled, deleteAccount } from '../services/auth';
+import { authEnabled, deleteAccount, unlinkProvider } from '../services/auth';
 import { blocker } from '../services/blocker';
+import { receiptHtml, sharePdf } from '../services/pdf';
 import { deleteRemote, stopSync } from '../services/sync';
 import { FloorPlan, houseData } from '../stage/House';
-import { BlockApp, S, getS, useApp } from '../store';
+import { sfx } from '../sfx';
+import { BlockApp, S, getS, hooks, useApp } from '../store';
 import { FONT, useC } from '../theme';
 import { Anim, EZ } from '../ui/anim';
 import { Btn, CatFace, CatScene, Primary, Toggle, Txt } from '../ui/kit';
@@ -42,8 +44,8 @@ export async function loadInstalledApps() {
 export function AppSheet() {
   const C = useC();
   const apps = useApp(s => s.apps), blocked = useApp(s => s.blocked);
-  const [busy, setBusy] = useState(false), [q, setQ] = useState('');
-  useEffect(() => { if (blocker.available) { setBusy(true); loadInstalledApps().finally(() => setBusy(false)); } }, []);
+  const [busy, setBusy] = useState(blocker.available), [q, setQ] = useState('');
+  useEffect(() => { if (blocker.available) loadInstalledApps().finally(() => setBusy(false)); }, []);
   const list = q ? apps.filter(a => a.name.toLowerCase().includes(q.toLowerCase())) : apps;
   return (
     <Scrim z={5} align="bottom" onClose={() => S({ sheet: false })}>
@@ -84,9 +86,9 @@ export function HouseModal({ width }: { width: number }) {
     if (dbl) { lastTap = null; S({ houseHint: false }); if (getS().rooms.includes(id)) getS().moveCat(id); else getS().toast('잠긴 방이에요. 아래 버튼으로 해금해 주세요'); }
   };
   const act = sel.locked
-    ? () => { if (!can) return; getS().log(sel.name + ' 해금', -sel.price); require('../sfx').sfx('buy'); S(st => ({ churu: st.churu - sel.price, rooms: [...st.rooms, sel.id] })); getS().toast(sel.name + '이(가) 열렸어요'); }
+    ? () => { if (!can) return; getS().log(sel.name + ' 해금', -sel.price); sfx('buy'); S(st => ({ churu: st.churu - sel.price, rooms: [...st.rooms, sel.id] })); getS().toast(sel.name + '이(가) 열렸어요'); }
     : () => { getS().switchRoom(sel.id); S({ house: false, screen: 'decor', preview: null, decorCat: 'wall' }); };
-  const expand = () => { if (s.churu < 200) return getS().toast('츄르가 ' + (200 - s.churu) + '개 부족해요'); getS().log('집 넓히기', -200); require('../sfx').sfx('buy'); S(st => ({ churu: st.churu - 200, extra: true, rooms: [...st.rooms, 'attic', 'study'] })); getS().toast('다락방과 서재가 생겼어요!'); };
+  const expand = () => { if (s.churu < 200) return getS().toast('츄르가 ' + (200 - s.churu) + '개 부족해요'); getS().log('집 넓히기', -200); sfx('buy'); S(st => ({ churu: st.churu - 200, extra: true, rooms: [...st.rooms, 'attic', 'study'] })); getS().toast('다락방과 서재가 생겼어요!'); };
   const rowH = 54;
   return (
     <Scrim z={13} dim={0.55} pad={14} onClose={() => S({ house: false })}>
@@ -140,7 +142,7 @@ export function PaySheet() {
   const C = useC();
   const pay = useApp(s => s.pay)!, sAmt = useApp(s => s.sAmt), sAnimal = useApp(s => s.sAnimal);
   const amt = [3000, 5000, 10000][sAmt], all = pay.agree.every(Boolean);
-  const name = require('../data').ANIMALS.find((x: any) => x.id === sAnimal).name;
+  const name = ANIMALS.find(x => x.id === sAnimal)!.name;
   const methods = ios ? ['Apple Pay', '신용·체크카드', '카카오페이'] : ['Google Play 결제', '신용·체크카드', '카카오페이', '토스페이'];
   const agree = ['전체 동의', '(필수) 결제 서비스 이용약관', '(필수) 후원 환불 정책 확인', '(필수) 개인정보 제3자 제공 동의 (보호소 전달용)'];
   return (
@@ -188,7 +190,11 @@ export function Receipt() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Txt jua style={{ fontSize: 16 }}>합계</Txt><Txt jua style={{ fontSize: 16 }}>{total}</Txt></View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Btn onPress={() => S({ rcpt: null })} style={{ flex: 1, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 15 }}>닫기</Txt></Btn>
-          <Btn onPress={() => { S({ rcpt: null }); getS().toast('PDF로 저장했어요 (데모)'); }} style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 15, color: C.bg }}>PDF로 저장</Txt></Btn>
+          <Btn onPress={async () => {
+            const title = s.rcpt === 'cum' ? '누적 후원 증명서' : '기부 영수증', d = new Date();
+            const html = receiptHtml({ title, sub: s.user.name + ' 님 · ' + (s.rcpt === 'cum' ? '집중과 후원의 누적 기록' : '결제 후원 내역'), rows: rows.length ? rows : [['내역이 없어요', '-']], total, issued: `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}` });
+            try { const ok = await sharePdf(html, title); S({ rcpt: null }); if (!ok) getS().toast('이 기기에서는 PDF를 공유할 수 없어요'); } catch { getS().toast('PDF를 만들지 못했어요'); }
+          }} style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 15, color: C.bg }}>PDF로 저장</Txt></Btn>
         </View>
       </Anim>
     </Scrim>
@@ -200,7 +206,7 @@ export function AdView() {
   const C = useC();
   const ad = useApp(s => s.ad)!;
   useEffect(() => { const t = setInterval(() => { const a = getS().ad; if (a == null || a <= 0) { clearInterval(t); return; } S({ ad: a - 1 }); }, 1000); return () => clearInterval(t); }, []);
-  const claim = () => { getS().log('광고 시청 보상', 5); require('../sfx').sfx('coin'); S(st => ({ ad: null, adLeft: st.adLeft - 1, churu: st.churu + 5, earnedTotal: st.earnedTotal + 5 })); getS().toast('츄르 5개를 받았어요'); };
+  const claim = () => { getS().log('광고 시청 보상', 5); sfx('coin'); S(st => ({ ad: null, adLeft: st.adLeft - 1, churu: st.churu + 5, earnedTotal: st.earnedTotal + 5 })); getS().toast('츄르 5개를 받았어요'); };
   return (
     <View style={[FULL, { zIndex: 10, backgroundColor: '#2B221D', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }]}>
       <Txt style={{ fontSize: 12, color: C.line }}>광고 (데모)</Txt>
@@ -223,7 +229,7 @@ export function Dialog() {
   const toLogin = () => S({ dlg: null, screen: 'login', menuPage: null, emailMode: false, loggedIn: false });
   const M: Record<string, () => { cat?: boolean; title: string; lines: string[]; btns: B[] }> = {
     unlink: () => ({ title: D.name + ' 연결을 해제할까요?', lines: ['해제하면 이 계정으로는 로그인할 수 없어요.', '다른 연결 계정이 있어 기록은 그대로 유지돼요.'], btns: [['취소', 'ghost', close], ['연결 해제', 'danger', async () => {
-      if (IS_FULL && authEnabled) { try { const r = await require('../services/auth').unlinkProvider(D.name); if (r) S({ linked: r.linked, dlg: null }); else close(); } catch (e: any) { close(); getS().toast(e?.message || '해제하지 못했어요'); } return; }
+      if (IS_FULL && authEnabled) { try { const r = await unlinkProvider(D.name!); if (r) S({ linked: r.linked, dlg: null }); else close(); } catch (e: any) { close(); getS().toast(e?.message || '해제하지 못했어요'); } return; }
       S(st => ({ dlg: null, linked: { ...st.linked, [D.name!]: false } }));
     }]] }),
     withdraw: () => ({ title: '정말 탈퇴할까요?', lines: ['고양이와 츄르, 기록이 모두 삭제돼요.', '이 작업은 되돌릴 수 없어요.'], btns: [['취소', 'ghost', close], ['탈퇴하기', 'danger', async () => {
@@ -239,7 +245,7 @@ export function Dialog() {
     incall: () => ({ title: '통화 중', lines: ['타이머가 멈춰 있어요.'], btns: [['통화 종료', 'primary', () => { close(); getS().resumeTimer(); getS().toast('집중을 이어가요'); }]] }),
     alarm: () => ({ title: '알람이 울려요', lines: ['집중 시간이 잠시 멈췄어요.'], btns: [['알람 끄기', 'primary', () => { close(); getS().resumeTimer(); getS().toast('집중을 이어가요'); }]] }),
     recover: () => ({ cat: true, title: '집중이 중단됐어요', lines: ['앱이 종료되기 전에 ' + mm + '분이 남아 있었어요.', '3분 안에 돌아오면 벌점 없이 이어갈 수 있어요.'], btns: [
-      ['이어서 집중하기', 'primary', () => { S({ dlg: null, screen: 'focus' }); require('../store').hooks.onStart?.(getS()); }],
+      ['이어서 집중하기', 'primary', () => { S({ dlg: null, screen: 'focus' }); hooks.onStart?.(getS()); }],
       ['이번엔 쉬기', 'ghost', () => { S({ dlg: null, remain: 0, total: 0, screen: 'tabs' }); getS().toast('벌점 없이 종료했어요'); }]] }),
     permlost: () => ({ title: '권한이 꺼져 있어요', lines: ['방해 앱을 막으려면 다시 허용해야 해요.', '설정 → ' + (ios ? '스크린 타임' : '사용 정보 접근') + ' → 집중냥 켜기'], btns: [
       ['설정 열기', 'primary', () => { if (blocker.available) { close(); blocker.openUsage(); return; } S({ dlg: null, perm: { a: true, b: true } }); getS().toast('권한이 다시 켜졌어요'); }], ['나중에', 'ghost', close]] }),
@@ -267,7 +273,6 @@ export function Coach({ height }: { height: number }) {
   const n = useApp(s => s.coach);
   const [r, setR] = useState<{ l: number; t: number; w: number; h: number } | null>(null);
   useEffect(() => {
-    setR(null);
     const el = coachRefs.items[n], sc = coachRefs.scroll, root = coachRefs.root;
     if (!el || !root) return;
     const t1 = setTimeout(() => {

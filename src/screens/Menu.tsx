@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, TextInput, View } from 'react-native';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
 import { CATS, DOCS, FAQS, MOODS, NOTICES, OSS, PARTNER_ROWS, PG, PLAT, PLUS_PLANS, catById, isoDay, streakOf } from '../data';
-import { affOf, badges, dkg, goalDays, gotBadges, growth, monthHeat, todayMin, weekLabels, weekVals } from '../derive';
+import { affOf, badges, dkg, goalDays, recentDone, gotBadges, growth, monthHeat, todayMin, weekLabels, weekVals } from '../derive';
 import { AuthError, authEnabled, linkEmail, linkGoogle, logOut } from '../services/auth';
 import { blocker } from '../services/blocker';
 import { fb } from '../services/firebase';
 import { pushNow, readFriend, stopSync } from '../services/sync';
+import { notifyEnabled } from '../services/notify';
+import { checkUpdate, openUpdate } from '../services/update';
 import { sfx } from '../sfx';
 import { S, State, getS, useApp } from '../store';
 import { FONT, useC } from '../theme';
@@ -66,6 +68,10 @@ function MenuRoot() {
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="메뉴" />
+      {!!s.update && <Btn onPress={openUpdate} style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 18, backgroundColor: '#F6D58E', borderWidth: 1.5, borderColor: '#4A3428', justifyContent: 'flex-start' }}>
+        <View style={{ flex: 1, gap: 2 }}><Txt jua style={{ fontSize: 16, color: '#4A3428' }}>{'새 버전 ' + s.update.tag + '이 나왔어요'}</Txt><Txt style={{ fontSize: 12, color: '#7A6352' }}>눌러서 APK를 받고 설치하면 기록은 그대로 이어져요</Txt></View>
+        <Txt jua style={{ fontSize: 14, color: '#4A3428' }}>받기 ›</Txt>
+      </Btn>}
       <Btn onPress={page(PG.profile)} style={{ flexDirection: 'row', gap: 12, padding: 14, borderRadius: 20, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}>
         <CatFace cat={av} size={52} border={1.5} />
         <View style={{ flex: 1, gap: 3, minWidth: 0 }}>
@@ -225,7 +231,9 @@ function SubPage({ p, width }: { p: string; width: number }) {
       <CatFace cat={cat} size={96} />
       <Txt jua style={{ fontSize: 26 }}>집중냥</Txt>
       <Txt style={{ fontSize: 13, color: C.sub }}>{`버전 ${APP_VERSION} (${IS_DEMO ? '데모' : '정식'})`}</Txt>
-      <View style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: C.mint }}><Txt style={{ fontSize: 12 }}>최신 버전을 사용 중이에요</Txt></View>
+      {s.update ? <Btn onPress={openUpdate} style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12, backgroundColor: '#F6D58E' }}><Txt style={{ fontSize: 12, color: '#4A3428' }}>{'새 버전 ' + s.update.tag + ' 받기 ›'}</Txt></Btn>
+        : <View style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: C.mint }}><Txt style={{ fontSize: 12 }}>최신 버전을 사용 중이에요</Txt></View>}
+      <Btn onPress={() => { checkUpdate(true); }} style={{ paddingVertical: 4 }}><Txt style={{ fontSize: 12, color: C.sub, textDecorationLine: 'underline' }}>업데이트 확인</Txt></Btn>
     </View>
     <ListCard>{['이용약관', '개인정보 처리방침', '문의하기', PG.oss].map(l => (
       <Btn key={l} onPress={page(l)} style={{ flexDirection: 'row', minHeight: 50, paddingHorizontal: 14, justifyContent: 'flex-start' }}><Txt style={{ flex: 1, fontSize: 15 }}>{l}</Txt><Txt style={{ fontSize: 16, color: C.mute }}>›</Txt></Btn>))}</ListCard>
@@ -298,13 +306,15 @@ function SubPage({ p, width }: { p: string; width: number }) {
       <View style={{ flexDirection: 'row', gap: 6 }}>{days.map((d, i) => <Chip key={d} h={38} label={d} on={!!s.remind.days[i]} style={{ flex: 1, paddingHorizontal: 0 }} onPress={() => S(x => ({ remind: { ...x.remind, days: x.remind.days.map((v, j) => (j === i ? (v ? 0 : 1) : v)) } }))} />)}</View></View>
     <View style={{ padding: 14, borderRadius: 16, backgroundColor: C.bg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.sub }}>
       <Txt style={{ fontSize: 13, lineHeight: 20 }}>{s.remind.on ? '“같이 집중할까요?” — ' + cat.name + '가 ' + days.filter((_, i) => s.remind.days[i]).join('·') + ' ' + s.remind.time + '에 불러요.' : '리마인더가 꺼져 있어요.'}</Txt>
+      {notifyEnabled && s.remind.on && !s.toggles.notif && <Txt style={{ fontSize: 12, color: C.red, marginTop: 6 }}>메뉴 → 알림이 꺼져 있어서 리마인더가 오지 않아요.</Txt>}
+      {!notifyEnabled && <Txt style={{ fontSize: 11, color: C.mute, marginTop: 6 }}>데모 빌드는 알림을 예약하지 않아요.</Txt>}
     </View>
   </View>; }
   if (p === PG.report) {
     const wk = weekVals(s), lb = weekLabels(), total = wk.reduce((a, b) => a + b, 0), gr = growth(s);
     const best = lb[wk.indexOf(Math.max(...wk))], heatC = [C.sand3, '#DCEBD6', '#C5E0BE', '#9FCB97', '#7FB07F', '#E59A4C'];
-    const tiles = s.reportTab === 'week' ? [['총 집중', total + '분'], ['완료 횟수', (s.sessions.filter(x => x.ok && Date.now() - x.at < 7 * 864e5).length + (IS_DEMO ? 8 : 0)) + '회'], ['최고의 요일', total ? best : '-']]
-      : [['총 집중', (IS_DEMO ? Math.round((total * 4 + 120) / 60) : Math.round(s.sessions.filter(x => x.ok && Date.now() - x.at < 30 * 864e5).reduce((a, x) => a + x.min, 0) / 60)) + '시간'], ['목표 달성', goalDays(s) + '일'], ['후원', dkg(s) + 'kg']];
+    const tiles = s.reportTab === 'week' ? [['총 집중', total + '분'], ['완료 횟수', (recentDone(s, 7).length + (IS_DEMO ? 8 : 0)) + '회'], ['최고의 요일', total ? best : '-']]
+      : [['총 집중', (IS_DEMO ? Math.round((total * 4 + 120) / 60) : Math.round(recentDone(s, 30).reduce((a, x) => a + x.min, 0) / 60)) + '시간'], ['목표 달성', goalDays(s) + '일'], ['후원', dkg(s) + 'kg']];
     return <View style={{ gap: 14 }}>
       <Seg items={[['week', '주간'], ['month', '월간']]} value={s.reportTab} onPick={k => S({ reportTab: k })} />
       <View style={{ flexDirection: 'row', gap: 8 }}>{tiles.map(([k, v]) => <View key={k} style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 14, backgroundColor: C.card, alignItems: 'center' }}><Txt jua style={{ fontSize: 19 }}>{v}</Txt><Txt style={{ fontSize: 11, color: C.sub }}>{k}</Txt></View>)}</View>

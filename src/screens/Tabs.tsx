@@ -1,9 +1,10 @@
 import React from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
-import { ANIMALS, BEH, CATS, DECOR, DECOR_KINDS, FEED, FLOOR, LIMITED, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
+import { ANIMALS, BEH, CATS, DECOR, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
 import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
 import { S, getS, listOf, useApp } from '../store';
+import { sfx } from '../sfx';
 import { useC } from '../theme';
 import { Bar, Btn, CatFace, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
 
@@ -101,7 +102,7 @@ export function Shop() {
           const act = () => {
             const st = getS();
             if (own) return S({ equipped: eq ? st.equipped.filter(x => x !== id) : [...st.equipped, id] });
-            if (!can) return; st.log(name + ' 구매', -price); require('../sfx').sfx('buy');
+            if (!can) return; st.log(name + ' 구매', -price); sfx('buy');
             S({ churu: st.churu - price, items: [...st.items, id], equipped: [...st.equipped, id], aff: { ...st.aff, [st.catId]: Math.min(100, (st.aff[st.catId] || 0) + 2) } });
           };
           return (

@@ -23,3 +23,6 @@ export const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
 export const FIREBASE_READY = !!(FIREBASE.apiKey && FIREBASE.projectId && FIREBASE.appId);
 
 export const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
+
+// 업데이트 확인에 쓰는 GitHub 저장소 (릴리스에 APK를 올린다)
+export const GITHUB_REPO = 'elpong2-ai/BigDeal';
