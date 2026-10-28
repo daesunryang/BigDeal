@@ -4,7 +4,7 @@ name: Android APK
 # 결과물은 실행 화면의 Artifacts에서 내려받는다.
 on:
   push:
-    branches: [main]
+    branches: [main, 'claude/**']
   pull_request:
   workflow_dispatch:
 
