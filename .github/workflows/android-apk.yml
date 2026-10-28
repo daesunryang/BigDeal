@@ -8,6 +8,11 @@ on:
     tags: ['v*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: '릴리스로 게시할 버전 태그 (예: v1.0.0). 비우면 APK만 만든다.'
+        required: false
+        default: ''
 
 concurrency:
   group: apk-${{ github.ref }}
@@ -86,7 +91,7 @@ jobs:
 
   release:
     needs: apk
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -99,10 +104,10 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
           cp out/jibjungnyang-demo.apk "out/jibjungnyang-demo-$TAG.apk"
           cp out/jibjungnyang-full.apk "out/jibjungnyang-$TAG.apk"
-          gh release create "$TAG" --title "집중냥 $TAG" --notes-file docs/release-notes.md \
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "집중냥 $TAG" --notes-file docs/release-notes.md \
             "out/jibjungnyang-$TAG.apk#집중냥 정식 (실제 앱 차단 · 로그인 · 동기화)" \
             "out/jibjungnyang-demo-$TAG.apk#집중냥 데모 (UI 데모)"
