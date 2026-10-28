@@ -1,10 +1,11 @@
 name: Android APK
 
 # 데모(UI만)와 정식(실제 차단·로그인·동기화) APK 두 개를 만든다.
-# 결과물은 실행 화면의 Artifacts에서 내려받는다.
+# 결과물은 실행 화면의 Artifacts에서 내려받는다. v로 시작하는 태그를 올리면 GitHub 릴리스에 두 APK를 붙인다.
 on:
   push:
     branches: [main, 'claude/**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -82,3 +83,26 @@ jobs:
           name: jibjungnyang-${{ matrix.flavor }}-apk
           path: out/jibjungnyang-${{ matrix.flavor }}.apk
           if-no-files-found: error
+
+  release:
+    needs: apk
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cp out/jibjungnyang-demo.apk "out/jibjungnyang-demo-$TAG.apk"
+          cp out/jibjungnyang-full.apk "out/jibjungnyang-$TAG.apk"
+          gh release create "$TAG" --title "집중냥 $TAG" --notes-file docs/release-notes.md \
+            "out/jibjungnyang-$TAG.apk#집중냥 정식 (실제 앱 차단 · 로그인 · 동기화)" \
+            "out/jibjungnyang-demo-$TAG.apk#집중냥 데모 (UI 데모)"
