@@ -1,3 +1,4 @@
+import { describe, expect, test } from '@jest/globals';
 import { tr } from '../src/i18n';
 import { reminderPlan, toWeekday } from '../src/services/notify';
 import { isNewer, parseVer, pickApk } from '../src/services/update';
