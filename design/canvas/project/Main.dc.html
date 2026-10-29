@@ -206,16 +206,16 @@ button{font-family:inherit;color:inherit}
       <div data-coach="0" onClick="{{ openRoom }}" style="cursor:pointer;width:220px;height:220px;border-radius:50%;border:2px solid var(--ink);background-color:var(--card);background-image:var(--ca);background-size:{{ cat.homeSize }};background-position:{{ cat.homePos }};filter:{{ catFilter }};animation:bob 3s ease-in-out infinite"></div>
     </div>
     </sc-if>
-    <div style="display:flex;flex-direction:column;gap:10px;flex:none">
-    <div style="padding:12px;border-radius:20px;background:var(--card);display:flex"><button data-coach="1" onClick="{{ openWheel }}" style="flex:none;display:flex;align-items:baseline;justify-content:center;gap:6px;padding:14px 0;border-radius:22px;background:{{ clockBg }};border:{{ clockBorder }};color:{{ clockFg }};cursor:pointer;width:100%" style-active="transform:scale(.98)">
+    <div style="display:flex;flex-direction:column;gap:10px;flex:none;padding:12px;border-radius:24px;background:var(--card)">
+    <div style="display:flex"><button data-coach="1" onClick="{{ openWheel }}" style="flex:none;display:flex;align-items:baseline;justify-content:center;gap:6px;padding:14px 0;border-radius:22px;background:{{ clockBg }};border:{{ clockBorder }};color:{{ clockFg }};cursor:pointer;width:100%" style-active="transform:scale(.98)">
       <span style="font:400 22px 'Jua',sans-serif;color:#E59A4C">{{ apLabel }}</span>
       <span style="font:400 54px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;color:{{ digitFg }}">{{ dispH }}</span>
       <span style="font:400 48px/1 'Jua',sans-serif">:</span>
       <span style="font:400 54px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;color:{{ digitFg }}">{{ dispM }}</span>
     </button></div>
     <div style="display:flex;gap:8px;flex:none">
-      <button onClick="{{ openWheel }}" style="flex:1;min-width:0;height:42px;padding:0 12px;border-radius:21px;border:1.5px solid var(--ink);background:var(--mint);font:400 14px 'Jua',sans-serif;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">휴식 · {{ restText }}</button>
-      <button data-coach="2" onClick="{{ openSheet }}" style="flex:1;min-width:0;height:42px;padding:0 12px;border-radius:21px;border:1.5px dashed var(--sub);background:transparent;font:400 14px 'Jua',sans-serif;color:var(--ink);cursor:pointer;white-space:nowrap">{{ allowCount }}개앱 차단 제외 ›</button>
+      <button onClick="{{ openWheel }}" style="flex:1;min-width:0;height:42px;padding:0 8px;border-radius:21px;border:1.5px solid var(--ink);background:var(--mint);font:400 13px 'Jua',sans-serif;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">휴식 · {{ restText }}</button>
+      <button data-coach="2" onClick="{{ openSheet }}" style="flex:1;min-width:0;height:42px;padding:0 8px;border-radius:21px;border:1.5px dashed var(--sub);background:transparent;font:400 13px 'Jua',sans-serif;color:var(--ink);cursor:pointer;white-space:nowrap">{{ allowCount }}개앱 차단 제외 ›</button>
     </div>
     </div>
     <button data-coach="3" onClick="{{ startFocus }}" style="height:56px;border-radius:28px;border:none;background:var(--ink);color:var(--bg);font:400 20px 'Jua',sans-serif;cursor:pointer;flex:none" style-active="transform:scale(.98)">집중 시작</button>
