@@ -38,6 +38,7 @@ Run lint and typecheck before declaring any task done.
 
 - The user reacts to changes in the web checklist artifact https://claude.ai/artifact/TbHNt1WHm9w85JrnqcSxdz (source `tools/feedback/index.html`, db collections `items` and `reactions`, same doc ids). `FEEDBACK.md` is the Git copy.
 - When asked to apply feedback ("피드백 반영해 줘"): read `reactions` (and `items`) with the ArtifactData tool, copy status and memo into `FEEDBACK.md`, implement the `수정 필요` items on a new version branch (never on `main` or an older version branch), then set `done: "vX.Y.Z"` and a short Korean `reply` on each handled item and add the new version's changes as new `items` (ids `X.Y.Z-n`, `order` lower than the previous round's). If `FEEDBACK.md` was edited by hand, merge: the later edit wins; ask when unclear.
+- Claude Design history lives in the same checklist as items `D<round>-<n>` (round title `디자인 라운드 N · …`, `order` 300+, `source: "design"`). When a new Claude Design handoff bundle arrives, import any new rounds from its `집중냥 업데이트 내역.dc.html` the same way, then port the changed screens to the app.
 - Reply to the user in Korean.
 
 ## Building with EAS
