@@ -91,7 +91,7 @@ export function Home({ width }: { width: number }) {
             </View>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Btn onPress={() => S({ wheel: true })} style={{ flex: 1, minWidth: 0, height: 54, paddingHorizontal: 8, borderRadius: 21, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.mint }}>
+            <Btn onPress={() => S({ wheel: true })} style={{ flex: 1, minWidth: 0, height: 55, paddingHorizontal: 8, borderRadius: 21, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.mint }}>
               <Txt jua numberOfLines={1} style={{ fontSize: 16 }}>{'휴식 · ' + restText(s)}</Txt>
             </Btn>
             <View ref={reg(2)} collapsable={false} style={{ flex: 1, minWidth: 0 }}>
