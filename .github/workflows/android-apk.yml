@@ -96,6 +96,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
     uses: ./.github/workflows/ios.yml
     secrets: inherit
+    # 불려 간 iOS 워크플로에도 릴리스 작업(직접 실행용)이 있어 쓰기 권한을 넘겨 줘야 시작할 수 있다
+    permissions:
+      contents: write
 
   release:
     needs: [apk, ios]
