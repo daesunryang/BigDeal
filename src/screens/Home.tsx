@@ -77,8 +77,9 @@ export function Home({ width }: { width: number }) {
           </View>
         </View>
 
-        <View style={{ gap: 10 }}>
-          <View style={{ padding: 12, borderRadius: 20, backgroundColor: C.card }}>
+        {/* 시계 + 휴식 · 차단 제외 버튼을 한 카드로 묶음 (캔버스 디자인) */}
+        <View style={{ gap: 10, padding: 12, borderRadius: 24, backgroundColor: C.card }}>
+          <View>
             <View ref={reg(1)} collapsable={false}>
               <Btn onPress={() => S({ wheel: true })} accessibilityLabel={'집중 종료 시각 ' + (pm ? '오후 ' : '오전 ') + h12 + '시 ' + s.endM + '분, 눌러서 집중 설정'}
                 style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6, paddingVertical: 14, borderRadius: 22, backgroundColor: '#2B221D', borderWidth: 2, borderColor: '#2B221D' }}>
@@ -90,12 +91,12 @@ export function Home({ width }: { width: number }) {
             </View>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Btn onPress={() => S({ wheel: true })} style={{ flex: 1, minWidth: 0, height: 42, paddingHorizontal: 12, borderRadius: 21, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.mint }}>
-              <Txt jua numberOfLines={1} style={{ fontSize: 14 }}>{'휴식 · ' + restText(s)}</Txt>
+            <Btn onPress={() => S({ wheel: true })} style={{ flex: 1, minWidth: 0, height: 54, paddingHorizontal: 8, borderRadius: 21, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.mint }}>
+              <Txt jua numberOfLines={1} style={{ fontSize: 16 }}>{'휴식 · ' + restText(s)}</Txt>
             </Btn>
             <View ref={reg(2)} collapsable={false} style={{ flex: 1, minWidth: 0 }}>
-              <Btn onPress={() => S({ sheet: true })} style={{ height: 42, paddingHorizontal: 12, borderRadius: 21, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.sub }}>
-                <Txt jua numberOfLines={1} style={{ fontSize: 14 }}>{allow + '개앱 차단 제외 ›'}</Txt>
+              <Btn onPress={() => S({ sheet: true })} style={{ height: 55, paddingHorizontal: 8, borderRadius: 21, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.sub }}>
+                <Txt jua numberOfLines={1} adjustsFontSizeToFit style={{ fontSize: 18 }}>{allow + '개앱 차단 제외 ›'}</Txt>
               </Btn>
             </View>
           </View>
@@ -103,7 +104,7 @@ export function Home({ width }: { width: number }) {
 
         <View ref={reg(3)} collapsable={false}>
           <Btn onPress={() => getS().start(s.dur)} style={{ height: 56, borderRadius: 28, backgroundColor: C.ink }}>
-            <Txt jua style={{ fontSize: 20, color: C.bg }}>집중 시작</Txt>
+            <Txt jua style={{ fontSize: 30, lineHeight: 36, color: C.bg }}>집중 시작</Txt>
           </Btn>
         </View>
       </View>

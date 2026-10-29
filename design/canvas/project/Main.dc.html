@@ -12,7 +12,7 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jua&amp;family=Gowun+Dodum&amp;display=swap" rel="stylesheet">
 <style>
 :root{--ca:url('/_blob/ab4d4e5a03f4ace2ad6db3888383ebc2');--cut-angora:url('/_blob/50a8b7013c84acc351d648aff4b645fe');--cut-blue:url('/_blob/a07d53eb0dc31a9f9d5a06b75694d3f9');--cut-calico:url('/_blob/55f2fa303a739354c816eb6852ae7de2');--cut-cheese:url('/_blob/adb2a00e0d4db5d018af06e32da2c849');--cut-persian:url('/_blob/3261797a3dbeda9e55a5f48f26f24433');--cut-ragdoll:url('/_blob/e2ad8ad9e05e817b8d3aa43f1f818067');--cut-siam:url('/_blob/a9af8ab350e7758d33c06dbe00a76e3b');--cut-tux:url('/_blob/0db0b2ddb4760c828f88ecc605b137f4')}
 body{margin:0;background:#EDE5D8;font-family:'Gowun Dodum',system-ui,sans-serif;color:#4A3428;-webkit-font-smoothing:antialiased}
@@ -128,10 +128,10 @@ button{font-family:inherit;color:inherit}
     <sc-if value="{{ emailMode }}">
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--sub)">이메일
-        <input type="email" value="{{ email }}" onChange="{{ onEmail }}" placeholder="name@example.com" style="height:50px;border-radius:14px;border:1.5px solid {{ emailBorder }};background:var(--white);padding:0 14px;font:16px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none"></input>
+        <input type="email" value="{{ email }}" onChange="{{ onEmail }}" placeholder="name@example.com" style="height:50px;border-radius:14px;border:1.5px solid {{ emailBorder }};background:var(--white);padding:0 14px;font:16px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none">
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--sub)">비밀번호
-        <input type="password" value="{{ pw }}" onChange="{{ onPw }}" placeholder="6자 이상" style="height:50px;border-radius:14px;border:1.5px solid var(--ink);background:var(--white);padding:0 14px;font:16px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none"></input>
+        <input type="password" value="{{ pw }}" onChange="{{ onPw }}" placeholder="6자 이상" style="height:50px;border-radius:14px;border:1.5px solid var(--ink);background:var(--white);padding:0 14px;font:16px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none">
       </label>
       <sc-if value="{{ loginErr }}"><div style="font-size:12px;color:var(--red)">{{ loginErr }}</div></sc-if>
       <button onClick="{{ emailLogin }}" style="height:54px;border-radius:27px;border:none;background:{{ emailBtnBg }};color:var(--bg);font:400 17px 'Jua',sans-serif;cursor:pointer">로그인 / 가입</button>
@@ -206,7 +206,7 @@ button{font-family:inherit;color:inherit}
       <div data-coach="0" onClick="{{ openRoom }}" style="cursor:pointer;width:220px;height:220px;border-radius:50%;border:2px solid var(--ink);background-color:var(--card);background-image:var(--ca);background-size:{{ cat.homeSize }};background-position:{{ cat.homePos }};filter:{{ catFilter }};animation:bob 3s ease-in-out infinite"></div>
     </div>
     </sc-if>
-    <div style="display:flex;flex-direction:column;gap:10px;flex:none;padding:12px;border-radius:24px;background:var(--card)">
+    <div style="display: flex; flex-direction: column; gap: 10px; flex: none; padding: 12px; border-radius: 24px; background: var(--card); height: 151px">
     <div style="display:flex"><button data-coach="1" onClick="{{ openWheel }}" style="flex:none;display:flex;align-items:baseline;justify-content:center;gap:6px;padding:14px 0;border-radius:22px;background:{{ clockBg }};border:{{ clockBorder }};color:{{ clockFg }};cursor:pointer;width:100%" style-active="transform:scale(.98)">
       <span style="font:400 22px 'Jua',sans-serif;color:#E59A4C">{{ apLabel }}</span>
       <span style="font:400 54px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;color:{{ digitFg }}">{{ dispH }}</span>
@@ -214,11 +214,11 @@ button{font-family:inherit;color:inherit}
       <span style="font:400 54px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;color:{{ digitFg }}">{{ dispM }}</span>
     </button></div>
     <div style="display:flex;gap:8px;flex:none">
-      <button onClick="{{ openWheel }}" style="flex:1;min-width:0;height:42px;padding:0 8px;border-radius:21px;border:1.5px solid var(--ink);background:var(--mint);font:400 13px 'Jua',sans-serif;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">휴식 · {{ restText }}</button>
-      <button data-coach="2" onClick="{{ openSheet }}" style="flex:1;min-width:0;height:42px;padding:0 8px;border-radius:21px;border:1.5px dashed var(--sub);background:transparent;font:400 13px 'Jua',sans-serif;color:var(--ink);cursor:pointer;white-space:nowrap">{{ allowCount }}개앱 차단 제외 ›</button>
+      <button onClick="{{ openWheel }}" style="flex: 1; min-width: 0; height: 54px; padding: 0 8px; border-radius: 21px; border: 1.5px solid var(--ink); background: var(--mint); font: 400 13px 'Jua',sans-serif; color: var(--ink); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 16px; width: 150px">휴식 · {{ restText }}</button>
+      <button data-coach="2" onClick="{{ openSheet }}" style="flex: 1; min-width: 0; height: 55px; padding: 0 8px; border-radius: 21px; border: 1.5px dashed var(--sub); background: transparent; font: 400 13px 'Jua',sans-serif; color: var(--ink); cursor: pointer; white-space: nowrap; width: 146px; font-size: 18px">{{ allowCount }}개앱 차단 제외 ›</button>
     </div>
     </div>
-    <button data-coach="3" onClick="{{ startFocus }}" style="height:56px;border-radius:28px;border:none;background:var(--ink);color:var(--bg);font:400 20px 'Jua',sans-serif;cursor:pointer;flex:none" style-active="transform:scale(.98)">집중 시작</button>
+    <button data-coach="3" onClick="{{ startFocus }}" style="height: 56px; border-radius: 28px; border: none; background: var(--ink); color: var(--bg); font: 400 20px 'Jua',sans-serif; cursor: pointer; flex: none; font-size: 30px" style-active="transform:scale(.98)">집중 시작</button>
   </div>
   </sc-if>
 
@@ -681,14 +681,14 @@ button{font-family:inherit;color:inherit}
       <div style="padding:14px;border-radius:16px;background:var(--mint);font-size:13px;line-height:1.6;text-wrap:pretty">{{ reportNote }}</div></div></sc-if>
     <sc-if value="{{ p_friends }}"><div style="display:flex;flex-direction:column;gap:14px">
       <div style="padding:14px;border-radius:18px;background:var(--chip1);display:flex;align-items:center;gap:10px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:var(--sub)">내 초대 코드</span><span style="font:400 22px 'Jua',sans-serif;letter-spacing:1px">CAT-4821</span></div><button onClick="{{ copyCode }}" style="height:36px;padding:0 14px;border-radius:18px;border:1.5px solid var(--ink);background:var(--bg);font-size:13px;cursor:pointer">복사</button></div>
-      <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px"><input value="{{ friendCode }}" onChange="{{ onFriendCode }}" placeholder="친구 코드 (예: CAT-1234)" maxlength="8" style="flex:1;min-width:0;height:44px;border-radius:14px;border:1.5px solid var(--ink);background:var(--white);padding:0 12px;font:15px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none"></input><button onClick="{{ addFriend }}" style="height:44px;padding:0 16px;border-radius:14px;border:none;background:var(--ink);color:var(--bg);font:400 14px 'Jua',sans-serif;cursor:pointer">추가</button></div><sc-if value="{{ friendErr }}"><span style="font-size:12px;color:var(--red)">{{ friendErr }}</span></sc-if></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px"><input value="{{ friendCode }}" onChange="{{ onFriendCode }}" placeholder="친구 코드 (예: CAT-1234)" maxlength="8" style="flex:1;min-width:0;height:44px;border-radius:14px;border:1.5px solid var(--ink);background:var(--white);padding:0 12px;font:15px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none"><button onClick="{{ addFriend }}" style="height:44px;padding:0 16px;border-radius:14px;border:none;background:var(--ink);color:var(--bg);font:400 14px 'Jua',sans-serif;cursor:pointer">추가</button></div><sc-if value="{{ friendErr }}"><span style="font-size:12px;color:var(--red)">{{ friendErr }}</span></sc-if></div>
       <div style="font:400 16px 'Jua',sans-serif">이번 주 집중 시간</div>
       <div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ friendRows }}" as="fr"><div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:{{ fr.bd }};background:{{ fr.bg }}"><span style="width:18px;font:400 16px 'Jua',sans-serif;text-align:center">{{ fr.rank }}</span><div style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--ink);flex:none;background-image:var(--ca);background-size:{{ fr.size }};background-position:{{ fr.pos }}"></div><div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><div style="display:flex;justify-content:space-between;font-size:14px"><span>{{ fr.name }}</span><span>{{ fr.min }}분</span></div><div style="height:7px;border-radius:4px;background:var(--card);overflow:hidden"><div style="height:100%;width:{{ fr.w }};background:#E59A4C"></div></div></div></div></sc-for></div>
       <div style="font-size:12px;color:var(--sub);line-height:1.5">친구에게는 집중 시간 합계만 보여요. 차단 앱이나 세부 기록은 공개되지 않아요.</div></div></sc-if>
     <sc-if value="{{ p_profile }}"><div style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ profSize }};background-position:{{ profPos }}"></div><span style="font-size:12px;color:var(--sub)">프로필 고양이</span></div>
       <div style="display:flex;gap:8px;justify-content:center"><sc-for list="{{ ownedCats }}" as="oc"><button onClick="{{ oc.pick }}" style="width:56px;height:56px;border-radius:50%;border:{{ oc.bd }};background-color:var(--card);background-image:var(--ca);background-size:{{ oc.size }};background-position:{{ oc.pos }};cursor:pointer;padding:0"></button></sc-for></div>
-      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--sub)">닉네임<input value="{{ nickDraft }}" onChange="{{ onNick }}" maxlength="12" style="height:50px;border-radius:14px;border:1.5px solid var(--ink);background:var(--white);padding:0 14px;font:16px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none"></input></label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--sub)">닉네임<input value="{{ nickDraft }}" onChange="{{ onNick }}" maxlength="12" style="height:50px;border-radius:14px;border:1.5px solid var(--ink);background:var(--white);padding:0 14px;font:16px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none"></label>
       <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--sub)">이메일</span><div style="height:46px;border-radius:14px;background:var(--card);display:flex;align-items:center;padding:0 14px;font-size:14px">{{ userEmail }}</div></div>
       <button onClick="{{ saveProfile }}" style="height:52px;border-radius:26px;border:none;background:{{ nickBg }};color:var(--bg);font:400 17px 'Jua',sans-serif;cursor:pointer">저장</button></div></sc-if>
     <sc-if value="{{ p_withdraw }}"><div style="display:flex;flex-direction:column;gap:14px">
@@ -895,7 +895,7 @@ button{font-family:inherit;color:inherit}
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:16px;background:var(--card)">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="display:flex;align-items:center;gap:8px;min-width:0"><div style="font:400 16px 'Jua',sans-serif">{{ houseView.name }}</div><sc-if value="{{ houseView.catHere }}"><div style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--ink);background-color:var(--bg);background-image:var(--ca);background-size:{{ houseView.catThumbSize }};background-position:{{ houseView.catThumbPos }};flex:none"></div></sc-if></div><sc-if value="{{ houseView.canRename }}"><button onClick="{{ houseView.toggleRename }}" style="height:28px;padding:0 10px;border-radius:14px;border:1.5px solid var(--ink);background:var(--bg);font-size:12px;cursor:pointer;flex:none">{{ houseView.renameLabel }}</button></sc-if></div>
-        <sc-if value="{{ houseView.renaming }}"><div style="display:flex;gap:8px"><input value="{{ houseView.nameDraft }}" onChange="{{ houseView.onName }}" maxlength="10" style="flex:1;min-width:0;height:40px;border-radius:12px;border:1.5px solid var(--ink);background:var(--white);padding:0 12px;font:15px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none"></input><button onClick="{{ houseView.saveName }}" style="height:40px;padding:0 14px;border-radius:12px;border:none;background:var(--ink);color:var(--bg);font:400 14px 'Jua',sans-serif;cursor:pointer">저장</button></div></sc-if>
+        <sc-if value="{{ houseView.renaming }}"><div style="display:flex;gap:8px"><input value="{{ houseView.nameDraft }}" onChange="{{ houseView.onName }}" maxlength="10" style="flex:1;min-width:0;height:40px;border-radius:12px;border:1.5px solid var(--ink);background:var(--white);padding:0 12px;font:15px 'Gowun Dodum',sans-serif;color:var(--ink);outline:none"><button onClick="{{ houseView.saveName }}" style="height:40px;padding:0 14px;border-radius:12px;border:none;background:var(--ink);color:var(--bg);font:400 14px 'Jua',sans-serif;cursor:pointer">저장</button></div></sc-if>
         <div style="font-size:12px;line-height:1.5;color:var(--body)">{{ houseView.desc }}</div>
         <button onClick="{{ houseView.act }}" style="height:44px;border-radius:22px;border:none;background:{{ houseView.actBg }};color:var(--bg);font:400 15px 'Jua',sans-serif;cursor:pointer">{{ houseView.actLabel }}</button>
       </div>
