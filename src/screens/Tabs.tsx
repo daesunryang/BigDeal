@@ -9,7 +9,7 @@ import { useC } from '../theme';
 import { Bar, Btn, CatFace, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
 
 const pad = { paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18 };
-const back = () => S(st => ({ tab: st.prevTab === 'home' ? 'home' : 'menu', menuPage: null }));
+const back = () => { getS().back(); };
 
 // ── 도감 ──
 export function Dex() {
@@ -227,7 +227,7 @@ export function Shelter() {
   const i = s.shIdx, meta = SHD[i], m = SHELTER_META[i];
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
-      <Header title={m.name} onBack={() => S({ tab: 'donate' })} />
+      <Header title={m.name} onBack={back} />
       <PhotoSlot label="보호소 전경 사진" style={{ height: 120, borderRadius: 16 }} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {[[String(m.cats), '보호 중'], [meta.since, '설립'], [s.shelters[i].kg.toFixed(1) + 'kg', '이번 달 사료']].map(([v, k]) => (

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { reward, isoDay, streakOf, growthOf } from '../src/data';
-import { getS, useApp } from '../src/store';
+import { clearNav, getS, switchTab, useApp } from '../src/store';
 
 jest.useFakeTimers();
 
-const fresh = () => { getS().reset(); useApp.setState({ screen: 'tabs', tab: 'home', loggedIn: true }); };
+const fresh = () => { getS().reset(); clearNav(); useApp.setState({ screen: 'tabs', tab: 'home', loggedIn: true }); };
 
 describe('집중 세션', () => {
   beforeEach(fresh);
@@ -60,8 +60,7 @@ describe('뒤로가기', () => {
   test('팝업 → 하위 화면 → 홈 순서로 닫고, 홈에서 두 번 누르면 종료', () => {
     useApp.setState({ tab: 'menu', menuPage: '공지사항', dlg: { kind: 'refundinfo' } });
     expect(getS().back()).toBe(true); expect(getS().dlg).toBeNull();
-    expect(getS().back()).toBe(true); expect(getS().menuPage).toBeNull();
-    expect(getS().back()).toBe(true); expect(getS().tab).toBe('home');
+    expect(getS().back()).toBe(true); expect(getS().tab).toBe('home'); expect(getS().menuPage).toBeNull();
     expect(getS().back()).toBe(true);
     expect(getS().back()).toBe(false);
   });
@@ -149,5 +148,58 @@ describe('계산 도우미', () => {
     expect(streakOf([isoDay(1), isoDay(2)])).toBe(2);
     expect(streakOf([isoDay(0), isoDay(2)])).toBe(1);
     expect(streakOf([])).toBe(0);
+  });
+});
+
+describe('뒤로가기는 바로 전 화면으로', () => {
+  beforeEach(fresh);
+  const at = () => { const s = getS(); return [s.screen, s.tab, s.menuPage]; };
+
+  test('도감에서 잠긴 Plus 고양이를 누르면 Plus 페이지, 뒤로가면 도감', () => {
+    switchTab({ tab: 'dex' });
+    useApp.setState({ tab: 'menu', menuPage: '집중냥 Plus' });
+    expect(at()).toEqual(['tabs', 'menu', '집중냥 Plus']);
+    getS().back();
+    expect(at()).toEqual(['tabs', 'dex', null]);
+  });
+
+  test('홈 → 메뉴 → 하위 페이지 → 또 하위 페이지를 거꾸로 되짚는다', () => {
+    switchTab({ tab: 'menu', menuPage: null });
+    useApp.setState({ menuPage: '앱 정보' });
+    useApp.setState({ menuPage: '이용약관' });
+    getS().back(); expect(at()).toEqual(['tabs', 'menu', '앱 정보']);
+    getS().back(); expect(at()).toEqual(['tabs', 'menu', null]);
+    getS().back(); expect(at()).toEqual(['tabs', 'home', null]);
+  });
+
+  test('홈의 하트 영역에서 성장 페이지로 갔다가 뒤로가면 홈', () => {
+    useApp.setState({ tab: 'menu', menuPage: '고양이 성장' });
+    getS().back(); expect(at()).toEqual(['tabs', 'home', null]);
+  });
+
+  test('상점 → 츄르 내역 → 뒤로가면 상점, 한 번 더 가면 홈', () => {
+    useApp.setState({ tab: 'shop' });
+    useApp.setState({ tab: 'menu', menuPage: '츄르 내역' });
+    getS().back(); expect(at()).toEqual(['tabs', 'shop', null]);
+    getS().back(); expect(at()).toEqual(['tabs', 'home', null]);
+  });
+
+  test('방 꾸미기에서 뒤로가면 들어오기 전 화면', () => {
+    switchTab({ tab: 'menu', menuPage: null });
+    useApp.setState({ tab: 'shop' });
+    useApp.setState({ screen: 'decor' });
+    getS().back(); expect(at()).toEqual(['tabs', 'shop', null]);
+  });
+
+  test('보호소 상세 → 뒤로가면 후원', () => {
+    switchTab({ tab: 'donate' });
+    useApp.setState({ tab: 'shelter' });
+    getS().back(); expect(at()).toEqual(['tabs', 'donate', null]);
+  });
+
+  test('하단 탭으로 옮기면 기록을 새로 시작한다', () => {
+    useApp.setState({ tab: 'menu', menuPage: '앱 정보' });
+    switchTab({ tab: 'dex', menuPage: null });
+    getS().back(); expect(at()).toEqual(['tabs', 'home', null]);
   });
 });

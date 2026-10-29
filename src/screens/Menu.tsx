@@ -106,7 +106,7 @@ export function Menu({ width }: { width: number }) {
   if (!mp) return <MenuRoot />;
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]} keyboardShouldPersistTaps="handled">
-      <Header title={TITLES[mp] || mp} onBack={() => S({ menuPage: null })} />
+      <Header title={TITLES[mp] || mp} onBack={() => { getS().back(); }} />
       <SubPage p={mp} width={width} />
     </ScrollView>
   );

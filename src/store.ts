@@ -299,6 +299,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     if (s.sheet) return S({ sheet: false }); if (s.acct) return S({ acct: false }); if (s.house) return S({ house: false });
     if (s.showBlocked) return S({ showBlocked: false });
     if (s.coach >= 0) return S({ coach: -1, coachSeen: true });
+    if (s.screen === 'decor' || s.screen === 'tabs') { if (popNav()) return true; }
     if (s.screen === 'decor') return S({ screen: 'tabs', preview: null });
     if (s.screen === 'focus') { get().toast('집중 중에는 뒤로가기가 막혀 있어요'); return true; }
     if (['done', 'fail', 'rest'].includes(s.screen)) return S({ screen: 'tabs', tab: 'home' });
@@ -341,6 +342,40 @@ export function listOf(kind: DecorKind, room: string) {
   if (kind === 'special') return SPECIAL[room] || [];
   return DECOR[kind].list;
 }
+
+// ── 화면 이동 기록 ──
+// 탭·하위 화면(메뉴 페이지, 상점, 기록, 방 꾸미기 등)을 옮길 때마다 직전 위치를 쌓아 두고,
+// 뒤로가기(시스템 · 화면 위 ‹ 버튼)는 항상 "바로 전에 있던 화면"으로 돌아간다.
+// 위치가 바뀌는 모든 setState를 여기서 한 번에 지켜보기 때문에, 새 화면을 추가해도 따로 할 일이 없다.
+const NAV_OK = (sc: Screen) => sc === 'tabs' || sc === 'decor';
+type Loc = { screen: Screen; tab: Tab; menuPage: string | null };
+const locOf = (s: State): Loc => ({ screen: s.screen, tab: s.tab, menuPage: s.screen === 'tabs' && s.tab === 'menu' ? s.menuPage : null });
+const locKey = (l: Loc) => l.screen === 'decor' ? 'decor' : l.screen + '|' + l.tab + '|' + (l.menuPage ?? '');
+let navStack: Loc[] = [], navMute = false;
+
+export const navDepth = () => navStack.length;
+export function clearNav() { navStack = []; }
+// 하단 탭을 눌러 이동할 때: 기록을 비우고 새로 시작한다 (탭 사이를 오가며 기록이 쌓이지 않게)
+export function switchTab(patch: Partial<State>) { navMute = true; try { useApp.getState().set(patch); } finally { navMute = false; } navStack = []; }
+export function popNav(): boolean {
+  while (navStack.length) {
+    const l = navStack.pop()!, cur = useApp.getState();
+    if (locKey(l) === locKey(locOf(cur))) continue;
+    navMute = true;
+    try { useApp.setState({ screen: l.screen, tab: l.tab, menuPage: l.menuPage, preview: null }); } finally { navMute = false; }
+    return true;
+  }
+  return false;
+}
+useApp.subscribe((s, prev) => {
+  if (navMute) return;
+  if (!NAV_OK(s.screen)) { navStack = []; return; }
+  if (!NAV_OK(prev.screen)) return;
+  const a = locOf(prev), b = locOf(s);
+  if (locKey(a) === locKey(b)) return;
+  navStack.push(a);
+  if (navStack.length > 40) navStack.shift();
+});
 
 export const getS = () => useApp.getState();
 export const S = (p: Partial<State> | ((s: State) => Partial<State> | null)) => useApp.getState().set(p);
