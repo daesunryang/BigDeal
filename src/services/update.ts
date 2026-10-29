@@ -25,7 +25,8 @@ export async function checkUpdate(manual = false) {
     if (!r.ok) throw new Error(String(r.status));
     const rel = (await r.json()) as Release;
     if (!isNewer(rel.tag_name, APP_VERSION)) { S({ update: null }); if (manual) getS().toast('최신 버전을 사용 중이에요'); return null; }
-    const apk = pickApk(rel.assets, IS_DEMO);
+    // iOS는 APK를 쓸 수 없으니 릴리스 페이지로 보낸다 (거기서 IPA를 받는다)
+    const apk = Platform.OS === 'android' ? pickApk(rel.assets, IS_DEMO) : null;
     const info = { tag: rel.tag_name, url: apk?.browser_download_url ?? rel.html_url, page: rel.html_url, notes: (rel.body ?? '').slice(0, 400) };
     S({ update: info });
     return info;

@@ -28,6 +28,13 @@ Actions → 실행 하나 선택 → Artifacts에서 `nyangjibjung-demo-apk`, `n
 
 서명 키 비밀값이 없으면 디버그 키로 서명돼서, 직접 설치(사이드로드)는 되지만 Play 스토어에는 올릴 수 없습니다.
 
+## iOS 빌드 (Android와 따로)
+
+- 워크플로: `.github/workflows/ios.yml` (macOS 러너). Android(`android-apk.yml`)와 실행·파일 이름이 섞이지 않아요.
+- main에 올라갈 때와 Actions → iOS → Run workflow로 직접 실행할 때 돌아요. `release_tag`를 주면 같은 태그의 릴리스(Android 워크플로가 만듦)에 iOS 파일을 붙여요.
+- 결과물: 서명 전 IPA(`nyangjibjung-ios[-demo].ipa`)와 시뮬레이터용 앱(`…-simulator.zip`). 앱 차단은 iOS에서 아직 없어요.
+- 앱스토어·TestFlight 배포에는 Apple Developer 계정과 서명 인증서가 필요해요.
+
 ## 정식 빌드 설정 (Firebase)
 
 키가 없어도 정식 APK는 만들어집니다. 그때는 로그인·동기화 없이 이 기기에만 저장되고, 앱 차단은 그대로 동작합니다.

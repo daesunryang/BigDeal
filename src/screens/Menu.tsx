@@ -70,7 +70,7 @@ function MenuRoot() {
     <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="메뉴" />
       {!!s.update && <Btn onPress={openUpdate} style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 18, backgroundColor: '#F6D58E', borderWidth: 1.5, borderColor: '#4A3428', justifyContent: 'flex-start' }}>
-        <View style={{ flex: 1, gap: 2 }}><Txt jua style={{ fontSize: 16, color: '#4A3428' }}>{'새 버전 ' + s.update.tag + '이 나왔어요'}</Txt><Txt style={{ fontSize: 12, color: '#7A6352' }}>눌러서 APK를 받고 설치하면 기록은 그대로 이어져요</Txt></View>
+        <View style={{ flex: 1, gap: 2 }}><Txt jua style={{ fontSize: 16, color: '#4A3428' }}>{'새 버전 ' + s.update.tag + '이 나왔어요'}</Txt><Txt style={{ fontSize: 12, color: '#7A6352' }}>{ios ? '눌러서 릴리스 페이지에서 새 버전을 받아요' : '눌러서 APK를 받고 설치하면 기록은 그대로 이어져요'}</Txt></View>
         <Txt jua style={{ fontSize: 14, color: '#4A3428' }}>받기 ›</Txt>
       </Btn>}
       <Btn onPress={page(PG.profile)} style={{ flexDirection: 'row', gap: 12, padding: 14, borderRadius: 20, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}>
