@@ -6,6 +6,7 @@ import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
 import { S, getS, listOf, useApp } from '../store';
 import { sfx } from '../sfx';
 import { useC } from '../theme';
+import { useScrollMemory } from '../ui/scrollMemory';
 import { Bar, Btn, CatFace, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
 
 const pad = { paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18 };
@@ -13,6 +14,7 @@ const back = () => { getS().back(); };
 
 // ── 도감 ──
 export function Dex() {
+  const sm = useScrollMemory('dex');
   const C = useC();
   const s = useApp(st => st);
   const isOwned = (k: string, id: string) => (DECOR as any)[k].single ? s.ownedDecor.includes(id) : s.items.includes(id);
@@ -23,7 +25,7 @@ export function Dex() {
   });
   const count = s.dexTab === 'cat' ? s.owned.length + '/4 만남' : s.dexTab === 'beh' ? s.seenBeh.length + '/7 수집' : s.dexTab === 'song' ? s.seenSongs.length + '/' + SONGS.length + ' 수집' : own + '/' + tot + ' 보유';
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="도감" right={<Txt style={{ fontSize: 14, color: C.sub }}>{count}</Txt>} />
       <Seg items={[['cat', '고양이'], ['beh', '행동'], ['song', '노래'], ['item', '아이템']]} value={s.dexTab} onPick={k => S({ dexTab: k })} />
       {s.dexTab === 'cat' && <>
@@ -101,12 +103,13 @@ export function Dex() {
 // ── 상점 · 꾸미기 ──
 const SHOP: [string, string, number][] = [['rug', '초록 러그', 0], ['scratch', '스크래처', 15], ['plant', '캣닢 화분', 20], ['yarn', '털실 장난감', 12], ['hammock', '창가 해먹', 40], ['cushion', '생선 쿠션', 25]];
 export function Shop() {
+  const sm = useScrollMemory('shop');
   const C = useC();
   const s = useApp(st => st);
   const cat = catById(s.catId);
   const watchAd = () => { if (s.adLeft <= 0) return getS().toast('오늘 광고 보상을 모두 받았어요'); S({ ad: 5 }); };
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 16 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 16 }]}>
       <Header title="상점 · 꾸미기" onBack={back} size={24} right={<ChuruBadge n={s.churu} />} />
       <Txt style={{ fontSize: 13, color: C.sub, lineHeight: 20 }}>{`방을 꾸미면 ${cat.name}의 친밀도가 조금 올라요. 장착한 아이템은 홈 방에 표시돼요.`}</Txt>
       <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -142,6 +145,7 @@ export function Shop() {
 
 // ── 후원 ──
 export function Donate() {
+  const sm = useScrollMemory('donate');
   const C = useC();
   const s = useApp(st => st);
   const an = ANIMALS.find(x => x.id === s.sAnimal)!, cm = s.sMode === 'churu';
@@ -149,7 +153,7 @@ export function Donate() {
   const kg = dkg(s);
   const payMethod = Platform.OS === 'ios' ? 'Apple Pay' : 'Google Play 결제';
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="함께 후원" right={<Txt style={{ fontSize: 14, color: C.sub }}>{'내 후원 ' + kg + 'kg'}</Txt>} />
       <Seg items={[['give', '후원하기'], ['feed', '소식 피드'], ['mine', '내 후원']]} value={s.donTab} onPick={k => S({ donTab: k })} />
       {s.donTab === 'give' && <>
@@ -239,11 +243,12 @@ export function Donate() {
 }
 
 export function Shelter() {
+  const sm = useScrollMemory('shelter');
   const C = useC();
   const s = useApp(st => st);
   const i = s.shIdx, meta = SHD[i], m = SHELTER_META[i];
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title={m.name} onBack={back} />
       <PhotoSlot label="보호소 전경 사진" style={{ height: 120, borderRadius: 16 }} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -275,6 +280,7 @@ export function Shelter() {
 
 // ── 집중 기록 ──
 export function Stats() {
+  const sm = useScrollMemory('stats');
   const C = useC();
   const s = useApp(st => st);
   const wk = weekVals(s), lb = weekLabels();
@@ -282,7 +288,7 @@ export function Stats() {
   const mx = Math.max(1, ...tries.map(t => t[1]));
   const name = (k: string) => s.apps.find(a => a.id === k)?.name || ({ ig: '인스타그램', yt: '유튜브', tt: '숏폼 영상', kk: '메신저', wt: '웹툰', gm: '게임' } as Record<string, string>)[k] || k;
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 16 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 16 }]}>
       <Header title="집중 기록" onBack={back} size={24} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {[['오늘 집중', todayMin(s) + '분'], ['연속 달성', focusStreak(s) + '일']].map(([k, v]) => (
@@ -328,13 +334,14 @@ export function Stats() {
 // ── 우편함 ──
 const TYPES: Record<string, [string, string]> = { reward: ['보상', 'chip1'], report: ['후원', 'mint'], news: ['공지', 'card'], event: ['이벤트', 'pink'] };
 export function Mailbox() {
+  const sm = useScrollMemory('mail');
   const C = useC();
   const s = useApp(st => st);
   const inF = (m: { type: string }) => s.mailFilter === 'all' || m.type === s.mailFilter || (s.mailFilter === 'news' && m.type === 'event');
   const claimable = s.mails.filter(m => m.churu && !s.claimed.includes(m.id));
   const list = s.mails.filter(inF);
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 12 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 12 }]}>
       <Header title="우편함" right={
         <Btn onPress={() => getS().claimAll()} style={{ height: 34, paddingHorizontal: 12, borderRadius: 17, borderWidth: 1.5, borderColor: C.ink, backgroundColor: claimable.length ? C.ink : C.card2 }}>
           <Txt jua style={{ fontSize: 14, color: claimable.length ? C.bg : C.mute }}>{'모두 받기 ' + (claimable.length || '')}</Txt>

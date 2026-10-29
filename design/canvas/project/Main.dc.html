@@ -214,7 +214,7 @@ button{font-family:inherit;color:inherit}
       <span style="font:400 54px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;color:{{ digitFg }}">{{ dispM }}</span>
     </button></div>
     <div style="display:flex;gap:8px;flex:none">
-      <button onClick="{{ openWheel }}" style="flex: 1; min-width: 0; height: 55px; padding: 0 8px; border-radius: 21px; border: 1.5px solid var(--ink); background: var(--mint); font: 400 13px 'Jua',sans-serif; color: var(--ink); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 16px; width: 150px">휴식 · {{ restText }}</button>
+      <button onClick="{{ openWheel }}" style="flex: 1; min-width: 0; height: 55px; padding: 0 8px; border-radius: 21px; border: 1.5px solid var(--ink); background: var(--mint); font: 400 13px 'Jua',sans-serif; color: var(--ink); cursor: pointer; white-space: normal; line-height: 1.2; text-align: center; font-size: 16px; width: 150px">{{ restLine1 }}<br>{{ restLine2 }}</button>
       <button data-coach="2" onClick="{{ openSheet }}" style="flex: 1; min-width: 0; height: 55px; padding: 0 8px; border-radius: 21px; border: 1.5px dashed var(--sub); background: transparent; font: 400 13px 'Jua',sans-serif; color: var(--ink); cursor: pointer; white-space: nowrap; width: 146px; font-size: 18px">{{ allowCount }}개앱 차단 제외 ›</button>
     </div>
     </div>
@@ -540,7 +540,7 @@ button{font-family:inherit;color:inherit}
 
   <!-- MENU TAB -->
   <sc-if value="{{ isMenuRoot }}">
-  <div style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:8px 18px 18px">
+  <div data-menuroot="1" onScroll="{{ menuScrolled }}" style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:8px 18px 18px">
     <div style="display:flex;align-items:center;height:44px"><div style="font:400 24px 'Jua',sans-serif">메뉴</div></div>
     <sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:20px;border:1.5px solid #4A3428;background:#F6D58E;color:#4A3428;cursor:pointer;text-align:left"><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:400 16px 'Jua',sans-serif">새 버전 v1.2.0이 나왔어요</span><span style="font-size:12px;color:#7A6352">눌러서 APK를 받고 설치하면 기록은 그대로 이어져요</span></span><span style="font-size:18px">›</span></button></sc-if>
     <button onClick="{{ openProfile }}" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:20px;border:1.5px solid var(--ink);background:var(--bg);cursor:pointer;text-align:left">
@@ -1214,6 +1214,8 @@ class Component extends DCLogic {
   // 디자인 런타임은 componentDidUpdate에 이전 state를 넘겨주지 않으므로 직전 위치를 직접 기억해 둔다
   componentDidUpdate() { const s = this.state, ok = sc => sc === 'tabs' || sc === 'decor';
     const ps = this.lastLoc, cur = { screen: s.screen, tab: s.tab, menuPage: s.tab === 'menu' ? s.menuPage : null }; this.lastLoc = cur;
+    // 뒤로가기로 메뉴 첫 화면에 돌아오면 떠날 때의 스크롤 위치로
+    if (this.wentBack) { this.wentBack = false; if (ps && ps.tab === 'menu' && ps.menuPage && cur.tab === 'menu' && !cur.menuPage) requestAnimationFrame(() => { const el = document.querySelector('[data-menuroot]'); if (el) el.scrollTop = this.menuY || 0; }); }
     if (this.navMute || !ps) return; if (!ok(s.screen)) { this.nav = []; return; } if (!ok(ps.screen) || this.navKey(cur) === this.navKey(ps)) return;
     (this.nav = this.nav || []).push(ps); if (this.nav.length > 40) this.nav.shift(); }
   popNav() { const st = this.nav || [], cur = this.navKey(this.state);
@@ -1302,7 +1304,7 @@ class Component extends DCLogic {
       return { id: r.id, gc: r.gc, gr: r.gr, name: s.roomNames[r.id] || r.name, price: r.price, locked: lk, bg: lk ? '#E2DACB' : (FLOOR[rd.decor.floor] || '#E9DFCF'), deco: mk(rd.equipped, rd.decor.struct), op: lk ? 0.35 : 1, cx: (c0 + c1 - 2) / 2 / 6 * 100, cy: (r0 + r1 - 2) / 2 / rows * 100 }; });
     const here = rooms.find(r => r.id === s.catRoom) || rooms[0];
     return { rooms, tx: here.cx + '%', ty: here.cy + '%', here }; }
-  back() { const s = this.state;
+  back() { const s = this.state; this.wentBack = true;
     if (s.dlg) { if (['bye', 'expired'].includes(s.dlg.kind)) return; return this.setState({ dlg: null }); }
     if (s.pay) return this.setState({ pay: null }); if (s.rcpt) return this.setState({ rcpt: null }); if (s.cert) return this.setState({ cert: null });
     if (s.ad != null) return this.closeAd(); if (s.share) return this.setState({ share: false }); if (s.gacha) return this.setState({ gacha: null });
@@ -1938,7 +1940,7 @@ class Component extends DCLogic {
           durText: (dh ? dh + '시간 ' : '') + (dm ? dm + '분' : (dh ? '' : '5분')),
           durSummary: '지금부터 ' + (dh ? dh + '시간 ' : '') + (dm ? dm + '분' : (dh ? '' : '5분')) + ' 집중해요',
           freezeFlag: s.wheel ? '1' : '0',
-          restText: s.restOn ? s.restEvery + '분마다 ' + s.restLen + '분' : '휴식 없음', restEvery: s.restEvery, restLen: s.restLen, restOp: s.restOn ? '1' : '.45',
+          restText: s.restOn ? s.restEvery + '분마다 ' + s.restLen + '분' : '휴식 없음', menuScrolled: e => { this.menuY = e.currentTarget.scrollTop; }, restLine1: s.restOn ? s.restEvery + '분마다' : '휴식', restLine2: s.restOn ? s.restLen + '분 휴식' : '없음', restEvery: s.restEvery, restLen: s.restLen, restOp: s.restOn ? '1' : '.45',
           restPresets: [[25,5],[50,10],[90,15],[0,0]].map(([e, l]) => { const on = e ? (s.restOn && s.restEvery === e && s.restLen === l) : !s.restOn;
             return { label: e ? e + '분 · ' + l + '분' : '휴식 없음', bg: on ? 'var(--ink)' : 'var(--bg)', fg: on ? 'var(--bg)' : 'var(--ink)', pick: () => this.setState(e ? { restOn:true, restEvery:e, restLen:l } : { restOn:false }) }; }),
           evMinus: () => this.setState(st => ({ restOn:true, restEvery: Math.max(5, st.restEvery - 5) })), evPlus: () => this.setState(st => ({ restOn:true, restEvery: Math.min(180, st.restEvery + 5) })),

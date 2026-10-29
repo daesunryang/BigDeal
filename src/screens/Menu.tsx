@@ -2,6 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, TextInput, View } from 'react-native';
+import { scrollKey, useScrollMemory } from '../ui/scrollMemory';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
 import { CATS, DOCS, FAQS, MOODS, NOTICES, OSS, PARTNER_ROWS, PG, PLAT, PLUS_PLANS, catById, isoDay, streakOf } from '../data';
 import { affOf, badges, dkg, goalDays, recentDone, gotBadges, growth, monthHeat, todayMin, weekLabels, weekVals } from '../derive';
@@ -32,6 +33,7 @@ export async function doLogout() {
 
 function MenuRoot() {
   const C = useC();
+  const sm = useScrollMemory(scrollKey('menu', null));
   const s = useApp(st => st);
   const av = catById(s.avatarCat || s.catId);
   const tog = (k: keyof State['toggles']) => () => S(st => ({ toggles: { ...st.toggles, [k]: !st.toggles[k] } }));
@@ -65,7 +67,7 @@ function MenuRoot() {
       { label: '튜토리얼 다시 보기', onPress: () => S({ menuPage: null, tab: 'home', coach: 0 }) }]] as [string, Row[]]] : []),
   ];
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="메뉴" />
       {!!s.update && <Btn onPress={openUpdate} style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 18, backgroundColor: '#F6D58E', borderWidth: 1.5, borderColor: '#4A3428', justifyContent: 'flex-start' }}>
         <View style={{ flex: 1, gap: 2 }}><Txt jua style={{ fontSize: 16, color: '#4A3428' }}>{'새 버전 ' + s.update.tag + '이 나왔어요'}</Txt><Txt style={{ fontSize: 12, color: '#7A6352' }}>눌러서 APK를 받고 설치하면 기록은 그대로 이어져요</Txt></View>
@@ -103,8 +105,13 @@ const TITLES: Record<string, string> = { login: '로그인 관리' };
 export function Menu({ width }: { width: number }) {
   const mp = useApp(s => s.menuPage);
   if (!mp) return <MenuRoot />;
+  return <MenuSub key={mp} mp={mp} width={width} />;
+}
+
+function MenuSub({ mp, width }: { mp: string; width: number }) {
+  const sm = useScrollMemory(scrollKey('menu', mp));
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]} keyboardShouldPersistTaps="handled">
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]} keyboardShouldPersistTaps="handled">
       <Header title={TITLES[mp] || mp} onBack={() => { getS().back(); }} />
       <SubPage p={mp} width={width} />
     </ScrollView>

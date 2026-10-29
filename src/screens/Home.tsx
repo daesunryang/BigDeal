@@ -33,7 +33,6 @@ function Wheel({ items, idx, onIdx, w = 72 }: { items: string[]; idx: number; on
   );
 }
 
-export const restText = (s: { restOn: boolean; restEvery: number; restLen: number }) => (s.restOn ? s.restEvery + '분마다 ' + s.restLen + '분' : '휴식 없음');
 
 // 홈 — 스크롤 없는 한 화면: 헤더 · 방 · 시계 묶음 · 집중 시작 (디자인 라운드 9·13)
 export function Home({ width }: { width: number }) {
@@ -92,7 +91,7 @@ export function Home({ width }: { width: number }) {
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Btn onPress={() => S({ wheel: true })} style={{ flex: 1, minWidth: 0, height: 55, paddingHorizontal: 8, borderRadius: 21, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.mint }}>
-              <Txt jua numberOfLines={1} style={{ fontSize: 16 }}>{'휴식 · ' + restText(s)}</Txt>
+              <Txt jua numberOfLines={2} adjustsFontSizeToFit style={{ fontSize: 16, lineHeight: 19, textAlign: 'center' }}>{s.restOn ? s.restEvery + '분마다\n' + s.restLen + '분 휴식' : '휴식 없음'}</Txt>
             </Btn>
             <View ref={reg(2)} collapsable={false} style={{ flex: 1, minWidth: 0 }}>
               <Btn onPress={() => S({ sheet: true })} style={{ height: 55, paddingHorizontal: 8, borderRadius: 21, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.sub }}>

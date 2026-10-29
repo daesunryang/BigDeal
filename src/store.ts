@@ -7,6 +7,7 @@ import {
   catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs,
 } from './data';
 import type { Lang } from './i18n';
+import { markBack, scrollKey } from './ui/scrollMemory';
 
 export type Screen = 'splash' | 'login' | 'onboard' | 'tabs' | 'decor' | 'focus' | 'done' | 'fail' | 'rest';
 export type Tab = 'home' | 'dex' | 'donate' | 'mail' | 'menu' | 'shop' | 'stats' | 'shelter';
@@ -356,9 +357,9 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     if (s.screen === 'onboard') return S({ screen: 'login' });
     if (s.screen === 'login' && s.emailMode) return S({ emailMode: false });
     if (s.screen === 'tabs') {
-      if (s.tab === 'menu' && s.menuPage) return S({ menuPage: null });
-      if (s.tab === 'shelter') return S({ tab: 'donate' });
-      if (s.tab === 'shop' || s.tab === 'stats') return S({ tab: s.prevTab === 'home' ? 'home' : 'menu' });
+      if (s.tab === 'menu' && s.menuPage) { markBack(scrollKey('menu', null)); return S({ menuPage: null }); }
+      if (s.tab === 'shelter') { markBack('donate'); return S({ tab: 'donate' }); }
+      if (s.tab === 'shop' || s.tab === 'stats') { markBack(scrollKey(s.prevTab === 'home' ? 'home' : 'menu', null)); return S({ tab: s.prevTab === 'home' ? 'home' : 'menu' }); }
       if (s.tab !== 'home') return S({ tab: 'home' });
     }
     if (Date.now() - s.lastBack < 2000) return false;
@@ -412,6 +413,7 @@ export function popNav(): boolean {
     const l = navStack.pop()!, cur = useApp.getState();
     if (locKey(l) === locKey(locOf(cur))) continue;
     navMute = true;
+    if (l.screen === 'tabs') markBack(scrollKey(l.tab, l.menuPage));
     try { useApp.setState({ screen: l.screen, tab: l.tab, menuPage: l.menuPage, preview: null }); } finally { navMute = false; }
     return true;
   }
