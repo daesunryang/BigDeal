@@ -91,8 +91,14 @@ jobs:
           path: out/nyangjibjung-${{ matrix.flavor }}.apk
           if-no-files-found: error
 
+  # 릴리스할 때는 iOS도 따로(macOS) 빌드해서 같은 릴리스에 함께 싣는다
+  ios:
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
+    uses: ./.github/workflows/ios.yml
+    secrets: inherit
+
   release:
-    needs: apk
+    needs: [apk, ios]
     if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
     runs-on: ubuntu-latest
     permissions:
@@ -110,6 +116,11 @@ jobs:
         run: |
           cp out/nyangjibjung-demo.apk "out/nyangjibjung-demo-$TAG.apk"
           cp out/nyangjibjung-full.apk "out/nyangjibjung-$TAG.apk"
+          for f in nyangjibjung-ios nyangjibjung-ios-demo; do cp "out/$f.ipa" "out/$f-$TAG.ipa"; cp "out/$f-simulator.zip" "out/$f-simulator-$TAG.zip"; done
           gh release create "$TAG" --target "$GITHUB_SHA" --title "냥집중 $TAG" --notes-file docs/release-notes.md \
-            "out/nyangjibjung-$TAG.apk#냥집중 정식 (실제 앱 차단 · 로그인 · 동기화)" \
-            "out/nyangjibjung-demo-$TAG.apk#냥집중 데모 (UI 데모)"
+            "out/nyangjibjung-$TAG.apk#냥집중 Android 정식 (실제 앱 차단 · 로그인 · 동기화)" \
+            "out/nyangjibjung-demo-$TAG.apk#냥집중 Android 데모 (UI 데모)" \
+            "out/nyangjibjung-ios-$TAG.ipa#냥집중 iOS 정식 (서명 전 · 직접 서명해 설치)" \
+            "out/nyangjibjung-ios-demo-$TAG.ipa#냥집중 iOS 데모 (서명 전 · 직접 서명해 설치)" \
+            "out/nyangjibjung-ios-simulator-$TAG.zip#냥집중 iOS 정식 · 시뮬레이터용" \
+            "out/nyangjibjung-ios-demo-simulator-$TAG.zip#냥집중 iOS 데모 · 시뮬레이터용"

@@ -16,10 +16,8 @@ on:
         description: 'iOS 파일을 붙일 릴리스 태그 (예: v1.2.0). 비우면 빌드만 한다.'
         required: false
         default: ''
-
-concurrency:
-  group: ios-${{ github.ref }}-${{ inputs.release_tag || 'build' }}
-  cancel-in-progress: true
+  # Android 워크플로가 릴리스할 때 이 워크플로를 불러 iOS 파일을 같은 릴리스에 함께 싣는다
+  workflow_call:
 
 jobs:
   build:
@@ -91,8 +89,9 @@ jobs:
           if-no-files-found: error
 
   release:
+    # 직접 실행했을 때만: 이미 있는 릴리스에 iOS 파일을 붙인다 (Android에서 불렀을 때는 Android 쪽 release가 함께 싣는다)
     needs: build
-    if: inputs.release_tag != ''
+    if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
