@@ -54,7 +54,7 @@ export function Home({ width }: { width: number }) {
     <Freeze.Provider value={s.wheel}>
       <View style={{ flex: 1, minHeight: 0, overflow: 'hidden', justifyContent: 'space-between', gap: 12, paddingTop: 6, paddingHorizontal: 18, paddingBottom: 18 }}>
         <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Txt jua style={{ fontSize: 24 }}>집중냥</Txt>
+          <Txt jua style={{ fontSize: 24 }}>냥집중</Txt>
           <Btn onPress={goStats} accessibilityLabel={'오늘 목표 ' + pct + '%'} style={{ flexDirection: 'row', gap: 6, height: 30, paddingHorizontal: 10, borderRadius: 15, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.bg }}>
             <Txt style={{ fontSize: 12, color: C.sub }}>오늘 목표</Txt>
             <Txt jua style={{ fontSize: 14 }}>{pct + '%'}</Txt>

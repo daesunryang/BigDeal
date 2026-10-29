@@ -157,8 +157,8 @@ describe('뒤로가기는 바로 전 화면으로', () => {
 
   test('도감에서 잠긴 Plus 고양이를 누르면 Plus 페이지, 뒤로가면 도감', () => {
     switchTab({ tab: 'dex' });
-    useApp.setState({ tab: 'menu', menuPage: '집중냥 Plus' });
-    expect(at()).toEqual(['tabs', 'menu', '집중냥 Plus']);
+    useApp.setState({ tab: 'menu', menuPage: '냥집중 Plus' });
+    expect(at()).toEqual(['tabs', 'menu', '냥집중 Plus']);
     getS().back();
     expect(at()).toEqual(['tabs', 'dex', null]);
   });

@@ -238,7 +238,7 @@ export function Dialog() {
     }]] }),
     bye: () => ({ title: '탈퇴가 완료됐어요', lines: ['그동안 고마웠어요. 고양이도 기억할게요.'], btns: [['처음으로', 'primary', () => { getS().reset(); S({ dlg: null }); }]] }),
     expired: () => ({ title: '로그인이 만료됐어요', lines: ['보안을 위해 다시 로그인해 주세요.', '진행 중이던 기록은 안전하게 저장돼 있어요.'], btns: [['다시 로그인', 'primary', toLogin]] }),
-    conflict: () => ({ title: '이미 연결된 계정이에요', lines: ['이 Apple 계정은 다른 집중냥 계정에 연결돼 있어요.', '그 계정으로 전환하면 지금 기록은 이 기기에서 보이지 않아요.'], btns: [['취소', 'ghost', close], ['그 계정으로 전환', 'primary', () => { close(); getS().toast('계정을 전환했어요 (데모)'); }]] }),
+    conflict: () => ({ title: '이미 연결된 계정이에요', lines: ['이 Apple 계정은 다른 냥집중 계정에 연결돼 있어요.', '그 계정으로 전환하면 지금 기록은 이 기기에서 보이지 않아요.'], btns: [['취소', 'ghost', close], ['그 계정으로 전환', 'primary', () => { close(); getS().toast('계정을 전환했어요 (데모)'); }]] }),
     refund: () => { const r = s.sponsorships.find(x => x.id === D.id); return { title: (r ? r.animal : '') + ' 후원 환불을 요청할까요?', lines: ['전달 전이라면 영업일 3일 안에 환불돼요.', '환불을 요청하면 인증서가 취소돼요.'], btns: [['닫기', 'ghost', close], ['환불 요청', 'danger', () => { S(st => ({ dlg: null, sponsorships: st.sponsorships.map(x => (x.id === D.id ? { ...x, refunded: true } : x)) })); getS().toast('환불을 요청했어요'); }]] }; },
     refundinfo: () => ({ title: '취소·환불 안내', lines: ['결제 후원은 보호소로 전달되기 전(7일 이내)에 환불할 수 있어요.', '전달이 끝난 후원은 환불할 수 없어요.', '츄르 후원은 환불되지 않아요.', '그 밖의 문의는 문의하기에서 남겨 주세요.'], btns: [['확인', 'primary', close]] }),
     call: () => ({ cat: true, title: '전화가 왔어요', lines: ['집중 시간이 잠시 멈췄어요.', '통화 중에는 벌점이 없어요.'], btns: [['받기', 'primary', () => S({ dlg: { kind: 'incall' } })], ['거절', 'ghost', () => { close(); getS().resumeTimer(); }]] }),
@@ -247,7 +247,7 @@ export function Dialog() {
     recover: () => ({ cat: true, title: '집중이 중단됐어요', lines: ['앱이 종료되기 전에 ' + mm + '분이 남아 있었어요.', '3분 안에 돌아오면 벌점 없이 이어갈 수 있어요.'], btns: [
       ['이어서 집중하기', 'primary', () => { S({ dlg: null, screen: 'focus' }); hooks.onStart?.(getS()); }],
       ['이번엔 쉬기', 'ghost', () => { S({ dlg: null, remain: 0, total: 0, screen: 'tabs' }); getS().toast('벌점 없이 종료했어요'); }]] }),
-    permlost: () => ({ title: '권한이 꺼져 있어요', lines: ['방해 앱을 막으려면 다시 허용해야 해요.', '설정 → ' + (ios ? '스크린 타임' : '사용 정보 접근') + ' → 집중냥 켜기'], btns: [
+    permlost: () => ({ title: '권한이 꺼져 있어요', lines: ['방해 앱을 막으려면 다시 허용해야 해요.', '설정 → ' + (ios ? '스크린 타임' : '사용 정보 접근') + ' → 냥집중 켜기'], btns: [
       ['설정 열기', 'primary', () => { if (blocker.available) { close(); blocker.openUsage(); return; } S({ dlg: null, perm: { a: true, b: true } }); getS().toast('권한이 다시 켜졌어요'); }], ['나중에', 'ghost', close]] }),
   };
   const v = M[D.kind]?.(); if (!v) return null;
@@ -315,7 +315,7 @@ export function ShareCard() {
   const cat = catById(s.catId), last = s.last!;
   const save = async () => {
     if (Platform.OS !== 'web') {
-      try { const uri = await captureRef(ref, { format: 'png', quality: 1 }); if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: '집중냥 공유 카드' }); S({ share: false }); return; } catch {}
+      try { const uri = await captureRef(ref, { format: 'png', quality: 1 }); if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: '냥집중 공유 카드' }); S({ share: false }); return; } catch {}
     }
     S({ share: false }); getS().toast('공유 카드를 저장했어요 (데모)');
   };
@@ -334,7 +334,7 @@ export function ShareCard() {
                 <View key={k} style={{ flex: 1, padding: 10, borderRadius: 14, backgroundColor: '#FFFFFF', alignItems: 'center' }}><Txt jua style={{ fontSize: 18, color: '#4A3428' }}>{v}</Txt><Txt style={{ fontSize: 11, color: '#7A6352' }}>{k}</Txt></View>
               ))}
             </View>
-            <Txt jua style={{ fontSize: 14, marginTop: 4, color: '#4A3428' }}>집중냥 · 집중하면 고양이가 자라요</Txt>
+            <Txt jua style={{ fontSize: 14, marginTop: 4, color: '#4A3428' }}>냥집중 · 집중하면 고양이가 자라요</Txt>
           </View>
         </Anim>
         <View style={{ flexDirection: 'row', gap: 8 }}>

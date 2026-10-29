@@ -110,6 +110,6 @@ jobs:
         run: |
           cp out/jibjungnyang-demo.apk "out/jibjungnyang-demo-$TAG.apk"
           cp out/jibjungnyang-full.apk "out/jibjungnyang-$TAG.apk"
-          gh release create "$TAG" --target "$GITHUB_SHA" --title "집중냥 $TAG" --notes-file docs/release-notes.md \
-            "out/jibjungnyang-$TAG.apk#집중냥 정식 (실제 앱 차단 · 로그인 · 동기화)" \
-            "out/jibjungnyang-demo-$TAG.apk#집중냥 데모 (UI 데모)"
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "냥집중 $TAG" --notes-file docs/release-notes.md \
+            "out/jibjungnyang-$TAG.apk#냥집중 정식 (실제 앱 차단 · 로그인 · 동기화)" \
+            "out/jibjungnyang-demo-$TAG.apk#냥집중 데모 (UI 데모)"

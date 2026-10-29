@@ -1,4 +1,4 @@
-# 집중냥 (F cat)
+# 냥집중 (구 집중냥)
 
 방해 앱을 막고 집중하면 고양이가 자라고, 모은 츄르는 실제 보호소 고양이의 사료가 되는 Android 앱입니다.
 Claude Design에서 만든 프로토타입(`집중냥 App.dc.html`)을 React Native + Expo(SDK 57)로 옮겼습니다.

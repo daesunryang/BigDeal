@@ -15,7 +15,7 @@ export function receiptHtml(o: { title: string; sub: string; rows: string[][]; t
     .foot{margin-top:28px;font-size:11px;color:#9A8676;text-align:center}
   </style></head><body><h1>${esc(o.title)}</h1><div class="sub">${esc(o.sub)}</div><table>${rows}</table>
   <div class="tot"><span>합계</span><span>${esc(o.total)}</span></div>
-  <div class="foot">발급일 ${esc(o.issued)} · 집중냥 · 이 문서는 앱 안 기록을 바탕으로 만든 참고용이에요.</div></body></html>`;
+  <div class="foot">발급일 ${esc(o.issued)} · 냥집중 · 이 문서는 앱 안 기록을 바탕으로 만든 참고용이에요.</div></body></html>`;
 }
 
 export async function sharePdf(html: string, name: string) {

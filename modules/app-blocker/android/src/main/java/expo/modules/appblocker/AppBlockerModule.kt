@@ -19,7 +19,7 @@ import expo.modules.kotlin.modules.ModuleDefinition
 import java.io.ByteArrayOutputStream
 import java.util.Calendar
 
-// 집중냥 실제 앱 차단 모듈 (Android).
+// 냥집중 실제 앱 차단 모듈 (Android).
 // 사용 정보 접근(UsageStats)으로 지금 열린 앱을 확인하고, 다른 앱 위에 표시 권한으로 고양이 화면을 띄운다.
 class AppBlockerModule : Module() {
   private val ctx: Context

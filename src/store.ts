@@ -368,7 +368,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   dailyMail: () => {
     const s = get(), td = today();
     if (IS_DEMO || !s.loggedIn || s.mailDay === td) return;
-    const m: Mail = { id: Date.now(), type: 'reward', title: '출석 보상 · 오늘 출석 체크', body: '오늘도 집중냥에 와 줘서 고마워요. 출석 보상 츄르를 받으세요.', churu: 3, date: mmdd(), exp: '7일 후 만료' };
+    const m: Mail = { id: Date.now(), type: 'reward', title: '출석 보상 · 오늘 출석 체크', body: '오늘도 냥집중에 와 줘서 고마워요. 출석 보상 츄르를 받으세요.', churu: 3, date: mmdd(), exp: '7일 후 만료' };
     set({ mailDay: td, mails: [m, ...s.mails].slice(0, 200) });
   },
   reset: () => { const keep = { themeMode: get().themeMode, lang: get().lang }; set({ ...initial(), ...keep, screen: 'login' }); },

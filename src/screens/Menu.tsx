@@ -38,7 +38,7 @@ function MenuRoot() {
   const strictRow: Row = { label: '엄격 모드', value: (s.cb ? (s.toggles.strict ? '켜짐 ' : '꺼짐 ') : '') + '포기 버튼 숨김', onPress: tog('strict'), toggle: true, on: s.toggles.strict };
   const SECS: [string, Row[]][] = [
     ['내 활동', [
-      { label: '집중냥 Plus', value: s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', onPress: page(PG.plus), color: '#C9772F' },
+      { label: '냥집중 Plus', value: s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', onPress: page(PG.plus), color: '#C9772F' },
       { label: '집중 기록', onPress: go('stats') }, { label: '상점 · 꾸미기', value: s.churu + ' 츄르', onPress: go('shop') },
       { label: '고양이 도감', value: (s.owned.length + (s.plus ? 4 : 0)) + '/8', onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/' + badges(s).length * 4, onPress: page('업적 · 배지') },
       { label: '출석 체크', value: streakOf(s.att) + '일', onPress: page(PG.attend) }, { label: '주간 리포트 · 월간 회고', onPress: page(PG.report) }, { label: '친구와 비교', onPress: page(PG.friends) },
@@ -228,7 +228,7 @@ function SubPage({ p, width }: { p: string; width: number }) {
   if (p === '앱 정보') return <View style={{ gap: 16 }}>
     <View style={{ alignItems: 'center', gap: 8, paddingVertical: 10 }}>
       <CatFace cat={cat} size={96} />
-      <Txt jua style={{ fontSize: 26 }}>집중냥</Txt>
+      <Txt jua style={{ fontSize: 26 }}>냥집중</Txt>
       <Txt style={{ fontSize: 13, color: C.sub }}>{`버전 ${APP_VERSION} (${IS_DEMO ? '데모' : '정식'})`}</Txt>
       {s.update ? <Btn onPress={openUpdate} style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12, backgroundColor: '#F6D58E' }}><Txt style={{ fontSize: 12, color: '#4A3428' }}>{'새 버전 ' + s.update.tag + ' 받기 ›'}</Txt></Btn>
         : <View style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: C.mint }}><Txt style={{ fontSize: 12 }}>최신 버전을 사용 중이에요</Txt></View>}
@@ -236,7 +236,7 @@ function SubPage({ p, width }: { p: string; width: number }) {
     </View>
     <ListCard>{['이용약관', '개인정보 처리방침', '문의하기', PG.oss].map(l => (
       <Btn key={l} onPress={page(l)} style={{ flexDirection: 'row', minHeight: 50, paddingHorizontal: 14, justifyContent: 'flex-start' }}><Txt style={{ flex: 1, fontSize: 15 }}>{l}</Txt><Txt style={{ fontSize: 16, color: C.mute }}>›</Txt></Btn>))}</ListCard>
-    <Txt style={{ fontSize: 11, lineHeight: 18, color: C.mute, textAlign: 'center' }}>© 2026 집중냥 · 고양이 일러스트 © 집중냥</Txt>
+    <Txt style={{ fontSize: 11, lineHeight: 18, color: C.mute, textAlign: 'center' }}>© 2026 냥집중 · 고양이 일러스트 © 냥집중</Txt>
   </View>;
   if (p === '언어 선택') return <View style={{ gap: 12 }}>
     <ListCard>{(['한국어', 'English', '日本語'] as const).map(l => (

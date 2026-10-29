@@ -8,7 +8,7 @@ const full = flavor === 'full';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: full ? '집중냥' : '집중냥 데모',
+  name: full ? '냥집중' : '냥집중 데모',
   slug: 'jibjungnyang',
   version: '1.1.1',
   orientation: 'portrait',
