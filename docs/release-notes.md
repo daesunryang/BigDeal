@@ -1,5 +1,9 @@
 방해 앱을 막고 집중하면 고양이가 자라고, 모은 츄르로 보호소 고양이를 후원해요.
 
+## v1.2.0에서 달라진 점
+- 앱 이름 '냥집중'에 맞춰 앱 ID를 새로 바꿨어요 (`com.nyangjibjung.app` / `com.nyangjibjung.demo`)
+- **이전 앱(집중냥)과는 다른 앱으로 설치돼요.** 새 앱을 설치한 뒤 이전 앱은 지워 주세요. 이전 앱의 기록은 옮겨지지 않아요.
+
 ## v1.1.1에서 달라진 점
 - 앱 이름이 '냥집중'으로 바뀌었어요 (기존 앱 위에 그대로 설치하면 기록이 이어져요)
 - 홈을 스크롤 없는 한 화면으로 정리 (오늘 목표 칩, 오전/오후 시계, 휴식 · 차단 제외 버튼)
@@ -19,8 +23,8 @@
 
 | 파일 | 내용 |
 |---|---|
-| `jibjungnyang-v….apk` · **정식** (`com.jibjungnyang.app`) | 실제 앱 차단(Android), 설치된 앱 목록, Google·이메일 로그인과 자동 동기화(Firebase 설정 시) |
-| `jibjungnyang-demo-v….apk` · **데모** (`com.jibjungnyang.demo`) | 프로토타입과 같은 UI 데모. 차단·로그인은 흉내만 내고 타이머는 30배속 |
+| `nyangjibjung-v….apk` · **정식** (`com.nyangjibjung.app`) | 실제 앱 차단(Android), 설치된 앱 목록, Google·이메일 로그인과 자동 동기화(Firebase 설정 시) |
+| `nyangjibjung-demo-v….apk` · **데모** (`com.nyangjibjung.demo`) | 프로토타입과 같은 UI 데모. 차단·로그인은 흉내만 내고 타이머는 30배속 |
 
 패키지 이름이 달라서 두 앱을 한 휴대폰에 같이 설치할 수 있어요.
 

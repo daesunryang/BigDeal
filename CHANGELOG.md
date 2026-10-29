@@ -1,5 +1,12 @@
 # 변경 기록
 
+## v1.2.0
+
+- **새 앱 ID로 다시 등록했어요.** 앱 이름 '냥집중'에 맞춰 앱 ID를 `com.nyangjibjung.app`(정식) / `com.nyangjibjung.demo`(데모)로, 주소 이름을 `nyangjibjung`으로, APK 파일 이름을 `nyangjibjung-v….apk` / `nyangjibjung-demo-v….apk`로 바꿨어요.
+- 휴대폰은 이전 앱(집중냥, `com.jibjungnyang.*`)과 다른 앱으로 인식해요. 새 앱을 설치한 뒤 이전 앱은 지워 주세요. 이전 앱에 있던 기록은 옮겨지지 않아요(아직 Firebase 동기화를 켠 적이 없어 서버에 저장된 기록도 없어요).
+- Firebase를 나중에 켤 때는 처음부터 새 앱 ID(`com.nyangjibjung.app`)로 등록하면 돼요.
+- 그 밖의 기능은 v1.1.1과 같아요.
+
 ## v1.1.1
 
 Claude Design 라운드 9~13(홈 정리 · 집중 설정 · 휴식 자동 전환 · 고양이 노래 · 노래 도감)을 반영했어요.

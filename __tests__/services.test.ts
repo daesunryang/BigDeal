@@ -14,8 +14,8 @@ describe('업데이트 확인', () => {
 
   test('빌드에 맞는 APK를 고른다', () => {
     const assets = [
-      { name: 'jibjungnyang-v1.1.0.apk', browser_download_url: 'full' },
-      { name: 'jibjungnyang-demo-v1.1.0.apk', browser_download_url: 'demo' },
+      { name: 'nyangjibjung-v1.1.0.apk', browser_download_url: 'full' },
+      { name: 'nyangjibjung-demo-v1.1.0.apk', browser_download_url: 'demo' },
       { name: 'notes.txt', browser_download_url: 'txt' },
     ];
     expect(pickApk(assets, true)?.browser_download_url).toBe('demo');

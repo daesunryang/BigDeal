@@ -7,7 +7,7 @@ Claude Design에서 만든 프로토타입(`집중냥 App.dc.html`)을 React Nat
 
 | | 데모 (`APP_FLAVOR=demo`) | 정식 (`APP_FLAVOR=full`) |
 |---|---|---|
-| 패키지 | `com.jibjungnyang.demo` | `com.jibjungnyang.app` |
+| 패키지 | `com.nyangjibjung.demo` | `com.nyangjibjung.app` |
 | 앱 차단 | `(데모) 인스타그램 열어보기` 버튼으로 흉내 | 실제 차단: 사용 정보 접근 + 다른 앱 위에 표시, 포그라운드 서비스 |
 | 차단할 앱 목록 | 예시 6개 | 휴대폰에 설치된 앱 (아이콘 · 오늘 사용 시간) |
 | 로그인 | 예시 계정 | Firebase Auth (Google · 이메일) |
@@ -22,7 +22,7 @@ Claude Design에서 만든 프로토타입(`집중냥 App.dc.html`)을 React Nat
 ## APK 받기
 
 GitHub Actions의 **Android APK** 워크플로가 푸시마다 두 APK를 만듭니다.
-Actions → 실행 하나 선택 → Artifacts에서 `jibjungnyang-demo-apk`, `jibjungnyang-full-apk`를 내려받으세요.
+Actions → 실행 하나 선택 → Artifacts에서 `nyangjibjung-demo-apk`, `nyangjibjung-full-apk`를 내려받으세요.
 수동으로 돌리려면 Actions → Android APK → Run workflow. `release_tag`에 `v1.2.0`처럼 버전을 넣으면 그 태그로 GitHub 릴리스를 만들고 두 APK를 붙여요.
 새 버전을 낼 때는 `app.config.ts`의 `version`과 `android.versionCode`를 올리고, `CHANGELOG.md`와 `docs/release-notes.md`를 고쳐요.
 
@@ -34,7 +34,7 @@ Actions → 실행 하나 선택 → Artifacts에서 `jibjungnyang-demo-apk`, `j
 
 1. [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트를 만들고 **웹 앱**을 추가해 설정 값을 받습니다.
 2. Authentication → 로그인 방법에서 **Google**과 **이메일/비밀번호**를 켭니다. Google 공급자의 **웹 클라이언트 ID**를 복사합니다.
-3. Google 로그인용으로 Android 앱(`com.jibjungnyang.app`)도 Firebase 프로젝트에 추가하고, APK 서명 키의 **SHA-1**을 등록합니다.
+3. Google 로그인용으로 Android 앱(`com.nyangjibjung.app`)도 Firebase 프로젝트에 추가하고, APK 서명 키의 **SHA-1**을 등록합니다.
    (디버그 키로 서명된 CI 빌드라면 그 디버그 키의 SHA-1. 릴리스 키를 쓰면 릴리스 키의 SHA-1.)
 4. Firestore를 만들고 이 저장소의 `firestore.rules`를 규칙으로 배포합니다.
 5. GitHub 저장소 Settings → Secrets and variables → Actions에 다음 비밀값을 넣습니다.

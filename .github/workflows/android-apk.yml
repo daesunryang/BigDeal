@@ -84,11 +84,11 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
       - name: Rename
-        run: mkdir -p out && cp android/app/build/outputs/apk/release/app-release.apk out/jibjungnyang-${{ matrix.flavor }}.apk
+        run: mkdir -p out && cp android/app/build/outputs/apk/release/app-release.apk out/nyangjibjung-${{ matrix.flavor }}.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: jibjungnyang-${{ matrix.flavor }}-apk
-          path: out/jibjungnyang-${{ matrix.flavor }}.apk
+          name: nyangjibjung-${{ matrix.flavor }}-apk
+          path: out/nyangjibjung-${{ matrix.flavor }}.apk
           if-no-files-found: error
 
   release:
@@ -108,8 +108,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
-          cp out/jibjungnyang-demo.apk "out/jibjungnyang-demo-$TAG.apk"
-          cp out/jibjungnyang-full.apk "out/jibjungnyang-$TAG.apk"
+          cp out/nyangjibjung-demo.apk "out/nyangjibjung-demo-$TAG.apk"
+          cp out/nyangjibjung-full.apk "out/nyangjibjung-$TAG.apk"
           gh release create "$TAG" --target "$GITHUB_SHA" --title "냥집중 $TAG" --notes-file docs/release-notes.md \
-            "out/jibjungnyang-$TAG.apk#냥집중 정식 (실제 앱 차단 · 로그인 · 동기화)" \
-            "out/jibjungnyang-demo-$TAG.apk#냥집중 데모 (UI 데모)"
+            "out/nyangjibjung-$TAG.apk#냥집중 정식 (실제 앱 차단 · 로그인 · 동기화)" \
+            "out/nyangjibjung-demo-$TAG.apk#냥집중 데모 (UI 데모)"
