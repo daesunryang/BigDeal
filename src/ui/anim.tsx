@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Animated, Easing, Platform, StyleProp, ViewStyle } from 'react-native';
 
 // 프로토타입의 CSS @keyframes를 옮긴 것. 각 키프레임: [진행(0~1), { y, x, sx, sy, s, r(deg), o }]
@@ -32,11 +32,15 @@ const K: Record<string, KF> = {
   fillbar: [[0, { sx: 0 }], [1, { sx: 1 }]],
   spark: [[0, { o: 0, s: 0.4, r: 0 }], [0.5, { o: 1, s: 1.1, r: 30 }], [1, { o: 0, s: 0.4, r: 0 }]],
   note: [[0, { o: 0, x: 0, y: 0, r: 0 }], [0.25, { o: 1 }], [1, { o: 0, x: 16, y: -40, r: 14 }]],
+  songnote: [[0, { o: 0, x: 0, y: 0, s: 0.7 }], [0.2, { o: 1 }], [1, { o: 0, x: 0, y: -46, s: 1.1 }]],
   hopj: [[0, { y: 0, sx: 1.1, sy: 0.9 }], [0.3, { y: -26, sx: 0.95, sy: 1.08 }], [0.6, { y: -30, sx: 1, sy: 1 }], [1, { y: 0, sx: 1.1, sy: 0.9 }]],
   tapring: [[0, { s: 0.4, o: 0.95 }], [0.7, { s: 1.6, o: 0 }], [1, { s: 1.6, o: 0 }]],
   pulse: [[0, { o: 0.45 }], [0.5, { o: 1 }], [1, { o: 0.45 }]],
 };
 export type AnimName = keyof typeof K;
+
+// true인 동안 안쪽 애니메이션을 그 자리에서 멈춘다 (집중 설정 창이 열린 홈)
+export const Freeze = createContext(false);
 
 const DEF: Required<P> = { x: 0, y: 0, s: 1, sx: 1, sy: 1, r: 0, o: 1 };
 const native = Platform.OS !== 'web';
@@ -54,15 +58,16 @@ function track(kf: KF, key: keyof P) {
 export function useAnim(name: AnimName | null, dur: number, opt: { delay?: number; loop?: boolean; easing?: (t: number) => number; vars?: P } = {}) {
   const [v] = useState(() => new Animated.Value(0));
   const { delay = 0, loop = true } = opt;
+  const frozen = useContext(Freeze);
   useEffect(() => {
-    if (!name) return;
+    if (!name || frozen) return;
     v.setValue(0);
     const run = Animated.timing(v, { toValue: 1, duration: dur * 1000, easing: Easing.linear, useNativeDriver: native });
     const anim = loop ? Animated.loop(run) : run;
     const seq = delay ? Animated.sequence([Animated.delay(delay * 1000), anim]) : anim;
     seq.start();
     return () => seq.stop();
-  }, [v, name, dur, delay, loop]);
+  }, [v, name, dur, delay, loop, frozen]);
   if (!name) return {};
   const kf: KF = opt.vars ? K[name].map(([t, p]) => [t, { ...p, ...(t === 1 && opt.vars ? opt.vars : {}) }]) : K[name];
   const ez = opt.easing ?? Easing.inOut(Easing.ease);

@@ -40,13 +40,12 @@ function MenuRoot() {
     ['내 활동', [
       { label: '집중냥 Plus', value: s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', onPress: page(PG.plus), color: '#C9772F' },
       { label: '집중 기록', onPress: go('stats') }, { label: '상점 · 꾸미기', value: s.churu + ' 츄르', onPress: go('shop') },
-      { label: '고양이 도감', value: (s.owned.length + (s.plus ? 4 : 0)) + '/8', onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/24', onPress: page('업적 · 배지') },
+      { label: '고양이 도감', value: (s.owned.length + (s.plus ? 4 : 0)) + '/8', onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/' + badges(s).length * 4, onPress: page('업적 · 배지') },
       { label: '출석 체크', value: streakOf(s.att) + '일', onPress: page(PG.attend) }, { label: '주간 리포트 · 월간 회고', onPress: page(PG.report) }, { label: '친구와 비교', onPress: page(PG.friends) },
       { label: '고양이 성장', value: growth(s).name, onPress: page(PG.growth) }, { label: '츄르 내역', onPress: page(PG.ledger) }]],
     ['후원', [{ label: '후원 현황', value: dkg(s) + 'kg 전달', onPress: go('donate') }, { label: '기부 영수증 · 증명서', onPress: () => S({ tab: 'donate', donTab: 'mine' }) }, { label: '파트너 단체 소개', onPress: page(PG.partner) }]],
     ['집중 설정', [
       { label: '기본 차단 앱', value: s.apps.filter(a => s.blocked[a.id]).length + '개', onPress: () => S({ sheet: true }) },
-      { label: '시계 형식', value: s.fmt === '12' ? '12시간 (AM/PM)' : '24시간', onPress: () => S(st => ({ fmt: st.fmt === '12' ? '24' : '12' })) },
       strictRow, { label: '집중 목표', value: s.goal + '분/일', onPress: page(PG.goal) }, { label: '집중 리마인더', value: s.remind.on ? '매일 ' + s.remind.time : '꺼짐', onPress: page(PG.remind) }]],
     ['앱 설정', [
       { label: '알림', onPress: tog('notif'), toggle: true, on: s.toggles.notif }, { label: '소리 · 진동', onPress: tog('sound'), toggle: true, on: s.toggles.sound },
@@ -185,7 +184,7 @@ function SubPage({ p, width }: { p: string; width: number }) {
     <View key={i} style={{ borderRadius: 16, backgroundColor: C.card }}><Expand title={n.t} body={n.b} pin={n.pin} right={n.d} open={s.openNotice === i} onPress={() => S({ openNotice: s.openNotice === i ? null : i })} /></View>))}</View>;
   if (p === '자주 묻는 질문') return <View style={{ borderRadius: 18, backgroundColor: C.card, overflow: 'hidden' }}>{FAQS.map(([q, a], i) => <Expand key={i} divider={!!i} title={q} body={a} right={s.openFaq === i ? '−' : '+'} open={s.openFaq === i} onPress={() => S({ openFaq: s.openFaq === i ? null : i })} />)}</View>;
   if (p === '업적 · 배지') return <View style={{ gap: 12 }}>
-    <View style={{ padding: 14, borderRadius: 18, backgroundColor: C.ink, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Txt jua style={{ fontSize: 15, color: C.bg }}>획득한 배지</Txt><Txt jua style={{ fontSize: 24, color: C.bg }}>{gotBadges(s) + ' / 24'}</Txt></View>
+    <View style={{ padding: 14, borderRadius: 18, backgroundColor: C.ink, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Txt jua style={{ fontSize: 15, color: C.bg }}>획득한 배지</Txt><Txt jua style={{ fontSize: 24, color: C.bg }}>{gotBadges(s) + ' / ' + badges(s).length * 4}</Txt></View>
     {badges(s).map(([title, unit, th, cur, color]) => {
       const got = th.filter(x => cur >= x).length, nx = th.find(x => cur < x), lo = got ? th[got - 1] : 0;
       const col = (C as any)[color] ?? color;

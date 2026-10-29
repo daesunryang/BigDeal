@@ -203,3 +203,62 @@ describe('뒤로가기는 바로 전 화면으로', () => {
     getS().back(); expect(at()).toEqual(['tabs', 'home', null]);
   });
 });
+
+describe('휴식 주기 · 노래 (디자인 라운드 9~13)', () => {
+  beforeEach(fresh);
+
+  test('휴식 주기에 닿으면 휴식 화면으로 갔다가 남은 집중을 이어 간다', () => {
+    useApp.setState({ fast: true, restOn: true, restEvery: 25, restLen: 5 });
+    getS().start(60);
+    for (let i = 0; i < 60 && getS().screen === 'focus'; i++) getS().tick(); // 빠른 타이머: 틱마다 30초
+    expect(getS()).toMatchObject({ screen: 'rest', midRest: true, rest: 300 });
+    const remain = getS().remain;
+    expect(getS().back()).toBe(true); // 도중 휴식에서는 뒤로가기로 세션을 버리지 않는다
+    expect(getS().screen).toBe('rest');
+    for (let i = 0; i < 10; i++) getS().tick();
+    expect(getS()).toMatchObject({ screen: 'focus', midRest: false, remain });
+    getS().tick();
+    expect(getS().screen).toBe('focus'); // 같은 주기에서 다시 쉬지 않는다
+  });
+
+  test('휴식 없음이면 끝까지 집중한다', () => {
+    useApp.setState({ fast: true, restOn: false });
+    getS().start(60);
+    for (let i = 0; i < 200 && getS().screen === 'focus'; i++) getS().tick();
+    expect(getS().screen).toBe('done');
+  });
+
+  test('바로 집중 이어가기는 휴식한 만큼 종료 시각을 미룬다', () => {
+    useApp.setState({ fast: false });
+    getS().start(60);
+    const endAt = getS().endAt;
+    useApp.setState({ screen: 'rest', midRest: true, pauseAt: Date.now() - 60000 });
+    getS().endRest();
+    expect(getS()).toMatchObject({ screen: 'focus', midRest: false, pauseAt: 0 });
+    expect(getS().endAt).toBeGreaterThanOrEqual(endAt + 60000);
+  });
+
+  test('고양이를 누르면 기본 5곡 또는 지금 고양이 전용 곡을 부르고 수집한다', () => {
+    for (let i = 0; i < 40; i++) { getS().sing(); jest.advanceTimersByTime(4000); }
+    const seen = getS().seenSongs;
+    expect(seen.every(i => [0, 1, 2, 3, 4, 5].includes(i))).toBe(true); // 치즈태비 전용 = 5번
+    expect(getS().behavior().id).not.toBe('sing');
+    getS().sing();
+    expect(getS().behavior().id).toBe('sing');
+  });
+
+  test('기본 5곡을 다 모으면 츄르 20을 한 번만 받는다', () => {
+    useApp.setState({ seenSongs: [0, 1, 2, 3], churu: 0 });
+    for (let i = 0; i < 60 && !getS().seenSongs.includes(4); i++) getS().sing();
+    expect(getS().churu).toBe(20);
+    expect(getS().songBonus.basic).toBe(true);
+    getS().sing();
+    expect(getS().churu).toBe(20);
+  });
+
+  test('도감의 듣기는 수집 상태를 바꾸지 않는다', () => {
+    getS().sing(7);
+    expect(getS().seenSongs).toEqual([0]);
+    expect(getS().singUntil).toBe(0);
+  });
+});

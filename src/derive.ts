@@ -32,6 +32,7 @@ export const badges = (s: State): [string, string, number[], number, string][] =
   ['후원 횟수', '회', [1, 5, 15, 30], s.donated + s.sponsorships.length, 'blue'],
   ['고양이 도감 수집', '마리', [1, 2, 3, 4], s.owned.length, 'purple'],
   ['방 꾸미기 아이템', '개', [3, 6, 10, 15], s.ownedDecor.length + s.items.length, '#EDE3C9'],
+  ['노래 수집', '곡', [3, 5, 9, 13], s.seenSongs.length, 'mint'],
 ];
 export const gotBadges = (s: State) => badges(s).reduce((a, b) => a + b[2].filter(x => b[3] >= x).length, 0);
 export const goalDays = (s: State) => {

@@ -94,7 +94,7 @@ export function Done({ width, height }: { width: number; height: number }) {
         </Anim>
         <View style={{ flex: 1 }} />
         <View style={{ flexDirection: 'row', gap: 10, width: '100%' }}>
-          {([['휴식 5분', () => S({ screen: 'rest', rest: 300 }), C.mint], ['후원 현황', () => S({ screen: 'tabs', tab: 'donate' }), C.bg], ['공유 카드', () => S({ share: true }), C.chip1]] as const).map(([l, f, bg]) => (
+          {([['휴식 ' + (s.restOn ? s.restLen : 5) + '분', () => S({ screen: 'rest', midRest: false, rest: (s.restOn ? s.restLen : 5) * 60 }), C.mint], ['후원 현황', () => S({ screen: 'tabs', tab: 'donate' }), C.bg], ['공유 카드', () => S({ share: true }), C.chip1]] as const).map(([l, f, bg]) => (
             <Btn key={l} onPress={f} style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: bg }}><Txt jua style={{ fontSize: 15 }}>{l}</Txt></Btn>
           ))}
         </View>
@@ -148,10 +148,10 @@ export function Rest() {
       <Txt style={{ fontSize: 14, color: C.gink }}>휴식 타이머</Txt>
       <Anim name="nap" dur={3.6}><CatFace cat={cat} size={190} /></Anim>
       <Txt jua style={{ fontSize: 64, lineHeight: 68, fontVariant: ['tabular-nums'] }}>{mmss(s.rest)}</Txt>
-      <Txt style={{ fontSize: 14, color: C.gink, lineHeight: 21, textAlign: 'center' }}>{cat.name + '와(과) 함께 잠깐 쉬어요.\n시간이 끝나면 홈으로 돌아가요.'}</Txt>
+      <Txt style={{ fontSize: 14, color: C.gink, lineHeight: 21, textAlign: 'center' }}>{cat.name + '와(과) 함께 잠깐 쉬어요.\n' + (s.midRest ? '휴식이 끝나면 남은 집중을 이어서 해요.' : '시간이 끝나면 홈으로 돌아가요.')}</Txt>
       <View style={{ flex: 1 }} />
       <Btn onPress={() => S(st => ({ rest: st.rest + 300 }))} style={{ width: '100%', height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 15 }}>5분 더 쉬기</Txt></Btn>
-      <Primary label="휴식 끝내고 홈으로" style={{ width: '100%' }} onPress={() => S({ screen: 'tabs', tab: 'home' })} />
+      <Primary label={s.midRest ? '바로 집중 이어가기' : '휴식 끝내고 홈으로'} style={{ width: '100%' }} onPress={() => (s.midRest ? getS().endRest() : S({ screen: 'tabs', tab: 'home', rest: 0 }))} />
     </ScrollView>
   );
 }

@@ -11,7 +11,7 @@ import { IS_FULL } from './src/config';
 import { catById } from './src/data';
 import { AccountPicker, Login, Onboard, Splash, usePermSync } from './src/screens/Entry';
 import { Decor } from './src/screens/Decor';
-import { Home } from './src/screens/Home';
+import { FocusSettings, Home } from './src/screens/Home';
 import { Menu } from './src/screens/Menu';
 import { Nav } from './src/screens/Nav';
 import { AdView, AppSheet, Cert, Coach, Dialog, Gacha, HouseModal, PaySheet, Receipt, ShareCard, Toast, loadInstalledApps } from './src/screens/Overlays';
@@ -56,7 +56,7 @@ function Root() {
   const C = useC(), dark = useDark(), ins = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const screen = useApp(s => s.screen), tab = useApp(s => s.tab), offline = useApp(s => s.offline), coachN = useApp(s => s.coach);
-  const ov = useApp(useShallow(s => ({ sheet: s.sheet, house: s.house, pay: !!s.pay, rcpt: !!s.rcpt, ad: s.ad != null, dlg: !!s.dlg, coach: s.coach >= 0, share: s.share && !!s.last, cert: s.cert != null, gacha: !!s.gacha, acct: s.acct })));
+  const ov = useApp(useShallow(s => ({ sheet: s.sheet, house: s.house, pay: !!s.pay, rcpt: !!s.rcpt, ad: s.ad != null, dlg: !!s.dlg, coach: s.coach >= 0, share: s.share && !!s.last, cert: s.cert != null, gacha: !!s.gacha, acct: s.acct, wheel: s.wheel })));
   const [hydrated, setHydrated] = useState(useApp.persist.hasHydrated());
   usePermSync();
 
@@ -65,7 +65,7 @@ function Root() {
   // 타이머 · 고양이 행동 · 뒤로가기
   useEffect(() => {
     const t = setInterval(() => getS().tick(), 250);
-    const m = setInterval(() => { if (AppState.currentState === 'active') { S(s => ({ msg: s.msg + 1 })); getS().markBeh(); } }, 6000);
+    const m = setInterval(() => { if (AppState.currentState === 'active' && !getS().wheel) { S(s => ({ msg: s.msg + 1 })); getS().markBeh(); } }, 6000);
     const bh = BackHandler.addEventListener('hardwareBackPress', () => getS().back());
     return () => { clearInterval(t); clearInterval(m); bh.remove(); };
   }, []);
@@ -142,6 +142,7 @@ function Root() {
       <View ref={r => { coachRefs.root = r; }} collapsable={false} style={{ flex: 1 }}>
         <View style={{ flex: 1, backgroundColor: C.bg }}>{hydrated ? body : null}</View>
         {isTabs && <Nav />}
+        {ov.wheel && isTabs && tab === 'home' && <FocusSettings />}
         {ov.acct && <AccountPicker />}
         {ov.sheet && <AppSheet />}
         {ov.gacha && <Gacha width={width} />}

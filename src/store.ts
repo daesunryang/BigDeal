@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { IS_DEMO } from './config';
 import {
   APPS, CATS, DECOR, DecorKind, FRIENDS, MAILS, Mail, ROOMS, ROOM_DEF, SHN, ANIMALS, BEH, BehId,
-  catById, isoDay, reward, growthOf, won, SPECIAL,
+  catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs,
 } from './data';
 import type { Lang } from './i18n';
 
@@ -25,7 +25,9 @@ export type State = {
   // 계정
   user: User; linked: Record<string, boolean>; loggedIn: boolean;
   // 집중
-  endH: number; endM: number; dur: number; fmt: '24' | '12'; wheel: boolean; tag: string;
+  endH: number; endM: number; dur: number; wheel: boolean; tag: string;
+  // 휴식 주기: restEvery분 집중할 때마다 restLen분 쉰다. midRest = 집중 도중의 휴식 화면
+  restOn: boolean; restEvery: number; restLen: number; midRest: boolean;
   remain: number; total: number; endAt: number; pauseAt: number; fast: boolean;
   blocked: Record<string, boolean>; apps: BlockApp[];
   sessions: Session[]; last: null | { grow: boolean; goal: boolean; tag: string; min: number; churu: number; aff: number; up: boolean };
@@ -33,6 +35,8 @@ export type State = {
   // 고양이
   churu: number; earnedTotal: number; catId: string; owned: string[]; aff: Record<string, number>; sulky: boolean;
   msg: number; behOff: number; seenBeh: string[]; fedUntil: number;
+  // 노래: singUntil까지 부르는 중, seenSongs = 수집한 노래(SONGS 번호)
+  singUntil: number; songText: string; seenSongs: number[]; songBonus: { basic: boolean; cat: boolean };
   // 방 · 집
   decor: Decor; ownedDecor: string[]; items: string[]; equipped: string[]; pos: Record<string, [number, number]>;
   decorCat: DecorKind; preview: null | { kind: DecorKind; id: string }; dragSel: string | null;
@@ -54,7 +58,7 @@ export type State = {
   bk: { auto: boolean; wifi: boolean; last: string; busy: boolean }; offline: boolean; offlineDemo: boolean;
   ledger: { l: string; a: number; d: string }[]; friends: Friend[]; friendCode: string; friendErr: string; myCode: string;
   tries: Record<string, number>; att: string[]; fdays: string[];
-  dexTab: 'cat' | 'beh' | 'item'; openNotice: number | null; openFaq: number | null; openOss: number | null;
+  dexTab: 'cat' | 'beh' | 'song' | 'item'; openNotice: number | null; openFaq: number | null; openOss: number | null;
   inq: { cat: string; text: string; sent: boolean };
   // 오버레이
   sheet: boolean; gacha: string | null; share: boolean; coach: number; coachSeen: boolean;
@@ -72,12 +76,12 @@ function initial(): State {
   return {
     screen: 'splash', tab: 'home', prevTab: 'menu', menuPage: null,
     user: demo ? { name: '김집중', email: 'focus.kim@gmail.com', provider: 'Google' } : { name: '', email: '', provider: '' }, linked: demo ? { Google: true } : {}, loggedIn: false,
-    endH, endM, dur: 30, fmt: '24', wheel: false, tag: '공부',
+    endH, endM, dur: 30, wheel: false, tag: '공부', restOn: true, restEvery: 25, restLen: 5, midRest: false,
     remain: 0, total: 0, endAt: 0, pauseAt: 0, fast: demo,
     blocked: { ig: true, yt: true, tt: true, wt: true, kk: false, gm: false }, apps: APPS,
     sessions: [], last: null, showBlocked: false, holding: false, failPen: 3, rest: 0, blockedNow: 0, blockedApp: '인스타그램',
     churu: demo ? 24 : 0, earnedTotal: demo ? 44 : 0, catId: 'cheese', owned: ['cheese'], aff: { cheese: demo ? 34 : 0 }, sulky: false,
-    msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0,
+    msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false },
     decor: { wall: 'cream', floor: 'wood', struct: 'basic', outfit: 'none' }, ownedDecor: ['cream', 'wood', 'basic', 'none'], items: ['rug'], equipped: ['rug'], pos: {},
     decorCat: 'wall', preview: null, dragSel: null,
     house: false, hs: 'liv', rooms: ['liv', 'nap'], catRoom: 'liv', jumping: false, pinUntil: 0, rstore: {}, dRoom: 'liv', roomNames: {}, extra: false, houseHint: true, renaming: false, nameDraft: '',
@@ -98,13 +102,13 @@ function initial(): State {
 }
 
 // 저장하지 않는 화면 상태
-const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
+const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midRest', 'singUntil', 'songText', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
   'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gacha', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
 
 // 동기화(백업)에 올릴 게임 데이터
 export const SYNC_KEYS: (keyof State)[] = ['user', 'linked', 'churu', 'earnedTotal', 'catId', 'owned', 'aff', 'sulky', 'seenBeh', 'decor', 'ownedDecor', 'items', 'equipped', 'pos', 'rooms', 'catRoom', 'rstore', 'dRoom', 'roomNames', 'extra',
   'donated', 'pick', 'sponsorships', 'mails', 'mailRead', 'claimed', 'plus', 'plusKind', 'toggles', 'themeMode', 'lang', 'big', 'cb', 'haptic', 'goal', 'goalNotify', 'remind', 'avatarCat', 'ledger', 'friends', 'myCode', 'tries', 'att', 'fdays',
-  'sessions', 'blocked', 'tag', 'fmt', 'coachSeen', 'houseHint', 'mailDay'];
+  'sessions', 'blocked', 'tag', 'restOn', 'restEvery', 'restLen', 'seenSongs', 'songBonus', 'coachSeen', 'houseHint', 'mailDay'];
 
 type Actions = {
   set: (p: Partial<State> | ((s: State) => Partial<State> | null)) => void;
@@ -117,9 +121,11 @@ type Actions = {
   quit: () => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
+  endRest: (auto?: boolean) => void;
   behavior: () => { id: BehId; text: string };
   markBeh: () => void;
   nextBehavior: () => void;
+  sing: (pick?: number) => void;
   moveCat: (id: string) => void;
   callCat: () => void;
   feed: (id: string, price: number) => void;
@@ -139,6 +145,7 @@ type Actions = {
 };
 
 let toastT: ReturnType<typeof setTimeout> | undefined;
+let restK = 0, songK = -1; // 마지막으로 휴식한 주기 번호 · 마지막으로 부른 노래
 export const hooks: { onStart?: (s: State) => void; onStop?: () => void; sfx?: (n: string) => void; onGoal?: (goal: number, catName: string) => void } = {};
 const sfx = (n: string) => hooks.sfx?.(n);
 
@@ -151,20 +158,38 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   setEnd: (h, m) => { const d = new Date(), now = d.getHours() * 60 + d.getMinutes(); const dur = Math.max(5, ((h * 60 + m) - now + 1440) % 1440); set({ endH: h, endM: m, dur }); },
 
   start: min => {
-    sfx('start');
+    sfx('start'); restK = 0;
     set({ screen: 'focus', dur: min, remain: min * 60, total: min * 60, endAt: Date.now() + min * 60000, pauseAt: 0, sheet: false, showBlocked: false, blockedNow: 0, house: false });
     hooks.onStart?.(get());
   },
   tick: () => {
     const s = get();
     if (s.screen === 'rest') {
-      if (s.fast) { const rr = s.rest - 30; if (rr <= 0) set({ screen: 'tabs', tab: 'home', rest: 0 }); else set({ rest: rr }); }
-      else { const rr = s.rest - 0.25; if (rr <= 0) set({ screen: 'tabs', tab: 'home', rest: 0 }); else set({ rest: rr }); }
+      const rr = s.rest - (s.fast ? 30 : 0.25);
+      if (rr > 0) set({ rest: rr }); else if (s.midRest) get().endRest(true); else set({ screen: 'tabs', tab: 'home', rest: 0 });
       return;
     }
     if (s.screen !== 'focus' || s.pauseAt) return;
     const r = s.fast ? s.remain - 30 : (s.endAt - Date.now()) / 1000;
-    if (r <= 0) get().complete(); else set({ remain: r });
+    if (r <= 0) { get().complete(); return; }
+    // 휴식 주기에 닿으면 타이머를 멈추고 휴식 화면으로 (같은 주기에서는 한 번만)
+    if (s.restOn) {
+      const k = Math.floor((s.total - r) / (s.restEvery * 60));
+      if (k > 0 && k !== restK) {
+        restK = k; sfx('coin'); get().toast(s.restEvery + '분 집중했어요 · ' + s.restLen + '분 쉬어 가요');
+        hooks.onStop?.();
+        set({ remain: r, screen: 'rest', rest: s.restLen * 60, midRest: true, pauseAt: Date.now() });
+        return;
+      }
+    }
+    set({ remain: r });
+  },
+  // 도중 휴식을 끝내고 남은 집중을 이어 간다 (휴식 시간만큼 종료 시각을 미룬다)
+  endRest: auto => {
+    const s = get(); if (!s.midRest) return;
+    if (auto) { sfx('start'); get().toast('다시 집중해요'); }
+    set({ screen: 'focus', midRest: false, rest: 0, pauseAt: 0, endAt: s.pauseAt ? s.endAt + (Date.now() - s.pauseAt) : s.endAt });
+    hooks.onStart?.(get());
   },
   pauseTimer: () => { if (!get().pauseAt) set({ pauseAt: Date.now() }); },
   resumeTimer: () => { const s = get(); if (s.pauseAt) set({ endAt: s.endAt + (Date.now() - s.pauseAt), pauseAt: 0 }); },
@@ -195,12 +220,14 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
 
   behavior: () => {
     const s = get();
+    if (s.singUntil > Date.now()) return { id: 'sing', text: s.songText || SONGS[0].t };
     if (s.fedUntil > Date.now()) return { id: 'purr', text: '냠냠, 골골골… 맛있어요!' };
     if (s.sulky) return { id: 'sulky', text: '…조금 서운했어요. 다시 같이 해요.' };
     return BEH[(s.msg + s.behOff) % BEH.length];
   },
   markBeh: () => {
     const b = get().behavior(), st = get();
+    if (b.id === 'sing') return;
     if (b.id !== 'sulky' && !st.seenBeh.includes(b.id)) set({ seenBeh: [...st.seenBeh, b.id] });
     if (Date.now() < st.pinUntil) return;
     let tgt = st.sulky ? 'nap' : st.fedUntil > Date.now() ? 'kit' : (({ nap: 'nap', look: 'gar', hop: 'play' } as Record<string, string>)[b.id] || 'liv');
@@ -211,6 +238,27 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     }
   },
   nextBehavior: () => { sfx('meow'); set(st => ({ behOff: st.behOff + 1 })); get().markBeh(); },
+  // 홈에서 고양이를 누르면 노래한다. 기본 5곡 + 지금 고양이의 전용 곡 중 무작위(같은 곡 연속 금지).
+  // pick을 주면 도감의 ▶ 듣기: 소리만 내고 수집 상태는 그대로.
+  sing: pick => {
+    const st = get();
+    if (pick != null) { sfx('song' + pick); return; }
+    const pool = SONGS.map((_, i) => i).filter(i => !SONGS[i].cat || SONGS[i].cat === st.catId);
+    let k = pool[Math.floor(Math.random() * pool.length)];
+    if (k === songK) k = pool[(pool.indexOf(k) + 1) % pool.length];
+    songK = k; sfx('song' + k);
+    const sg = SONGS[k], dur = songMs(sg);
+    const isNew = !st.seenSongs.includes(k), ns = isNew ? [...st.seenSongs, k] : st.seenSongs;
+    const basicAll = SONGS.every((x, i) => x.cat || ns.includes(i)), catAll = SONGS.every((x, i) => !x.cat || ns.includes(i));
+    const bonus = (isNew && basicAll && !st.songBonus.basic ? 20 : 0) + (isNew && catAll && !st.songBonus.cat ? 50 : 0);
+    set({ singUntil: Date.now() + dur, songText: sg.t, seenSongs: ns, songBonus: { basic: st.songBonus.basic || basicAll, cat: st.songBonus.cat || catAll }, churu: st.churu + bonus, earnedTotal: st.earnedTotal + bonus });
+    if (isNew) get().toast('새 노래 · ' + sg.name + ' 수집!');
+    if (bonus) {
+      get().log(bonus === 20 ? '기본 노래 모두 수집' : '전용 노래 모두 수집', bonus);
+      setTimeout(() => { sfx('coin'); get().toast((bonus === 20 ? '기본 노래 5곡 완성! 배지 · 츄르 +' : '전용 노래 8곡 완성! 배지 · 츄르 +') + bonus); }, 1800);
+    }
+    setTimeout(() => { if (get().singUntil && get().singUntil <= Date.now()) set({ singUntil: 0 }); }, dur + 100);
+  },
   moveCat: id => {
     if (get().catRoom !== id) {
       sfx('meow'); set({ catRoom: id, jumping: true, pinUntil: Date.now() + 60000 });
@@ -296,12 +344,14 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     if (s.dlg) { if (['bye', 'expired'].includes(s.dlg.kind)) return true; return S({ dlg: null }); }
     if (s.pay) return S({ pay: null }); if (s.rcpt) return S({ rcpt: null }); if (s.cert) return S({ cert: null });
     if (s.ad != null) return S({ ad: null }); if (s.share) return S({ share: false }); if (s.gacha) return S({ gacha: null });
+    if (s.wheel) return S({ wheel: false });
     if (s.sheet) return S({ sheet: false }); if (s.acct) return S({ acct: false }); if (s.house) return S({ house: false });
     if (s.showBlocked) return S({ showBlocked: false });
     if (s.coach >= 0) return S({ coach: -1, coachSeen: true });
     if (s.screen === 'decor' || s.screen === 'tabs') { if (popNav()) return true; }
     if (s.screen === 'decor') return S({ screen: 'tabs', preview: null });
     if (s.screen === 'focus') { get().toast('집중 중에는 뒤로가기가 막혀 있어요'); return true; }
+    if (s.screen === 'rest' && s.midRest) { get().toast('휴식이 끝나면 남은 집중을 이어서 해요'); return true; }
     if (['done', 'fail', 'rest'].includes(s.screen)) return S({ screen: 'tabs', tab: 'home' });
     if (s.screen === 'onboard') return S({ screen: 'login' });
     if (s.screen === 'login' && s.emailMode) return S({ emailMode: false });

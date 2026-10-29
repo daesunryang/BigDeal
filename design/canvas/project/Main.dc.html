@@ -30,6 +30,8 @@ button{font-family:inherit;color:inherit}
 @keyframes popin{0%,40%{transform:scale(0);opacity:0}52%{transform:scale(1.25);opacity:1}62%,88%{transform:scale(1);opacity:1}100%{transform:scale(1);opacity:0}}
 @keyframes load{from{width:0}to{width:100%}}
 @keyframes nap{0%,100%{transform:scale(1.04,.9) rotate(-3deg)}50%{transform:scale(1.07,.87) rotate(-3deg)}}
+[data-freeze="1"] *{animation-play-state:paused !important;transition:none !important}
+@keyframes note{0%{opacity:0;transform:translate(0,0) scale(.7)}20%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-46px) scale(1.1)}}
 @keyframes meow{0%,60%,100%{transform:translateY(0) scale(1)}12%{transform:translateY(0) scale(1.06,.92)}25%{transform:translateY(-10px) scale(.96,1.05)}40%{transform:translateY(0) scale(1)}}
 @keyframes stretch{0%,100%{transform:scale(1,1)}40%,60%{transform:scale(1.14,.88)}}
 @keyframes sway{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
@@ -178,10 +180,10 @@ button{font-family:inherit;color:inherit}
 
   <!-- HOME TAB -->
   <sc-if value="{{ isHome }}">
-  <div data-hscroll="1" style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:16px;padding:8px 18px 18px">
-    <div style="display:flex;align-items:center;justify-content:space-between;height:44px">
+  <div data-hscroll="1" data-freeze="{{ freezeFlag }}" style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:6px 18px 18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;height:40px;flex:none">
       <div style="font:400 24px 'Jua',sans-serif">집중냥</div>
-      <div onClick="{{ goShop }}" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:16px;background:var(--chip1);border:1.5px solid var(--ink);font:400 15px 'Jua',sans-serif"><div style="width:10px;height:10px;transform:rotate(45deg);background:#E59A4C;border:1.5px solid var(--ink)"></div>{{ churu }} 츄르</div>
+      <button onClick="{{ goStats }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:15px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-size:12px;cursor:pointer"><span style="color:var(--sub)">오늘 목표</span><span style="font:400 14px 'Jua',sans-serif">{{ goalPct }}</span><span style="width:28px;height:4px;border-radius:2px;background:var(--line);overflow:hidden;display:flex"><span style="height:100%;width:{{ goalBar }};background:#E59A4C"></span></span></button>
     </div>
     <sc-if value="{{ homeCard }}" hint-placeholder-val="{{ true }}">
     <div data-coach="0" onClick="{{ openRoom }}" style="position:relative;border-radius:24px;overflow:hidden;border:2px solid var(--ink);width:320px;height:262px;filter:{{ catFilter }};flex:none;cursor:pointer;align-self:center">
@@ -204,29 +206,29 @@ button{font-family:inherit;color:inherit}
       <div data-coach="0" onClick="{{ openRoom }}" style="cursor:pointer;width:220px;height:220px;border-radius:50%;border:2px solid var(--ink);background-color:var(--card);background-image:var(--ca);background-size:{{ cat.homeSize }};background-position:{{ cat.homePos }};filter:{{ catFilter }};animation:bob 3s ease-in-out infinite"></div>
     </div>
     </sc-if>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-      <div onClick="{{ goGrowth }}" style="cursor:pointer;display:flex;flex-direction:column;gap:2px"><span style="font:400 20px 'Jua',sans-serif">{{ cat.name }} <span style="font:11px system-ui,sans-serif;padding:2px 7px;border-radius:8px;background:var(--mint);vertical-align:middle">{{ growName }}</span></span><span style="font-size:13px;color:var(--sub)">지금 표정 · {{ mood }}</span></div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-        <div style="display:flex;gap:2px;font-size:20px;line-height:1"><sc-for list="{{ hearts }}" as="h" hint-placeholder-count="5"><span style="color:{{ h.c }};transition:color .4s">{{ h.ch }}</span></sc-for></div>
-        <span style="font-size:11px;color:var(--sub)">다음 하트까지 {{ affNext }}</span>
-      </div>
+    <div style="display:flex;flex-direction:column;gap:10px;flex:none">
+    <div style="padding:12px;border-radius:20px;background:var(--card);display:flex"><button data-coach="1" onClick="{{ openWheel }}" style="flex:none;display:flex;align-items:baseline;justify-content:center;gap:6px;padding:14px 0;border-radius:22px;background:{{ clockBg }};border:{{ clockBorder }};color:{{ clockFg }};cursor:pointer;width:100%" style-active="transform:scale(.98)">
+      <span style="font:400 22px 'Jua',sans-serif;color:#E59A4C">{{ apLabel }}</span>
+      <span style="font:400 54px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;color:{{ digitFg }}">{{ dispH }}</span>
+      <span style="font:400 48px/1 'Jua',sans-serif">:</span>
+      <span style="font:400 54px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;color:{{ digitFg }}">{{ dispM }}</span>
+    </button></div>
+    <div style="display:flex;gap:8px;flex:none">
+      <button onClick="{{ openWheel }}" style="flex:1;min-width:0;height:42px;padding:0 12px;border-radius:21px;border:1.5px solid var(--ink);background:var(--mint);font:400 14px 'Jua',sans-serif;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">휴식 · {{ restText }}</button>
+      <button data-coach="2" onClick="{{ openSheet }}" style="flex:1;min-width:0;height:42px;padding:0 12px;border-radius:21px;border:1.5px dashed var(--sub);background:transparent;font:400 14px 'Jua',sans-serif;color:var(--ink);cursor:pointer;white-space:nowrap">{{ allowCount }}개앱 차단 제외 ›</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:20px;background:var(--card)">
-      <div style="font:400 16px 'Jua',sans-serif">얼마나 집중할까요?</div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:13px;color:var(--sub)">종료 시각 · 숫자를 눌러 설정</span>
-        <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--line)">
-          <sc-for list="{{ fmtOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.pick }}" style="height:28px;padding:0 10px;border:none;border-radius:9px;background:{{ o.bg }};color:{{ o.fg }};font-size:12px;cursor:pointer">{{ o.label }}</button></sc-for>
-        </div>
-      </div>
-      <div data-coach="1" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0;border-radius:16px;background:{{ clockBg }};border:{{ clockBorder }};color:{{ clockFg }}">
-        <sc-if value="{{ is12 }}"><button onClick="{{ openWheel }}" style="border:none;background:none;color:#E59A4C;font:400 22px 'Jua',sans-serif;padding:0 6px;cursor:pointer">{{ apLabel }}</button></sc-if>
-        <button onClick="{{ openWheel }}" style="border:none;border-radius:12px;background:{{ digitBg }};color:{{ digitFg }};font:400 52px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;padding:{{ digitPad }};cursor:pointer">{{ dispH }}</button>
-        <div style="font:400 46px/1 'Jua',sans-serif">:</div>
-        <button onClick="{{ openWheel }}" style="border:none;border-radius:12px;background:{{ digitBg }};color:{{ digitFg }};font:400 52px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums;padding:{{ digitPad }};cursor:pointer">{{ dispM }}</button>
-      </div>
-      <sc-if value="{{ wheelOpen }}">
-      <div style="position:relative;display:flex;justify-content:center;gap:10px;height:160px;border-radius:16px;background:var(--bg);border:1.5px solid var(--ink);overflow:hidden">
+    </div>
+    <button data-coach="3" onClick="{{ startFocus }}" style="height:56px;border-radius:28px;border:none;background:var(--ink);color:var(--bg);font:400 20px 'Jua',sans-serif;cursor:pointer;flex:none" style-active="transform:scale(.98)">집중 시작</button>
+  </div>
+  </sc-if>
+
+  <!-- FOCUS SETTINGS -->
+  <sc-if value="{{ wheelOpen }}">
+  <div onClick="{{ closeWheel }}" style="position:absolute;left:0;right:0;top:30px;bottom:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;background:radial-gradient(ellipse 70% 58% at 50% 50%,rgba(24,16,11,.2),rgba(24,16,11,.86));backdrop-filter:grayscale(.7) blur(2px);-webkit-backdrop-filter:grayscale(.7) blur(2px)">
+    <div onClick="{{ stop }}" style="width:100%;background:var(--bg);border:2px solid var(--ink);border-radius:26px;padding:18px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:2px"><span style="font:400 20px 'Jua',sans-serif">집중 설정</span><span style="font-size:12px;color:var(--sub)">{{ durSummary }}</span></div>
+      <span style="font:400 14px 'Jua',sans-serif">집중 종료 시각</span>
+      <div style="position:relative;display:flex;justify-content:center;gap:10px;height:160px;border-radius:16px;background:var(--bg);border:1.5px solid var(--line);overflow:hidden;margin-top:-6px">
         <div style="position:absolute;left:10px;right:10px;top:60px;height:40px;border-radius:10px;background:var(--card);pointer-events:none"></div>
         <sc-for list="{{ wheels }}" as="w" hint-placeholder-count="2">
           <div ref="{{ w.ref }}" onScroll="{{ w.onScroll }}" style="position:relative;width:72px;height:160px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none">
@@ -237,24 +239,22 @@ button{font-family:inherit;color:inherit}
         </sc-for>
         <div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(var(--bg),transparent 35%,transparent 65%,var(--bg))"></div>
       </div>
-      <button onClick="{{ closeWheel }}" style="height:40px;border-radius:20px;border:none;background:var(--ink);color:var(--bg);font:400 15px 'Jua',sans-serif;cursor:pointer">확인</button>
-      </sc-if>
-      <div style="font-size:13px;color:var(--sub);text-align:center">집중 시간 {{ durText }}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center"><sc-for list="{{ tagChips }}" as="tg" hint-placeholder-count="6"><button onClick="{{ tg.pick }}" style="height:30px;padding:0 12px;border-radius:15px;border:1.5px solid var(--ink);background:{{ tg.bg }};color:{{ tg.fg }};font-size:13px;cursor:pointer">{{ tg.label }}</button></sc-for></div>
-      <button data-coach="2" onClick="{{ openSheet }}" style="display:flex;align-items:center;gap:10px;height:48px;padding:0 12px;border-radius:14px;border:1.5px dashed var(--sub);background:transparent;cursor:pointer;text-align:left">
-        <div style="display:flex">
-          <sc-for list="{{ blockedApps }}" as="a"><div style="width:22px;height:22px;border-radius:7px;margin-right:-6px;border:1.5px solid var(--bg);background:{{ a.color }}" data-keep="1"></div></sc-for>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font:400 14px 'Jua',sans-serif">휴식 주기</span>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px"><sc-for list="{{ restPresets }}" as="rp" hint-placeholder-count="4"><button onClick="{{ rp.pick }}" style="height:44px;border-radius:14px;border:1.5px solid var(--ink);background:{{ rp.bg }};color:{{ rp.fg }};font:400 12px/1.25 'Jua',sans-serif;cursor:pointer;padding:0 2px">{{ rp.label }}</button></sc-for></div>
+        <div style="display:grid;grid-template-columns:32px 34px 32px auto;align-items:center;justify-content:center;column-gap:6px;row-gap:6px;padding:8px 6px;border-radius:16px;background:var(--card);opacity:{{ restOp }}">
+          <button onClick="{{ evMinus }}" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font-size:16px;cursor:pointer;padding:0">−</button>
+          <span style="font:400 18px 'Jua',sans-serif;text-align:center;font-variant-numeric:tabular-nums">{{ restEvery }}</span>
+          <button onClick="{{ evPlus }}" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font-size:16px;cursor:pointer;padding:0">+</button>
+          <span style="font-size:13px;color:var(--sub);white-space:nowrap;padding-left:2px">분마다</span>
+          <button onClick="{{ lnMinus }}" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font-size:16px;cursor:pointer;padding:0">−</button>
+          <span style="font:400 18px 'Jua',sans-serif;text-align:center;font-variant-numeric:tabular-nums">{{ restLen }}</span>
+          <button onClick="{{ lnPlus }}" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font-size:16px;cursor:pointer;padding:0">+</button>
+          <span style="font-size:13px;color:var(--sub);white-space:nowrap;padding-left:2px">분 휴식</span>
         </div>
-        <span style="flex:1;font-size:14px;padding-left:8px">{{ blockedCount }}개 앱 차단</span>
-        <span style="font-size:13px;color:var(--sub)">변경 ›</span>
-      </button>
+      </div>
+      <button onClick="{{ closeWheel }}" style="height:50px;border-radius:25px;border:none;background:var(--ink);color:var(--bg);font:400 17px 'Jua',sans-serif;cursor:pointer">확인</button>
     </div>
-    <button data-coach="3" onClick="{{ startFocus }}" style="height:58px;border-radius:29px;border:none;background:var(--ink);color:var(--bg);font:400 20px 'Jua',sans-serif;cursor:pointer;flex:none" style-active="transform:scale(.98)">집중 시작 · 보상 {{ previewReward }} 츄르</button>
-    <button onClick="{{ goStats }}" style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;border:1.5px solid var(--ink);background:var(--bg);cursor:pointer;text-align:left;flex:none">
-      <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:var(--sub)">오늘 집중</span><span style="font:400 24px 'Jua',sans-serif">{{ todayMin }}분</span><span style="font-size:11px;color:var(--sub)">목표 {{ goalMin }}분 · {{ goalPct }}</span><div style="height:5px;width:96px;border-radius:3px;background:var(--line);overflow:hidden"><div style="height:100%;width:{{ goalBar }};background:#E59A4C"></div></div></div>
-      <div style="flex:1;height:44px;display:flex;align-items:flex-end;gap:5px"><sc-for list="{{ miniWeek }}" as="w" hint-placeholder-count="7"><div style="flex:1;height:{{ w.h }};border-radius:4px;background:{{ w.bg }}"></div></sc-for></div>
-      <span style="font-size:18px;color:var(--mute)">›</span>
-    </button>
   </div>
   </sc-if>
 
@@ -291,6 +291,18 @@ button{font-family:inherit;color:inherit}
         <div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:18px;border:1.5px solid {{ b.border }};background:var(--bg)">
           <div style="width:40px;height:40px;border-radius:12px;background:{{ b.bg }};display:flex;align-items:center;justify-content:center;font:400 20px 'Jua',sans-serif;flex:none" data-keep="1">{{ b.g }}</div>
           <div style="display:flex;flex-direction:column;min-width:0"><span style="font:400 15px 'Jua',sans-serif">{{ b.name }}</span><span style="font-size:11px;color:{{ b.stColor }}">{{ b.status }}</span></div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+    <sc-if value="{{ dexSong }}">
+    <div style="font-size:13px;line-height:1.5;color:var(--sub)">홈에서 고양이를 누르면 노래를 불러요. 한 번 들은 노래는 여기서 다시 들을 수 있어요. 고양이마다 전용 노래도 한 곡씩 있어요.<br>{{ songGoal }}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ songCards }}" as="sg" hint-placeholder-count="5">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;border:1.5px solid {{ sg.border }};background:var(--bg)">
+          <div style="width:40px;height:40px;border-radius:12px;background:{{ sg.bg }};display:flex;align-items:center;justify-content:center;font:400 20px 'Jua',sans-serif;flex:none" data-keep="1">{{ sg.g }}</div>
+          <div style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="font:400 15px 'Jua',sans-serif">{{ sg.name }}</span><span style="font-size:12px;color:var(--sub)">{{ sg.lyric }}</span></div>
+          <sc-if value="{{ sg.on }}"><button onClick="{{ sg.play }}" style="height:34px;padding:0 12px;border-radius:17px;border:1.5px solid var(--ink);background:var(--chip1);color:var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer;flex:none">▶ 듣기</button></sc-if>
         </div>
       </sc-for>
     </div>
@@ -819,10 +831,10 @@ button{font-family:inherit;color:inherit}
     <div style="font-size:14px;color:var(--gink)">휴식 타이머</div>
     <div style="width:190px;height:190px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.doneSize }};background-position:{{ cat.donePos }};animation:nap 3.6s ease-in-out infinite"></div>
     <div style="font:400 64px/1 'Jua',sans-serif;font-variant-numeric:tabular-nums">{{ restText }}</div>
-    <div style="font-size:14px;color:var(--gink);line-height:1.5">{{ cat.name }}와(과) 함께 잠깐 쉬어요.<br>시간이 끝나면 홈으로 돌아가요.</div>
+    <div style="font-size:14px;color:var(--gink);line-height:1.5">{{ cat.name }}와(과) 함께 잠깐 쉬어요.<br>{{ restSub }}</div>
     <div style="flex:1"></div>
     <button onClick="{{ moreRest }}" style="width:100%;height:48px;border-radius:24px;border:1.5px solid var(--ink);background:var(--bg);font:400 15px 'Jua',sans-serif;cursor:pointer">5분 더 쉬기</button>
-    <button onClick="{{ goHome }}" style="width:100%;height:52px;border-radius:26px;border:none;background:var(--ink);color:var(--bg);font:400 17px 'Jua',sans-serif;cursor:pointer">휴식 끝내고 홈으로</button>
+    <button onClick="{{ restEnd }}" style="width:100%;height:52px;border-radius:26px;border:none;background:var(--ink);color:var(--bg);font:400 17px 'Jua',sans-serif;cursor:pointer">{{ restEndLabel }}</button>
   </div>
   </sc-if>
 
@@ -1143,6 +1155,20 @@ const LD = [['홈','Home','ホーム'],['도감','Collection','図鑑'],['후원
 ['벽지','Wallpaper','壁紙'],['바닥','Floor','床'],['구조','Layout','構造'],['가구','Furniture','家具'],['소품','Props','小物'],['옷','Outfits','服'],['간식','Snacks','おやつ'],['시즌','Season','シーズン'],['전용','Room only','専用'],['집중 중','Focusing','集中中'],['다음','Next','次へ'],['건너뛰기','Skip','スキップ']];
 const LPAT = [[/^(\d+)시간 (\d+)분$/, '$1h $2m', '$1時間$2分'], [/^(\d+)분 집중 완료$/, '$1 min focus done', '$1分の集中が完了'], [/^내 후원 (.+)kg$/, 'My support $1kg', '私の応援 $1kg']];
 const HANDLED = ['집중냥 Plus','공지사항','자주 묻는 질문','업적 · 배지','문의하기','이용약관','개인정보 처리방침','앱 정보','언어 선택','권한 설정'];
+const SONGS = [
+  { name:'냐옹냐옹 왕대', t:'야옹야옹~ 냐옹냐옹♪', n:[[660,.22],[880,.3],[660,.22],[784,.3],[988,.22],[880,.22],[784,.45]] },
+  { name:'츄르 송', t:'냥냥냥~ 츄르 송♫', n:[[523,.18],[523,.18],[784,.18],[784,.18],[880,.18],[880,.18],[784,.4]] },
+  { name:'낮잠 자장가', t:'골골~ 자장자장 야옹♪', n:[[784,.35],[659,.35],[698,.35],[587,.5],[523,.6]] },
+  { name:'신나는 냥', t:'미야우! 신나는 냥♬', n:[[880,.12],[988,.12],[1047,.12],[988,.12],[880,.12],[784,.24],[880,.12],[1047,.36]] },
+  { name:'아침 인사', t:'야~옹 야~옹 아침 냥♪', n:[[587,.3],[740,.3],[880,.45],[740,.2],[880,.2],[1175,.5]] },
+  { cat:'cheese', name:'햇살 항아리', t:'햇살이 따끈냥~♪', n:[[523,.2],[659,.2],[784,.3],[659,.2],[880,.4],[784,.5]] },
+  { cat:'blue', name:'조용한 밤', t:'쉬잇… 조용히 냐옹♫', n:[[440,.4],[523,.4],[494,.4],[392,.6],[440,.7]] },
+  { cat:'calico', name:'수다 폭발', t:'냐냐냐냐! 있잖아♬', n:[[784,.1],[880,.1],[784,.1],[988,.1],[880,.1],[1047,.1],[988,.1],[1175,.3]] },
+  { cat:'tux', name:'턴시도 행진', t:'둥둥 야옹 행진♪', n:[[392,.25],[392,.25],[523,.25],[392,.25],[659,.25],[523,.5]] },
+  { cat:'ragdoll', name:'포근한 안기', t:'안아줘옹~ 포근♫', n:[[587,.35],[523,.35],[587,.35],[659,.35],[587,.7]] },
+  { cat:'siam', name:'수다쟁이 아리아', t:'마아아옹~ 마아옹!♬', n:[[880,.3],[1047,.2],[1175,.2],[1319,.4],[1175,.2],[1047,.5]] },
+  { cat:'persian', name:'느긋한 오후', t:'느엇… 냐아옹♪', n:[[349,.5],[392,.5],[440,.5],[392,.8]] },
+  { cat:'angora', name:'두 빛깔 왕국', t:'반짝반짝 야옹♫', n:[[1047,.15],[1319,.15],[1568,.3],[1319,.15],[1175,.15],[1047,.45]] } ];
 class Component extends DCLogic {
   state = { decor:{ wall:'cream', floor:'wood', struct:'basic', outfit:'none' }, ownedDecor:['cream','wood','basic','none'], decorCat:'wall', preview:null,
     mails: MAILS, mailRead:[], claimed:[], mailFilter:'all', openMail:null, menuPage:null, prevTab:'menu',
@@ -1153,7 +1179,7 @@ class Component extends DCLogic {
     aff:{cheese:34}, sulky:false, pick:0, items:['rug'], equipped:['rug'],
     seenBeh:['idle','nap'], dexTab:'cat', donTab:'give', sAnimal:'a0', sMode:'churu', sAmt:1, sponsorships:[], cert:null, tag:'공부', rest:0, holding:false, failPen:3, earnedTotal:44,
     openNotice:0, openFaq:null, inq:{ cat:'기능 제안', text:'', sent:false }, lang:'한국어', menuSec:0, sysDark:false,
-    goal:60, goalHit:false, goalNotify:true, attendDone:[1,1,1,0,0,0,0], attendToday:3, remind:{ on:true, time:'21:00', days:[1,1,1,1,1,0,0] }, reportTab:'week', nick:null, avatarCat:null,
+    goal:60, restOn:true, restEvery:25, restLen:5, singUntil:0, seenSongs:[0], songBonus:{ basic:false, cat:false }, goalHit:false, goalNotify:true, attendDone:[1,1,1,0,0,0,0], attendToday:3, remind:{ on:true, time:'21:00', days:[1,1,1,1,1,0,0] }, reportTab:'week', nick:null, avatarCat:null,
     wd:{ reason:'', agree:false }, bk:{ auto:true, wifi:true, last:'방금 전', busy:false }, offline:false, upd:false, big:false, cb:false, haptic:true, openOss:null,
     ledger:[{ l:'집중 50분 완료', a:20, d:'10.27' }, { l:'출석 보상', a:8, d:'10.26' }, { l:'털실 장난감 구매', a:-12, d:'10.25' }, { l:'집중 25분 완료', a:10, d:'10.24' }, { l:'웰컴 선물', a:20, d:'10.20' }],
     house:false, hs:'liv', rooms:['liv','nap'], catRoom:'liv', jumping:false, pinUntil:0, rstore:{}, dRoom:'liv', roomNames:{}, extra:false, houseHint:true, renaming:false, nameDraft:'', themeMode:null, friends:FRIENDS, friendCode:'', friendErr:'', tries:{ ig:7, yt:4, tt:3, kk:2 }, share:false, att:[], fdays:[], blockedNow:0, coach:-1, coachRect:null, coachSeen:false, adLeft:3, ad:null, pay:null, rcpt:null, shIdx:0, dlg:null, fedUntil:0, toastMsg:'' };
@@ -1173,13 +1199,14 @@ class Component extends DCLogic {
     this.t = setInterval(() => {
       const s = this.state;
       const step = (this.props.fastTimer ?? true) ? 30 : 0.25;
-      if (s.screen === 'rest') { const rr = s.rest - step; if (rr <= 0) this.setState({ screen:'tabs', tab:'home', rest:0 }); else this.setState({ rest: rr }); return; }
+      if (s.screen === 'rest') { const rr = s.rest - step; if (rr <= 0) { if (s.midRest) { this.sfx('start'); this.toast('다시 집중해요'); } this.setState(s.midRest ? { screen:'focus', midRest:false, rest:0 } : { screen:'tabs', tab:'home', rest:0 }); } else this.setState({ rest: rr }); return; }
       if (s.screen !== 'focus') return;
       if (s.dlg && ['call', 'incall', 'alarm'].includes(s.dlg.kind)) return;
       const r = s.remain - step;
+      if (s.restOn && r > 0) { const k = Math.floor((s.total - r) / (s.restEvery * 60)); if (k === 0) this.restK = 0; if (k > 0 && k !== this.restK) { this.restK = k; this.sfx('coin'); this.toast(s.restEvery + '분 집중했어요 · ' + s.restLen + '분 쉬어 가요'); this.setState({ remain: r, screen:'rest', rest: s.restLen * 60, midRest:true }); return; } }
       if (r <= 0) this.complete(); else this.setState({ remain: r });
     }, 250);
-    this.m = setInterval(() => this.setState(s => ({ msg: s.msg + 1 }), () => this.markBeh()), 6000);
+    this.m = setInterval(() => !this.state.wheel && this.setState(s => ({ msg: s.msg + 1 }), () => this.markBeh()), 6000);
     if (window.matchMedia) { this.mq = window.matchMedia('(prefers-color-scheme: dark)'); this.mqf = () => this.setState({ sysDark: this.mq.matches }); this.mq.addEventListener('change', this.mqf); this.setState({ sysDark: this.mq.matches }); }
   }
   // v1.1.1: 뒤로가기는 바로 전 화면으로. 탭·메뉴 하위 화면·방 꾸미기 이동을 기록해 두고 back()에서 꺼낸다 (실제 앱 src/store.ts와 같은 규칙)
@@ -1194,12 +1221,27 @@ class Component extends DCLogic {
 
   behavior() {
     const B = BEH;
+    if (this.state.singUntil > Date.now()) return { id:'sing', anim:'meow .7s ease-in-out infinite', text: this.state.songText || '야옹야옹~ 냐옹냐옹♪' };
     if (this.state.fedUntil > Date.now()) return { id:'purr', anim: BEH[6].anim, text:'냠냠, 골골골… 맛있어요!' };
     if (this.state.sulky) return { id:'sulky', anim:'nap 5s ease-in-out infinite', text:'…조금 서운했어요. 다시 같이 해요.' };
     return B[((this.state.msg || 0) + (this.state.behOff || 0)) % B.length];
   }
   nextBehavior() { this.sfx('meow'); this.setState(st => ({ behOff: (st.behOff || 0) + 1 }), () => this.markBeh()); }
-  markBeh() { const b = this.behavior(); if (b.id !== 'sulky' && !this.state.seenBeh.includes(b.id)) this.setState(st => ({ seenBeh: [...st.seenBeh, b.id] }));
+  sing(pick) { const st = this.state;
+    const pool = SONGS.map((x, i) => i).filter(i => !SONGS[i].cat || SONGS[i].cat === st.catId);
+    let k = pick ?? pool[Math.floor(Math.random() * pool.length)]; if (pick == null && k === this.songK) k = pool[(pool.indexOf(k) + 1) % pool.length]; this.songK = k; const sg = SONGS[k];
+    const dur = Math.max(2600, sg.n.reduce((a, x) => a + x[1], 0) * 1000 + 900);
+    if (pick == null) { const isNew = !st.seenSongs.includes(k), ns = isNew ? [...st.seenSongs, k] : st.seenSongs;
+      const basicAll = SONGS.every((x, i) => x.cat || ns.includes(i)), catAll = SONGS.every((x, i) => !x.cat || ns.includes(i));
+      const bonus = (isNew && basicAll && !st.songBonus.basic ? 20 : 0) + (isNew && catAll && !st.songBonus.cat ? 50 : 0);
+      this.setState({ singUntil: Date.now() + dur, songText: sg.t, seenSongs: ns, songBonus: { basic: st.songBonus.basic || basicAll, cat: st.songBonus.cat || catAll }, churu: st.churu + bonus, earnedTotal: st.earnedTotal + bonus });
+      if (bonus) { this.log(bonus === 20 ? '기본 노래 모두 수집' : '전용 노래 모두 수집', bonus); this.sfx('coin'); setTimeout(() => this.toast((bonus === 20 ? '기본 노래 5곡 완성! 배지 · 츄르 +' : '전용 노래 8곡 완성! 배지 · 츄르 +') + bonus), 1800); }
+      if (isNew) this.toast('새 노래 · ' + sg.name + ' 수집!'); clearTimeout(this.sgT); this.sgT = setTimeout(() => this.forceUpdate(), dur + 100); }
+    if (!st.toggles.sound) return; try { const C = window.AudioContext || window.webkitAudioContext; this.ac = this.ac || new C(); let tm = this.ac.currentTime;
+      sg.n.forEach(([fq, d]) => { const o = this.ac.createOscillator(), g = this.ac.createGain(); o.type = 'triangle';
+        o.frequency.setValueAtTime(fq * 1.15, tm); o.frequency.exponentialRampToValueAtTime(fq * .8, tm + d); g.gain.setValueAtTime(.0001, tm); g.gain.exponentialRampToValueAtTime(.09, tm + .03); g.gain.exponentialRampToValueAtTime(.0001, tm + d);
+        o.connect(g); g.connect(this.ac.destination); o.start(tm); o.stop(tm + d); tm += d; }); } catch (e) {} }
+  markBeh() { const b = this.behavior(); if (b.id !== 'sulky' && b.id !== 'sing' && !this.state.seenBeh.includes(b.id)) this.setState(st => ({ seenBeh: [...st.seenBeh, b.id] }));
     const st = this.state; if (Date.now() < st.pinUntil) return;
     let tgt = st.sulky ? 'nap' : st.fedUntil > Date.now() ? 'kit' : ({ nap:'nap', look:'gar', hop:'play' }[b.id] || 'liv'); if (!st.rooms.includes(tgt)) tgt = 'liv';
     if (tgt !== st.catRoom) { this.setState({ catRoom: tgt, jumping:true }); setTimeout(() => this.setState({ jumping:false }), 800);
@@ -1377,11 +1419,13 @@ class Component extends DCLogic {
       showCat === false ? null : (() => { const gf = this.growth().f, ofEl = this.outfitEl(d.outfit, catObj.id), bh = this.behavior(), cw = Math.round(size * 1.1 * gf), chh = Math.round(size * 0.98 * gf), L = Math.round((w - cw) / 2), Bt = Math.round(H * 0.06);
         const fx = (st, txt) => h('span', { style: { position:'absolute', pointerEvents:'none', font:"400 16px 'Jua',sans-serif", color:'#4A3428', ...st } }, txt);
         const fs = Math.max(12, Math.round(w / 24));
-        return h('div', { key: 'cat-' + bh.id, onClick: drag ? () => this.nextBehavior() : undefined,
-          style: { position:'absolute', left:L, bottom:Bt, width:cw, height:chh, animation:'behin .5s ease-out', cursor: drag ? 'pointer' : 'inherit', pointerEvents: drag ? 'auto' : 'none' } },
+        return h('div', { key: 'cat-' + bh.id, onClick: drag ? () => this.nextBehavior() : e => { e.stopPropagation(); this.sing(); },
+          style: { position:'absolute', left:L, bottom:Bt, width:cw, height:chh, animation:'behin .5s ease-out', cursor:'pointer', pointerEvents:'auto' } },
           h('div', { style: { position:'absolute', inset:0, backgroundImage:`var(--cut-${catObj.id})`, backgroundSize:'contain', backgroundRepeat:'no-repeat', backgroundPosition:'center bottom',
             transformOrigin:'50% 100%', animation: bh.anim, filter: bh.id === 'nap' ? 'brightness(.94) saturate(.9)' : 'none' } }, ofEl),
           bh.id === 'nap' && [0, 1, 2].map(i => fx({ key:'z' + i, right: '8%', top: '4%', fontSize: fs + i * 3, animation:`zfloat 2.4s ${i * 0.8}s ease-out infinite`, opacity:0 }, 'z')),
+          bh.id === 'sing' && fx({ key:'sg', right:'-10%', top:'-8%', padding:'4px 10px', borderRadius:'12px 12px 12px 3px', background:'#FBF6EE', border:'1.5px solid #4A3428', fontSize: fs, whiteSpace:'nowrap', transformOrigin:'0 100%', animation:'bubblepop 1.6s ease-out infinite' }, '야옹야옹♪'),
+          bh.id === 'sing' && [['-18px', 0, '♪'], ['14px', .5, '♫'], ['-4px', 1, '♪'], ['22px', 1.4, '♬']].map(([dx, dl, n], i) => fx({ key:'n' + i, left: (20 + i * 16) + '%', top:'6%', fontSize: fs + 2, '--dx': dx, animation:`note 1.6s ${dl}s ease-out infinite`, opacity:0 }, n)),
           bh.id === 'meow' && fx({ key:'mw', right:'-6%', top:'-4%', padding:'4px 10px', borderRadius:'12px 12px 12px 3px', background:'#FBF6EE', border:'1.5px solid #4A3428', fontSize: fs, transformOrigin:'0 100%', animation:'bubblepop 2.4s ease-out infinite' }, '야옹~'),
           bh.id === 'purr' && [['-14px', 0], ['10px', .5], ['-2px', 1]].map(([dx, dl], i) => fx({ key:'h' + i, left:'46%', top:'2%', fontSize: fs, color:'#E07F7F', '--dx': dx, animation:`hfloat 1.8s ${dl}s ease-out infinite`, opacity:0 }, '♥')),
           bh.id === 'look' && fx({ key:'q', right:'4%', top:'-2%', fontSize: fs + 4, animation:'bubblepop 2s ease-out infinite' }, '?'),
@@ -1487,7 +1531,7 @@ class Component extends DCLogic {
         const row = (label, value, onClick, extra = {}) => ({ label, value, onClick, ...extra });
         const tgl = (label, k, value = '') => row(label, (s.cb ? (s.toggles[k] ? '켜짐' : '꺼짐') + (value ? ' ' : '') : '') + value, tog(k), { isToggle: true, track: s.toggles[k] ? '#8DBF93' : 'var(--line)', knob: s.toggles[k] ? '20px' : '3px' });
         const dark = this.isDark(), ml = p.menuLayout ?? 'list';
-        const BT = [['연속 집중 일수','일',[3,7,14,30],streakOf([...s.att, ...s.fdays]),'var(--chip1)'],['누적 집중 시간','분',[60,300,1000,3000],310 + todayMin,'var(--mint)'],['츄르 획득량','개',[50,200,500,1500],s.earnedTotal,'var(--pink)'],['후원 횟수','회',[1,5,15,30],s.donated + s.sponsorships.length,'var(--blue)'],['고양이 도감 수집','마리',[1,2,3,4],s.owned.length,'var(--purple)'],['방 꾸미기 아이템','개',[3,6,10,15],s.ownedDecor.length + s.items.length,'#EDE3C9']];
+        const BT = [['연속 집중 일수','일',[3,7,14,30],streakOf([...s.att, ...s.fdays]),'var(--chip1)'],['누적 집중 시간','분',[60,300,1000,3000],310 + todayMin,'var(--mint)'],['츄르 획득량','개',[50,200,500,1500],s.earnedTotal,'var(--pink)'],['후원 횟수','회',[1,5,15,30],s.donated + s.sponsorships.length,'var(--blue)'],['고양이 도감 수집','마리',[1,2,3,4],s.owned.length,'var(--purple)'],['방 꾸미기 아이템','개',[3,6,10,15],s.ownedDecor.length + s.items.length,'#EDE3C9'],['노래 수집','곡',[3,5,9,13],s.seenSongs.length,'var(--mint)']];
         const gotBadges = BT.reduce((a, b) => a + b[2].filter(x => b[3] >= x).length, 0);
         const SECS = [
           ['내 활동', [row('집중냥 Plus', s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', page('집중냥 Plus'), { color: '#C9772F' }), row('집중 기록', '', go('stats')), row('상점 · 꾸미기', s.churu + ' 츄르', go('shop')), row('고양이 도감', (s.owned.length + (s.plus ? 4 : 0)) + '/8', go('dex')), row('업적 · 배지', gotBadges + '/24', page('업적 · 배지')), row('출석 체크', streakOf(s.att) + '일', page('출석 체크')), row('주간 리포트 · 월간 회고', '', page('주간 리포트 · 월간 회고')), row('친구와 비교', '', page('친구와 비교')), row('고양이 성장', this.growth().name, page('고양이 성장')), row('츄르 내역', '', page('츄르 내역'))]],
@@ -1573,7 +1617,7 @@ class Component extends DCLogic {
           splashScene: h('div', { style: { position:'relative', width:300, height:250 } },
             ico({ left:28, top:150, background:'#E0473C', zIndex:1, animation:'shake .35s ease-in-out infinite' },
               h('div', { style: { width:0, height:0, borderLeft:'20px solid #FFFFFF', borderTop:'12px solid transparent', borderBottom:'12px solid transparent', marginLeft:4 } })),
-            h('div', { style: { position:'absolute', left:65, top:44, width:170, height:170, borderRadius:'50%', border:'2px solid var(--ink)', backgroundImage:"var(--ca)", backgroundSize:ck.size, backgroundPosition:ck.pos, zIndex:2, transformOrigin:'50% 100%', animation:'sqbounce 1s ease-in-out infinite' } }),
+            h('div', { style: { position:'absolute', left:65, top:44, width:170, height:170, borderRadius:'50%', border:'2px solid var(--ink)', backgroundImage:`var(--ca)`, backgroundSize:ck.size, backgroundPosition:ck.pos, zIndex:2, transformOrigin:'50% 100%', animation:'sqbounce 1s ease-in-out infinite' } }),
             ico({ left:204, top:24, background:'linear-gradient(45deg,#F2A65A,#D9567A 55%,#8E5BD0)', zIndex:3, transform:'rotate(14deg)', animation:'bite 2s ease-in-out infinite' },
               h('div', { style: { width:26, height:26, borderRadius:9, border:'4px solid #FFFFFF', boxSizing:'border-box' } })),
             crumb(240, 34, '18px', 0, '#D9567A'), crumb(252, 30, '34px', .15, '#8E5BD0'), crumb(232, 40, '-6px', .3, '#F2A65A'),
@@ -1659,10 +1703,18 @@ class Component extends DCLogic {
           confettiEls: Array.from({ length: 22 }, (_, i) => h('span', { key: i, style: { position:'absolute', top:0, left: ((i * 37) % 100) + '%', width: 7 + (i % 3) * 2, height: 11, background: CC[i % 6], borderRadius: 2, opacity: 0, animation: 'confetti ' + (2.4 + (i % 5) * 0.35) + 's ' + ((i % 7) * 0.18) + 's ease-in 1 forwards' } })),
           tearEls: [[62, 108, 0], [104, 108, 1.1]].map(([l, tp, d], i) => h('span', { key: i, style: { position:'absolute', left: l, top: tp, width: 7, height: 11, borderRadius:'50% 50% 50% 50% / 60% 60% 40% 40%', background:'#8CB6D9', opacity: 0, animation: 'tear 2.2s ' + d + 's ease-in infinite' } })),
           isRest: s.screen === 'rest', restText: String(mmr).padStart(2, '0') + ':' + String(ssr).padStart(2, '0'),
-          startRest: () => this.setState({ screen:'rest', rest:300 }), moreRest: () => this.setState(st => ({ rest: st.rest + 300 })),
-          dexTabs: seg([['cat', '고양이'], ['beh', '행동'], ['item', '아이템']], s.dexTab, k => this.setState({ dexTab: k })),
+          startRest: () => this.setState({ screen:'rest', midRest:false, rest:(s.restOn ? s.restLen : 5) * 60 }),
+          restSub: s.midRest ? '휴식이 끝나면 남은 집중을 이어서 해요.' : '시간이 끝나면 홈으로 돌아가요.',
+          restEndLabel: s.midRest ? '바로 집중 이어가기' : '휴식 끝내고 홈으로',
+          restEnd: () => s.midRest ? this.setState({ screen:'focus', midRest:false, rest:0 }) : this.setState({ screen:'tabs', tab:'home', rest:0 }), moreRest: () => this.setState(st => ({ rest: st.rest + 300 })),
+          dexTabs: seg([['cat', '고양이'], ['beh', '행동'], ['song', '노래'], ['item', '아이템']], s.dexTab, k => this.setState({ dexTab: k })),
+          dexSong: s.dexTab === 'song',
+          songCards: SONGS.map((x, i) => { const on = s.seenSongs.includes(i), cc = x.cat && CATS.find(c => c.id === x.cat), cOwn = cc && (s.owned.includes(cc.id) || (cc.plus && s.plus));
+            const tagTxt = cc ? (cOwn ? cc.name + ' 전용' : '??? 전용') : '기본';
+            return { on, name: (on ? x.name : '???') + ' · ' + tagTxt, lyric: on ? x.t : cc ? (cOwn ? cc.name + '와(과) 함께일 때 눌러 보세요' : '아직 못 만난 고양이의 노래예요') : '고양이를 눌러 들어 보세요', g: on ? (cc ? '♬' : '♪') : '?', bg: on ? (cc ? 'var(--chip1)' : 'var(--mint)') : 'var(--card2)', border: on ? 'var(--ink)' : 'var(--line)', play: () => this.sing(i) }; }),
+          songGoal: '기본 5곡 모으면 츄르 20 · 전용 8곡 모으면 츄르 50' + (s.songBonus.basic ? ' · 기본 보상 받음' : '') + (s.songBonus.cat ? ' · 전용 보상 받음' : ''),
           dexCats: s.dexTab === 'cat', dexBeh: s.dexTab === 'beh', dexItems: s.dexTab === 'item',
-          dexCount: s.dexTab === 'cat' ? s.owned.length + '/4 만남' : s.dexTab === 'beh' ? seen.length + '/7 수집' : ownItems + '/' + totItems + ' 보유',
+          dexCount: s.dexTab === 'cat' ? s.owned.length + '/4 만남' : s.dexTab === 'beh' ? seen.length + '/7 수집' : s.dexTab === 'song' ? s.seenSongs.length + '/' + SONGS.length + ' 수집' : ownItems + '/' + totItems + ' 보유',
           behCards: BEH.map(b => { const on = seen.includes(b.id); return { name: on ? b.name : '???', g: on ? b.g : '?', bg: on ? b.bg : 'var(--card2)', status: on ? '수집 완료' : '아직 못 봤어요', stColor: on ? 'var(--gink)' : 'var(--mute)', border: on ? 'var(--ink)' : 'var(--line)' }; }),
           itemGroups,
           donTabs: seg([['give', '후원하기'], ['feed', '소식 피드'], ['mine', '내 후원']], s.donTab, k => this.setState({ donTab: k })),
@@ -1863,7 +1915,7 @@ class Component extends DCLogic {
       cat, level, xpPct, stage, xpWidth: xpPct + '%', churu: s.churu,
       bubble: this.behavior().text,
       ...(() => {
-        const eh = s.endH ?? 0, em = s.endM ?? 0, is12 = s.fmt === '12', pm = eh >= 12, p2 = n => String(n).padStart(2,'0');
+        const eh = s.endH ?? 0, em = s.endM ?? 0, is12 = true, pm = eh >= 12, p2 = n => String(n).padStart(2,'0');
         const h12 = eh % 12 === 0 ? 12 : eh % 12;
         const mkWheel = (key, items, idx, onIdx) => ({ items: items.map((t, i) => ({ t, c: i === idx ? 'var(--ink)' : 'var(--mute)' })),
           ref: el => { if (el && el._k !== key + s.fmt) { el._k = key + s.fmt; el.scrollTop = idx * 40; } },
@@ -1882,10 +1934,17 @@ class Component extends DCLogic {
           openWheel: () => this.setState({ wheel: true }), closeWheel: () => this.setState({ wheel: false }),
           fmtOpts: [['24','24시간'],['12','12시간']].map(([k, label]) => ({ label, bg: s.fmt === k ? 'var(--bg)' : 'transparent', fg: s.fmt === k ? 'var(--ink)' : 'var(--sub)', pick: () => this.setState({ fmt: k }) })),
           durText: (dh ? dh + '시간 ' : '') + (dm ? dm + '분' : (dh ? '' : '5분')),
+          durSummary: '지금부터 ' + (dh ? dh + '시간 ' : '') + (dm ? dm + '분' : (dh ? '' : '5분')) + ' 집중해요',
+          freezeFlag: s.wheel ? '1' : '0',
+          restText: s.restOn ? s.restEvery + '분마다 ' + s.restLen + '분' : '휴식 없음', restEvery: s.restEvery, restLen: s.restLen, restOp: s.restOn ? '1' : '.45',
+          restPresets: [[25,5],[50,10],[90,15],[0,0]].map(([e, l]) => { const on = e ? (s.restOn && s.restEvery === e && s.restLen === l) : !s.restOn;
+            return { label: e ? e + '분 · ' + l + '분' : '휴식 없음', bg: on ? 'var(--ink)' : 'var(--bg)', fg: on ? 'var(--bg)' : 'var(--ink)', pick: () => this.setState(e ? { restOn:true, restEvery:e, restLen:l } : { restOn:false }) }; }),
+          evMinus: () => this.setState(st => ({ restOn:true, restEvery: Math.max(5, st.restEvery - 5) })), evPlus: () => this.setState(st => ({ restOn:true, restEvery: Math.min(180, st.restEvery + 5) })),
+          lnMinus: () => this.setState(st => ({ restOn:true, restLen: Math.max(1, st.restLen - 1) })), lnPlus: () => this.setState(st => ({ restOn:true, restLen: Math.min(30, st.restLen + 1) })),
         };
       })(),
       durations: [15,25,50,90].map(m => ({ label: m + '분', bg: s.dur === m ? 'var(--ink)' : 'var(--bg)', fg: s.dur === m ? 'var(--bg)' : 'var(--ink)', pick: () => this.setState({ dur: m }) })),
-      blockedApps: blockedList, blockedCount: blockedList.length, previewReward: this.reward(s.dur).churu,
+      blockedApps: blockedList, blockedCount: blockedList.length, allowCount: APPS.length - blockedList.length, previewReward: this.reward(s.dur).churu,
       openSheet: () => this.setState({ sheet: true }), closeSheet: () => this.setState({ sheet: false }), stop: (e) => e.stopPropagation(),
       platformHint: ios ? '스크린 타임으로 선택한 앱이 잠겨요.' : '차단된 앱을 열면 고양이 화면이 위에 나타나요.',
       appRows: APPS.map(a => ({ ...a, track: s.blocked[a.id] ? '#8DBF93' : 'var(--line)', knob: s.blocked[a.id] ? '23px' : '3px',
@@ -1903,7 +1962,7 @@ class Component extends DCLogic {
       ownedCount: s.owned.length,
       catCards: CATS.map(c => { const own = s.owned.includes(c.id) || (c.plus && s.plus), cr = crop(c, 140); return {
         lockText: c.plus ? 'Plus 구독으로 만나요' : '츄르 30개로 만나요',
-        label: own || c.plus ? c.name : '???', bgSize: cr.size, bgPos: cr.pos, filter: own ? 'none' : c.plus ? 'brightness(.35) opacity(.55)' : 'brightness(0) opacity(.18)',
+        label: own ? c.name : '???', bgSize: cr.size, bgPos: cr.pos, filter: own ? 'none' : c.plus ? 'brightness(.35) opacity(.55)' : 'brightness(0) opacity(.18)',
         border: c.id === s.catId ? '2.5px solid var(--ink)' : '1.5px solid var(--line)',
         tag: own ? '♥ ' + Math.floor((s.aff[c.id]||0)/20) + (c.id === s.catId ? ' · 함께' : '') : c.plus ? 'PLUS' : '잠김', tagBg: c.id === s.catId ? 'var(--mint)' : c.plus && !own ? '#F6D58E' : 'var(--card)',
         locked: !own, select: () => own ? this.setState({ catId: c.id }) : c.plus ? this.setState({ tab: 'menu', menuPage: PG.plus, prevTab: 'dex' }) : null }; }),

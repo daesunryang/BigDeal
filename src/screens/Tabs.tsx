@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
-import { ANIMALS, BEH, CATS, DECOR, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
+import { ANIMALS, BEH, CATS, DECOR, SONGS, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
 import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
 import { S, getS, listOf, useApp } from '../store';
 import { sfx } from '../sfx';
@@ -21,11 +21,11 @@ export function Dex() {
     const items = listOf(k, s.dRoom).map(([id, name]) => { const o = isOwned(k, id); tot++; if (o) own++; return { id, nm: o ? name : '???', sw: k === 'wall' ? WALL[id] : k === 'floor' ? FLOOR[id] : SWATCH[id], op: o ? 1 : 0.25 }; });
     return { k, title: DECOR[k].label, count: items.filter(x => x.op === 1).length + '/' + items.length, items };
   });
-  const count = s.dexTab === 'cat' ? s.owned.length + '/4 만남' : s.dexTab === 'beh' ? s.seenBeh.length + '/7 수집' : own + '/' + tot + ' 보유';
+  const count = s.dexTab === 'cat' ? s.owned.length + '/4 만남' : s.dexTab === 'beh' ? s.seenBeh.length + '/7 수집' : s.dexTab === 'song' ? s.seenSongs.length + '/' + SONGS.length + ' 수집' : own + '/' + tot + ' 보유';
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="도감" right={<Txt style={{ fontSize: 14, color: C.sub }}>{count}</Txt>} />
-      <Seg items={[['cat', '고양이'], ['beh', '행동'], ['item', '아이템']]} value={s.dexTab} onPick={k => S({ dexTab: k })} />
+      <Seg items={[['cat', '고양이'], ['beh', '행동'], ['song', '노래'], ['item', '아이템']]} value={s.dexTab} onPick={k => S({ dexTab: k })} />
       {s.dexTab === 'cat' && <>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
           {CATS.map(c => {
@@ -38,7 +38,7 @@ export function Dex() {
                     : <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.18)' }} />}
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Txt jua style={{ fontSize: 15, flexShrink: 1 }} numberOfLines={1}>{o || c.plus ? c.name : '???'}</Txt>
+                  <Txt jua style={{ fontSize: 15, flexShrink: 1 }} numberOfLines={1}>{o ? c.name : '???'}</Txt>
                   <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: c.id === s.catId ? C.mint : c.plus && !o ? '#F6D58E' : C.card }}>
                     <Txt style={{ fontSize: 11, color: c.plus && !o ? '#4A3428' : C.ink }}>{o ? '♥ ' + Math.floor((s.aff[c.id] || 0) / 20) + (c.id === s.catId ? ' · 함께' : '') : c.plus ? 'PLUS' : '잠김'}</Txt>
                   </View>
@@ -62,6 +62,23 @@ export function Dex() {
               <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: on ? b.bg : C.card2, alignItems: 'center', justifyContent: 'center' }}><Txt jua style={{ fontSize: 20, color: '#4A3428' }}>{on ? b.g : '?'}</Txt></View>
               <View style={{ flexShrink: 1 }}><Txt jua style={{ fontSize: 15 }}>{on ? b.name : '???'}</Txt><Txt style={{ fontSize: 11, color: on ? C.gink : C.mute }}>{on ? '수집 완료' : '아직 못 봤어요'}</Txt></View>
             </View>); })}
+        </View>
+      </>}
+      {s.dexTab === 'song' && <>
+        <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>{'홈에서 고양이를 누르면 노래를 불러요. 한 번 들은 노래는 여기서 다시 들을 수 있어요. 고양이마다 전용 노래도 한 곡씩 있어요.\n기본 5곡 모으면 츄르 20 · 전용 8곡 모으면 츄르 50' + (s.songBonus.basic ? ' · 기본 보상 받음' : '') + (s.songBonus.cat ? ' · 전용 보상 받음' : '')}</Txt>
+        <View style={{ gap: 8 }}>
+          {SONGS.map((x, i) => {
+            const on = s.seenSongs.includes(i), cc = x.cat ? catById(x.cat) : null, cOwn = !!cc && (s.owned.includes(cc.id) || (!!cc.plus && s.plus));
+            const tag = cc ? (cOwn ? cc.name + ' 전용' : '??? 전용') : '기본';
+            const lyric = on ? x.t : cc ? (cOwn ? cc.name + '와(과) 함께일 때 눌러 보세요' : '아직 못 만난 고양이의 노래예요') : '고양이를 눌러 들어 보세요';
+            return (
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, borderWidth: 1.5, borderColor: on ? C.ink : C.line, backgroundColor: C.bg }}>
+                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: on ? (cc ? C.chip1 : C.mint) : C.card2, alignItems: 'center', justifyContent: 'center' }}><Txt jua style={{ fontSize: 20 }}>{on ? (cc ? '♬' : '♪') : '?'}</Txt></View>
+                <View style={{ flex: 1, minWidth: 0 }}><Txt jua style={{ fontSize: 15 }}>{(on ? x.name : '???') + ' · ' + tag}</Txt><Txt style={{ fontSize: 12, color: C.sub }}>{lyric}</Txt></View>
+                {on && <Btn onPress={() => getS().sing(i)} accessibilityLabel={x.name + ' 듣기'} style={{ height: 34, paddingHorizontal: 12, borderRadius: 17, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.chip1 }}><Txt jua style={{ fontSize: 13 }}>▶ 듣기</Txt></Btn>}
+              </View>
+            );
+          })}
         </View>
       </>}
       {s.dexTab === 'item' && groups.map(g => (
