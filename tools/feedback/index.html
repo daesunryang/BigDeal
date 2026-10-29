@@ -1,0 +1,224 @@
+<title>집중냥 피드백</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* 레이아웃: 버전(라운드)별 항목 카드를 한 줄로 쌓고, 화면 아래에 요약·정리 바를 고정한다. 앱과 같은 크림·브라운 팔레트. */
+:root {
+  --bg: #FBF6EE; --card: #F3EADB; --surface: #FFFDF9; --line: #E2D4BD; --ink: #4A3428; --sub: #7A6352; --mute: #9A8676;
+  --accent: #E59A4C; --good: #4F8A57; --good-bg: #E3EFDF; --fix: #C9772F; --fix-bg: #F6E3C9; --hold: #5B8FD9; --hold-bg: #DCE8F3;
+  --done: #2B221D; --done-fg: #FBF6EE;
+  --display: 'Jua', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --body: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1F1814; --card: #2B221C; --surface: #2A211B; --line: #463A31; --ink: #F0E5D5; --sub: #B9A793; --mute: #9A8B7A;
+  --accent: #E59A4C; --good: #A9D4AE; --good-bg: #2B3A2E; --fix: #F2B36B; --fix-bg: #4A3827; --hold: #8DB4EA; --hold-bg: #2B3645;
+  --done: #F0E5D5; --done-fg: #1F1814; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #1F1814; --card: #2B221C; --surface: #2A211B; --line: #463A31; --ink: #F0E5D5; --sub: #B9A793; --mute: #9A8B7A;
+  --accent: #E59A4C; --good: #A9D4AE; --good-bg: #2B3A2E; --fix: #F2B36B; --fix-bg: #4A3827; --hold: #8DB4EA; --hold-bg: #2B3645;
+  --done: #F0E5D5; --done-fg: #1F1814; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 760px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 140px; display: flex; flex-direction: column; gap: 26px; }
+h1 { font: 400 34px/1.15 var(--display); margin: 0; text-wrap: balance; }
+h2 { font: 400 22px/1.2 var(--display); margin: 0; }
+.lead { margin: 0; color: var(--sub); max-width: 62ch; }
+.lead b { color: var(--ink); }
+.head { display: flex; flex-direction: column; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 13px; font: 14px var(--body); cursor: pointer; display: inline-flex; gap: 6px; align-items: baseline; }
+.chip .n { font: 400 17px var(--display); font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip:focus-visible, .r:focus-visible, textarea:focus-visible, .bar button:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+.round { display: flex; flex-direction: column; gap: 12px; }
+.round-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.round-head span { color: var(--sub); font-size: 13px; }
+.item { background: var(--surface); border: 1.5px solid var(--line); border-radius: 18px; padding: 15px 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.item[data-s="good"] { border-color: var(--good); }
+.item[data-s="fix"] { border-color: var(--fix); }
+.item[data-s="hold"] { border-color: var(--hold); }
+.item-top { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.id { font: 12px var(--mono); color: var(--mute); }
+.title { font: 400 17px/1.35 var(--display); flex: 1; min-width: 12ch; }
+.done { font: 12px var(--body); background: var(--done); color: var(--done-fg); border-radius: 8px; padding: 2px 9px; }
+.desc { margin: 0; color: var(--sub); font-size: 14px; text-wrap: pretty; }
+.where { font-size: 12px; color: var(--mute); }
+.where::before { content: "확인하는 곳 · "; }
+.reply { font-size: 13px; background: var(--card); border-radius: 12px; padding: 9px 12px; }
+.reply::before { content: "Claude 답변 · "; color: var(--sub); }
+.reacts { display: flex; gap: 6px; flex-wrap: wrap; }
+.r { border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 7px 14px; font: 14px var(--body); cursor: pointer; min-height: 38px; }
+.r[data-k="good"][aria-pressed="true"] { background: var(--good-bg); border-color: var(--good); color: var(--good); }
+.r[data-k="fix"][aria-pressed="true"] { background: var(--fix-bg); border-color: var(--fix); color: var(--fix); }
+.r[data-k="hold"][aria-pressed="true"] { background: var(--hold-bg); border-color: var(--hold); color: var(--hold); }
+textarea { width: 100%; min-height: 64px; resize: vertical; border: 1.5px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); padding: 9px 12px; font: 15px/1.5 var(--body); }
+textarea::placeholder { color: var(--mute); }
+.empty { background: var(--card); border-radius: 18px; padding: 28px 18px; color: var(--sub); text-align: center; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1.5px solid var(--line); padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); z-index: 5; }
+.bar-in { max-width: 760px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.bar .sum { flex: 1; min-width: 14ch; font-size: 13px; color: var(--sub); }
+.bar button { border: none; border-radius: 999px; padding: 11px 18px; font: 400 16px var(--display); cursor: pointer; background: var(--ink); color: var(--bg); }
+.bar button.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+.status { font-size: 12px; color: var(--mute); }
+.out { width: 100%; font: 13px/1.5 var(--mono); min-height: 160px; }
+.panel { background: var(--surface); border: 1.5px solid var(--ink); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+@media (prefers-reduced-motion: no-preference) { .item { transition: border-color .2s } }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <h1>집중냥 피드백</h1>
+    <p class="lead">버전마다 바뀐 항목에 <b>좋아요 · 수정 필요 · 보류</b> 중 하나를 고르고, 필요하면 메모를 남겨 주세요. 고르는 즉시 저장돼서 PC와 휴대폰 어디서 열어도 같아요. 다 고른 뒤 Claude Code에 <b>“피드백 반영해 줘”</b>라고 말하면 Claude가 여기 적힌 내용을 읽고 처리해요.</p>
+    <div class="status" id="status">불러오는 중…</div>
+  </header>
+
+  <nav class="chips" id="filters" aria-label="보기 거르기"></nav>
+
+  <main id="list">
+    <div class="empty" id="empty">아직 항목이 없어요. Claude가 새 버전을 만들 때마다 바뀐 항목을 여기에 올려 둬요.</div>
+  </main>
+
+  <section class="panel" id="panel" hidden>
+    <h2>피드백 정리</h2>
+    <p class="lead">Claude Code 채팅에 붙여 넣어도 되고, 그냥 “피드백 반영해 줘”라고만 해도 돼요.</p>
+    <textarea class="out" id="out" readonly aria-label="정리된 피드백"></textarea>
+  </section>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="sum" id="sum">항목을 불러오는 중이에요</div>
+    <button class="ghost" id="make" type="button">정리 보기</button>
+    <button id="copy" type="button">정리 복사</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var LABEL = { good: '좋아요', fix: '수정 필요', hold: '보류' };
+  var FILTERS = [['all', '전체'], ['none', '아직 안 고름'], ['fix', '수정 필요'], ['hold', '보류'], ['good', '좋아요'], ['done', '처리 완료']];
+  var items = [], reacts = {}, filter = 'all', db = null, timers = {};
+  try { filter = localStorage.getItem('jjn-fb-filter') || 'all'; } catch (e) {}
+
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function status(t) { $('status').textContent = t; }
+  function stOf(id) { return (reacts[id] && reacts[id].status) || ''; }
+
+  function counts() {
+    var c = { all: items.length, none: 0, fix: 0, hold: 0, good: 0, done: 0 };
+    items.forEach(function (it) { var s = stOf(it._id); if (it.done) c.done++; if (!s) c.none++; else c[s]++; });
+    return c;
+  }
+  function visible(it) {
+    var s = stOf(it._id);
+    if (filter === 'all') return true;
+    if (filter === 'done') return !!it.done;
+    if (filter === 'none') return !s;
+    return s === filter;
+  }
+
+  function renderFilters() {
+    var c = counts(), box = $('filters'); box.textContent = '';
+    FILTERS.forEach(function (f) {
+      var b = el('button', 'chip'); b.type = 'button'; b.setAttribute('aria-pressed', String(filter === f[0]));
+      b.appendChild(el('span', 'n', String(c[f[0]]))); b.appendChild(document.createTextNode(f[1]));
+      b.onclick = function () { filter = f[0]; try { localStorage.setItem('jjn-fb-filter', filter); } catch (e) {} render(); };
+      box.appendChild(b);
+    });
+    $('sum').textContent = items.length ? ('좋아요 ' + c.good + ' · 수정 필요 ' + c.fix + ' · 보류 ' + c.hold + ' · 아직 ' + c.none) : '아직 항목이 없어요';
+  }
+
+  function save(id, patch) {
+    reacts[id] = Object.assign({}, reacts[id], patch, { at: new Date().toISOString() });
+    if (!db) { status('저장할 수 없어요. claude.ai에 로그인한 상태로 열어 주세요.'); return; }
+    status('저장 중…');
+    db.doc('reactions/' + id).set(reacts[id]).then(function () { status('저장됨 · ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })); })
+      .catch(function (e) { status('저장하지 못했어요 (' + (e && e.code || '오류') + '). 잠시 후 다시 골라 주세요.'); });
+  }
+
+  function card(it) {
+    var s = stOf(it._id), r = reacts[it._id] || {};
+    var c = el('article', 'item'); c.dataset.s = s;
+    var top = el('div', 'item-top');
+    top.appendChild(el('span', 'id', it.id || it._id));
+    top.appendChild(el('span', 'title', it.title || ''));
+    if (it.done) top.appendChild(el('span', 'done', '처리 완료' + (typeof it.done === 'string' ? ' · ' + it.done : '')));
+    c.appendChild(top);
+    if (it.desc) c.appendChild(el('p', 'desc', it.desc));
+    if (it.where) c.appendChild(el('div', 'where', it.where));
+    if (it.reply) c.appendChild(el('div', 'reply', it.reply));
+    var rx = el('div', 'reacts'); rx.setAttribute('role', 'group'); rx.setAttribute('aria-label', '반응');
+    ['good', 'fix', 'hold'].forEach(function (k) {
+      var b = el('button', 'r', LABEL[k]); b.type = 'button'; b.dataset.k = k; b.setAttribute('aria-pressed', String(s === k));
+      b.onclick = function () { save(it._id, { status: s === k ? '' : k }); render(); };
+      rx.appendChild(b);
+    });
+    c.appendChild(rx);
+    var ta = el('textarea'); ta.id = 'memo-' + it._id; ta.placeholder = s === 'fix' ? '어떻게 바꾸면 좋을지 적어 주세요' : '메모 (선택)'; ta.value = r.memo || '';
+    ta.setAttribute('aria-label', (it.id || it._id) + ' 메모');
+    ta.oninput = function () { clearTimeout(timers[it._id]); var v = ta.value; reacts[it._id] = Object.assign({}, reacts[it._id], { memo: v }); timers[it._id] = setTimeout(function () { save(it._id, { memo: v }); }, 700); };
+    c.appendChild(ta);
+    return c;
+  }
+
+  function render() {
+    renderFilters();
+    var list = $('list'), active = document.activeElement && document.activeElement.id, sel = active && document.activeElement.selectionStart;
+    list.textContent = '';
+    if (!items.length) { var e = el('div', 'empty', db ? '아직 항목이 없어요. Claude가 새 버전을 만들 때마다 바뀐 항목을 여기에 올려 둬요.' : '항목을 불러오는 중이에요.'); list.appendChild(e); return; }
+    var rounds = {}, order = [];
+    items.forEach(function (it) { if (!rounds[it.round]) { rounds[it.round] = []; order.push(it.round); } rounds[it.round].push(it); });
+    var shown = 0;
+    order.forEach(function (rd) {
+      var vis = rounds[rd].filter(visible); if (!vis.length) return;
+      var sec = el('section', 'round'), h = el('div', 'round-head');
+      h.appendChild(el('h2', null, rd)); var first = rounds[rd][0]; if (first.roundNote) h.appendChild(el('span', null, first.roundNote));
+      sec.appendChild(h); vis.forEach(function (it) { sec.appendChild(card(it)); shown++; }); list.appendChild(sec);
+    });
+    if (!shown) list.appendChild(el('div', 'empty', '이 보기에 해당하는 항목이 없어요.'));
+    if (active) { var a = document.getElementById(active); if (a) { a.focus(); try { a.setSelectionRange(sel, sel); } catch (e) {} } }
+  }
+
+  function summary() {
+    var by = { good: [], fix: [], hold: [] };
+    items.forEach(function (it) { var s = stOf(it._id), m = (reacts[it._id] || {}).memo; if (s) by[s].push('- ' + (it.id || it._id) + ' ' + it.title + (m ? ' — ' + m.trim() : '')); });
+    var none = items.filter(function (it) { return !stOf(it._id) && (reacts[it._id] || {}).memo; }).map(function (it) { return '- ' + (it.id || it._id) + ' ' + it.title + ' — ' + reacts[it._id].memo.trim(); });
+    var t = '[집중냥 피드백]\n';
+    [['good', '■ 좋아요'], ['fix', '■ 수정 필요'], ['hold', '■ 보류']].forEach(function (g) { if (by[g[0]].length) t += '\n' + g[1] + '\n' + by[g[0]].join('\n') + '\n'; });
+    if (none.length) t += '\n■ 메모만\n' + none.join('\n') + '\n';
+    return t;
+  }
+  $('make').onclick = function () { $('out').value = summary(); $('panel').hidden = false; $('panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  $('copy').onclick = function () {
+    var t = summary(); $('out').value = t; $('panel').hidden = false;
+    var done = function () { $('copy').textContent = '복사했어요'; setTimeout(function () { $('copy').textContent = '정리 복사'; }, 1800); };
+    try { navigator.clipboard.writeText(t).then(done, function () { $('out').select(); status('복사가 막혀 있어요. 아래 글을 길게 눌러 복사해 주세요.'); }); }
+    catch (e) { $('out').select(); status('복사가 막혀 있어요. 아래 글을 길게 눌러 복사해 주세요.'); }
+  };
+
+  render();
+  if (!window.claude || !window.claude.use) { status('claude.ai에서 열어야 저장돼요.'); return; }
+  window.claude.use('db').then(function (d) {
+    db = d;
+    if (!db) { status('저장소에 연결하지 못했어요. claude.ai에 로그인한 상태로 열어 주세요.'); render(); return; }
+    db.collection('items').orderBy('order').onSnapshot(function (snap) {
+      items = snap.docs.map(function (doc) { return Object.assign({ _id: doc.id }, doc.data()); });
+      status(items.length ? '저장된 반응을 불러왔어요' : '아직 항목이 없어요'); render();
+    }, function (e) { status('항목을 불러오지 못했어요 (' + e.code + ')'); });
+    db.collection('reactions').onSnapshot(function (snap) {
+      snap.docs.forEach(function (doc) {
+        var cur = document.activeElement && document.activeElement.id === 'memo-' + doc.id;
+        var data = doc.data() || {};
+        if (cur) data = Object.assign({}, data, { memo: (reacts[doc.id] || {}).memo });
+        reacts[doc.id] = data;
+      });
+      render();
+    }, function () {});
+  });
+})();
+</script>

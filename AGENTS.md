@@ -34,6 +34,12 @@ Run lint and typecheck before declaring any task done.
 - `APP_FLAVOR=demo` (default): UI demo, everything mocked.
 - `APP_FLAVOR=full`: real Android app blocking (`modules/app-blocker`, config plugin `plugins/withAppBlocker.js`), Firebase login and Firestore sync (`src/services/`).
 
+## Feedback loop
+
+- The user reacts to changes in the web checklist artifact https://claude.ai/artifact/TbHNt1WHm9w85JrnqcSxdz (source `tools/feedback/index.html`, db collections `items` and `reactions`, same doc ids). `FEEDBACK.md` is the Git copy.
+- When asked to apply feedback ("피드백 반영해 줘"): read `reactions` (and `items`) with the ArtifactData tool, copy status and memo into `FEEDBACK.md`, implement the `수정 필요` items on a new version branch (never on `main` or an older version branch), then set `done: "vX.Y.Z"` and a short Korean `reply` on each handled item and add the new version's changes as new `items` (ids `X.Y.Z-n`, `order` lower than the previous round's). If `FEEDBACK.md` was edited by hand, merge: the later edit wins; ask when unclear.
+- Reply to the user in Korean.
+
 ## Building with EAS
 
 Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
