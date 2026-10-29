@@ -1211,9 +1211,11 @@ class Component extends DCLogic {
   }
   // v1.1.1: 뒤로가기는 바로 전 화면으로. 탭·메뉴 하위 화면·방 꾸미기 이동을 기록해 두고 back()에서 꺼낸다 (실제 앱 src/store.ts와 같은 규칙)
   navKey(l) { return l.screen === 'decor' ? 'decor' : l.tab + '|' + (l.tab === 'menu' ? l.menuPage || '' : ''); }
-  componentDidUpdate(pp, ps) { const s = this.state, ok = sc => sc === 'tabs' || sc === 'decor';
-    if (this.navMute) return; if (!ok(s.screen)) { this.nav = []; return; } if (!ok(ps.screen) || this.navKey(s) === this.navKey(ps)) return;
-    (this.nav = this.nav || []).push({ screen: ps.screen, tab: ps.tab, menuPage: ps.tab === 'menu' ? ps.menuPage : null }); if (this.nav.length > 40) this.nav.shift(); }
+  // 디자인 런타임은 componentDidUpdate에 이전 state를 넘겨주지 않으므로 직전 위치를 직접 기억해 둔다
+  componentDidUpdate() { const s = this.state, ok = sc => sc === 'tabs' || sc === 'decor';
+    const ps = this.lastLoc, cur = { screen: s.screen, tab: s.tab, menuPage: s.tab === 'menu' ? s.menuPage : null }; this.lastLoc = cur;
+    if (this.navMute || !ps) return; if (!ok(s.screen)) { this.nav = []; return; } if (!ok(ps.screen) || this.navKey(cur) === this.navKey(ps)) return;
+    (this.nav = this.nav || []).push(ps); if (this.nav.length > 40) this.nav.shift(); }
   popNav() { const st = this.nav || [], cur = this.navKey(this.state);
     while (st.length) { const l = st.pop(); if (this.navKey(l) === cur) continue; this.navMute = true; this.setState({ ...l, preview: null }, () => { this.navMute = false; }); return true; }
     return false; }
