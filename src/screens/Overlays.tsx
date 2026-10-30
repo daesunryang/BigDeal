@@ -386,7 +386,7 @@ export function GachaPop() {
   const met = cats.filter(c => s.owned.includes(c.id)).length, left = GACHA_PITY - s.gachaPity;
   const locked = plus && !s.plus;
   const btn = (n: 1 | 10) => {
-    const price = n === 10 ? cost.ten : cost.one, ok = s.churu >= price;
+    const price = n === 10 ? cost.ten : cost.one, ok = s.churu >= price && cats.length - met >= n;
     return (
       <Btn key={n} onPress={() => getS().gachaPull(kind, n)} accessibilityLabel={(plus ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회, 츄르 ' + price + '개'} style={{ flex: 1, height: 54, borderRadius: 27, backgroundColor: ok ? C.ink : C.disabled, gap: 0 }}>
         <Txt jua style={{ fontSize: 17, color: C.bg }}>{n + '회 뽑기'}</Txt>
@@ -416,8 +416,8 @@ export function GachaPop() {
                 <Image source={CUTOUT[c.id]} resizeMode="contain" style={{ width: '78%', height: '78%', tintColor: '#4A3428', opacity: 0.3 }} /></View>)}
           </View>
           <Txt style={{ fontSize: 11, lineHeight: 17, color: plus ? '#6B5444' : C.sub }}>{plus
-            ? `확률 · 일반 ${TIER[1].rate}% · 희귀 ${TIER[2].rate}% · 전설 ${TIER[3].rate}%\n${left <= 1 ? '다음 뽑기는 희귀 이상 보장!' : `희귀 이상 보장까지 ${left}번`} · 이미 만난 고양이는 츄르로 돌려받아요 (일반 ${TIER[1].refund} · 희귀 ${TIER[2].refund} · 전설 ${TIER[3].refund})`
-            : `기본 고양이 중 한 마리가 같은 확률로 나와요.\n이미 만난 고양이는 츄르 ${TIER[1].refund}개로 돌려받아요.`}</Txt>
+            ? `확률 · 일반 ${TIER[1].rate}% · 희귀 ${TIER[2].rate}% · 전설 ${TIER[3].rate}%\n${left <= 1 ? '다음 뽑기는 희귀 이상 보장!' : `희귀 이상 보장까지 ${left}번`} · 이미 만난 고양이는 나오지 않아요`
+            : `기본 고양이 중 한 마리가 같은 확률로 나와요.\n이미 만난 고양이는 나오지 않아요.`}</Txt>
         </View>
         {locked
           ? <View style={{ gap: 8 }}>
@@ -430,13 +430,12 @@ export function GachaPop() {
   );
 }
 
-// 뽑기 결과: 1회는 크게, 10회는 5×2 칸. 새로 만난 고양이에는 NEW, 이미 만난 고양이는 돌려받은 츄르를 보여준다.
+// 뽑기 결과: 1회는 크게, 10회는 5×2 칸. 새로 만난 고양이에는 NEW를 붙인다.
 export function GachaResult() {
   const C = useC();
   const { width: sw } = useWindowDimensions();
   const res = useApp(s => s.gachaRes)!;
   const one = res.length === 1, first = res[0];
-  const newOnes = res.filter(r => !r.dup);
   const close = () => S({ gachaRes: null });
   const cell = Math.floor((Math.min(440, sw - 36) - 36 - 4 * 6) / 5); // 카드 안쪽 폭(패딩 · 테두리 제외)을 5칸으로
   const card = (r: (typeof res)[number], i: number, big: boolean) => {
@@ -446,22 +445,21 @@ export function GachaResult() {
         <View style={{ borderRadius: big ? 28 : 12, borderWidth: 2, borderColor: plusCat ? t.color : C.ink, overflow: 'hidden' }}>
           <CatFace cat={c} size={sz} border={0} round={false} bg={C.card} />
           {r.tier === 3 && <View style={{ position: 'absolute', left: 4, right: 4, top: 4, bottom: 4, borderRadius: big ? 22 : 9, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFF3E0' }} />}
-          {!r.dup && <View style={{ position: 'absolute', top: big ? 10 : 2, right: big ? 10 : 2, paddingHorizontal: big ? 6 : 3, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: '#E07F7F' }}><Txt jua style={{ fontSize: big ? 13 : 8, color: '#FFFFFF' }}>NEW</Txt></View>}
+          <View style={{ position: 'absolute', top: big ? 10 : 2, right: big ? 10 : 2, paddingHorizontal: big ? 6 : 3, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: '#E07F7F' }}><Txt jua style={{ fontSize: big ? 13 : 8, color: '#FFFFFF' }}>NEW</Txt></View>
         </View>
         <Txt jua numberOfLines={1} style={{ fontSize: big ? 24 : 10 }}>{c.name}</Txt>
         {plusCat && <View style={{ paddingHorizontal: big ? 8 : 4, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: t.color }}><Txt style={{ fontSize: big ? 12 : 9, color: '#2B221D' }}>{t.name}</Txt></View>}
-        {r.dup ? <Txt style={{ fontSize: big ? 13 : 9, color: C.sub, textAlign: 'center' }}>{big ? '이미 만났어요 · 츄르 +' + t.refund : '츄르 +' + t.refund}</Txt>
-          : big ? <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 19 }}>{c.desc}</Txt> : null}
+        {big ? <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 19 }}>{c.desc}</Txt> : null}
       </Anim>
     );
   };
   return (
     <View style={[FULL, { zIndex: 7, backgroundColor: 'rgba(43,34,29,0.6)', alignItems: 'center', justifyContent: 'center', padding: 18 }]}>
       <View style={{ width: '100%', maxWidth: 440, backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 16, alignItems: 'center', gap: 14 }}>
-        <Txt jua style={{ fontSize: 18 }}>{one ? '뽑기 결과' : `뽑기 결과 · 새 고양이 ${newOnes.length}마리`}</Txt>
+        <Txt jua style={{ fontSize: 18 }}>{one ? '뽑기 결과' : `뽑기 결과 · 새 고양이 ${res.length}마리`}</Txt>
         {one ? card(first, 0, true) : <View style={{ width: '100%', flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 10, justifyContent: 'center' }}>{res.map((r, i) => card(r, i, false))}</View>}
         <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
-          {one && !first.dup ? <>
+          {one ? <>
             <Btn onPress={close} style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 16 }}>도감에 두기</Txt></Btn>
             <Btn onPress={() => S({ catId: first.id, gachaRes: null, gachaPop: null })} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>함께 지내기</Txt></Btn>
           </> : <Btn onPress={close} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>확인</Txt></Btn>}

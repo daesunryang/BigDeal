@@ -24,12 +24,22 @@ describe('집중 세션', () => {
     getS().complete();
     const s = getS(), rw = reward(50);
     expect(s.screen).toBe('done');
-    expect(s.churu).toBe(churu0 + rw.churu);
+    expect(s.churu).toBe(churu0 + s.last!.churu);
+    expect(s.last!.churu).toBeGreaterThanOrEqual(rw.churu + 5); // 오늘 첫 집중 보너스
     expect(s.aff.cheese).toBe(Math.min(100, aff0 + rw.aff));
     expect(s.donated).toBe(1);
     expect(s.mails.length).toBeGreaterThan(mails0);
     expect(s.sessions[0]).toMatchObject({ min: 50, ok: true });
     expect(s.fdays).toContain(isoDay(0));
+  });
+
+  test('Plus는 집중 보상과 보너스를 2배로 받는다', () => {
+    getS().start(50); getS().complete();
+    const normal = getS().last!.churu;
+    useApp.setState({ plus: true, sessions: [], goalHit: '' });
+    getS().start(50); getS().complete();
+    expect(getS().last!.churu).toBe(normal * 2);
+    expect(getS().last!.parts).toContain('Plus 2배');
   });
 
   test('포기하면 시무룩해지고 친밀도가 3 (엄격 모드 6) 줄어든다', () => {
@@ -334,16 +344,31 @@ describe('고양이 뽑기', () => {
     useApp.setState({ churu: 100, plus: true });
     getS().gachaPull('plus', 1, seq(0.9, 0)); // 일반 등급, 첫 고양이
     const r = getS().gachaRes!;
-    expect(r[0]).toEqual({ id: GACHA_CATS.filter(c => c.tier === 1)[0].id, tier: 1, dup: false });
+    expect(r[0]).toEqual({ id: GACHA_CATS.filter(c => c.tier === 1)[0].id, tier: 1 });
     expect(getS().owned).toContain(r[0].id);
     expect(getS().churu).toBe(100 - P.one);
   });
-  test('이미 만난 고양이는 등급만큼 츄르를 돌려준다', () => {
-    const id = GACHA_CATS.filter(c => c.tier === 1)[0].id;
-    useApp.setState({ churu: 100, plus: true, owned: [...getS().owned, id] });
+  test('이미 만난 고양이는 나오지 않는다', () => {
+    const t1 = GACHA_CATS.filter(c => c.tier === 1);
+    useApp.setState({ churu: 100, plus: true, owned: [...getS().owned, t1[0].id] });
+    getS().gachaPull('plus', 1, seq(0.9, 0)); // 일반 등급, 첫 후보
+    expect(getS().gachaRes![0].id).toBe(t1[1].id);
+    expect(getS().churu).toBe(100 - P.one);
+  });
+  test('고른 등급을 다 모았으면 남은 고양이가 나온다', () => {
+    const t1 = GACHA_CATS.filter(c => c.tier === 1);
+    useApp.setState({ churu: 100, plus: true, owned: [...getS().owned, ...t1.map(c => c.id)] });
     getS().gachaPull('plus', 1, seq(0.9, 0));
-    expect(getS().gachaRes![0].dup).toBe(true);
-    expect(getS().churu).toBe(100 - P.one + 10);
+    expect(t1.map(c => c.id)).not.toContain(getS().gachaRes![0].id);
+    expect(getS().owned).toContain(getS().gachaRes![0].id);
+  });
+  test('다 만난 뽑기는 더 뽑지 않고, 남은 고양이보다 많이는 뽑지 않는다', () => {
+    useApp.setState({ churu: 1000, plus: true, owned: ['cheese', ...GACHA_CATS.map(c => c.id)] });
+    getS().gachaPull('plus', 1);
+    expect(getS().churu).toBe(1000); expect(getS().gachaRes).toBeNull();
+    useApp.setState({ owned: ['cheese'] });
+    getS().gachaPull('basic', 10); // 못 만난 기본 고양이는 3마리뿐
+    expect(getS().churu).toBe(1000); expect(getS().gachaRes).toBeNull();
   });
   test('Plus 전용 뽑기 10번째는 희귀 이상, 일반 뽑기는 보장 횟수에 들어가지 않는다', () => {
     useApp.setState({ churu: 1000, plus: true, gachaPity: 9 });
@@ -355,13 +380,12 @@ describe('고양이 뽑기', () => {
   });
   test('10회 뽑기는 열 마리 · 일반 270 / Plus 360 츄르', () => {
     useApp.setState({ churu: 1000, plus: true });
-    getS().gachaPull('basic', 10, () => 0.3);
-    expect(getS().gachaRes).toHaveLength(10);
-    expect(getS().churu).toBe(1000 - B.ten + 9 * 10); // 같은 고양이 9번 중복 → 츄르 10씩 돌려받기
-    useApp.setState({ churu: 1000, gachaRes: null });
+    useApp.setState({ owned: ['cheese'] });
     getS().gachaPull('plus', 10, seq(0.9, 0.1, 0.9, 0.3, 0.9, 0.5, 0.9, 0.7, 0.9, 0.9));
     expect(getS().gachaRes).toHaveLength(10);
-    expect(getS().gachaTotal).toBe(20);
+    expect(getS().churu).toBe(1000 - P.ten);
+    expect(new Set(getS().gachaRes!.map(r => r.id)).size).toBe(10); // 중복 없음
+    expect(getS().gachaTotal).toBe(10);
   });
   test('뒤로가기는 결과 → 뽑기 창 순서로 닫는다', () => {
     useApp.setState({ churu: 100, gachaPop: 'basic' });

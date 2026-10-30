@@ -41,7 +41,7 @@ export const GACHA_CATS: Cat[] = [
 ];
 export const ALL_CATS = [...CATS, ...GACHA_CATS];
 export const catById = (id: string) => ALL_CATS.find(c => c.id === id) ?? CATS[0];
-export const TIER = { 1: { name: '일반', color: '#8DBF93', rate: 65, refund: 10 }, 2: { name: '희귀', color: '#7E9CC8', rate: 28, refund: 20 }, 3: { name: '전설', color: '#E59A4C', rate: 7, refund: 40 } } as const;
+export const TIER = { 1: { name: '일반', color: '#8DBF93', rate: 65 }, 2: { name: '희귀', color: '#7E9CC8', rate: 28 }, 3: { name: '전설', color: '#E59A4C', rate: 7 } } as const;
 // 뽑기 두 가지: 일반 뽑기(기본 고양이 4종, 누구나) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종, 등급 · 보장 있음). 10회는 10% 할인.
 export type GachaKind = 'basic' | 'plus';
 export const GACHA_COST: Record<GachaKind, { one: number; ten: number }> = { basic: { one: 30, ten: 270 }, plus: { one: 40, ten: 360 } };

@@ -10,7 +10,7 @@ import type { Lang } from './i18n';
 import { markBack, scrollKey } from './ui/scrollMemory';
 
 export type Screen = 'splash' | 'login' | 'onboard' | 'tabs' | 'decor' | 'focus' | 'done' | 'fail' | 'rest';
-export type GachaHit = { id: string; tier: 1 | 2 | 3; dup: boolean };
+export type GachaHit = { id: string; tier: 1 | 2 | 3 };
 export type Tab = 'home' | 'gacha' | 'dex' | 'donate' | 'mail' | 'menu' | 'shop' | 'stats' | 'shelter';
 export type Decor = { wall: string; floor: string; struct: string; outfit: string };
 export type RoomData = { decor: Omit<Decor, 'outfit'> & { outfit?: string }; equipped: string[]; pos: Record<string, [number, number]> };
@@ -357,34 +357,39 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   },
 
 
-  // 고양이 뽑기: 1회 40 츄르, 5회 180 츄르. 일반 65% · 희귀 28% · 전설 7%, 10번째마다 희귀 이상 보장.
-  // 이미 만난 고양이가 나오면 등급에 따라 츄르를 돌려준다(일반 10 · 희귀 20 · 전설 40).
+  // 고양이 뽑기: 일반 뽑기(기본 고양이) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종), 1회 · 10회.
+  // Plus 전용은 일반 65% · 희귀 28% · 전설 7%, 10번째마다 희귀 이상 보장.
+  // 이미 만난 고양이는 나오지 않는다. 고른 등급이 다 모였으면 남은 고양이 중에서 나온다.
   gachaPull: (kind, n, rnd = Math.random) => {
     const st = get(), cost = n === 10 ? GACHA_COST[kind].ten : GACHA_COST[kind].one;
     if (kind === 'plus' && !st.plus) { get().toast('Plus 전용 뽑기는 Plus 구독 중에 할 수 있어요'); return; }
+    const all: Cat[] = kind === 'plus' ? GACHA_CATS : CATS.filter(c => !c.plus), left = all.filter(c => !st.owned.includes(c.id)).length;
+    if (left === 0) { get().toast('이 뽑기의 고양이를 모두 만났어요'); return; }
+    if (left < n) { get().toast('아직 못 만난 고양이가 ' + left + '마리라 ' + n + '회는 뽑을 수 없어요'); return; }
     if (st.churu < cost) { get().toast('츄르가 ' + (cost - st.churu) + '개 더 필요해요 · 집중하면 모을 수 있어요'); return; }
-    let pity = st.gachaPity, refund = 0;
+    let pity = st.gachaPity;
     const owned = [...st.owned], res: GachaHit[] = [];
-    const basic = CATS.filter(c => !c.plus);
     for (let i = 0; i < n; i++) {
+      const fresh = all.filter(c => !owned.includes(c.id));
       let tier: 1 | 2 | 3 = 1, c: Cat;
-      if (kind === 'basic') c = basic[Math.floor(rnd() * basic.length) % basic.length];
+      if (kind === 'basic') c = fresh[Math.floor(rnd() * fresh.length) % fresh.length];
       else {
         pity++;
         const r = rnd() * 100;
         tier = r < TIER[3].rate ? 3 : r < TIER[3].rate + TIER[2].rate ? 2 : 1;
         if (pity >= GACHA_PITY && tier < 2) tier = 2;
-        if (tier >= 2) pity = 0;
-        const pool = GACHA_CATS.filter(g => g.tier === tier);
+        let pool = fresh.filter(g => g.tier === tier);
+        if (!pool.length) pool = fresh.filter(g => (g.tier || 1) > tier);
+        if (!pool.length) pool = fresh;
         c = pool[Math.floor(rnd() * pool.length) % pool.length];
+        tier = (c.tier || 1) as 1 | 2 | 3;
+        if (tier >= 2) pity = 0;
       }
-      const dup = owned.includes(c.id);
-      if (dup) refund += TIER[tier].refund; else owned.push(c.id);
-      res.push({ id: c.id, tier, dup });
+      owned.push(c.id); res.push({ id: c.id, tier });
     }
-    get().log((kind === 'plus' ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회', -cost); if (refund) get().log('이미 만난 고양이 · 츄르 돌려받기', refund);
+    get().log((kind === 'plus' ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회', -cost);
     sfx('coin');
-    set({ churu: st.churu - cost + refund, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
+    set({ churu: st.churu - cost, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
   },
 
 
