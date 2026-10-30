@@ -77,7 +77,7 @@ button{font-family:inherit;color:inherit}
     <div>Android: UsageStats + 다른 앱 위에 표시(오버레이)로 차단. Material 3 하단 내비, 시스템 뒤로가기 대응.</div>
     <div>iOS: Screen Time(FamilyControls) 권한, 차단 화면은 Shield 확장으로 대체. 레이아웃은 동일, 상태바·홈 인디케이터만 교체.</div>
     <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.4.0 반영</div>
-    <div>v1.4.0 고양이 뽑기: 도감 → 고양이 탭에서 츄르로 뽑기 전용 고양이 14종(일반·희귀·전설, 보내준 일러스트)을 만나요. 도트 고양이는 집중 화면의 불멍 장면에만 나와요. 10번째는 희귀 이상 보장, 이미 만난 고양이는 츄르로 돌려받아요.</div>
+    <div>v1.4.0 고양이 뽑기: 하단 '뽑기' 탭(도감 자리)에서 츄르로 뽑기 전용 고양이 14종(일반·희귀·전설, 보내준 일러스트)을 만나요. 도트 고양이는 집중 화면의 불멍 장면에만 나와요. 도감은 메뉴 › 고양이 도감으로 옮겼고(뒤로 → 메뉴), 데모는 테스트용 츄르가 무제한이에요. 10번째는 희귀 이상 보장, 이미 만난 고양이는 츄르로 돌려받아요.</div>
     <div>뒤로가기는 바로 전 화면으로 (탭·메뉴 하위 화면·방 꾸미기 기록). 앱 정보의 업데이트 확인, 새 버전 안내 배너, 화면 오류 복구 화면. 메뉴 → 데모 상황에서 확인해요.</div>
     <div style="color:var(--sub)">Tweaks: 플랫폼 전환, 홈 레이아웃 3종(방 카드 / 풀블리드 / 원형), 타이머 레이아웃 3종(링 / 방 / 나이트), 빠른 타이머.</div>
   </div>
@@ -259,11 +259,49 @@ button{font-family:inherit;color:inherit}
   </div>
   </sc-if>
 
+  <!-- GACHA TAB (고양이 뽑기 · 하단 탭) -->
+  <sc-if value="{{ isGacha }}">
+  <div style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:8px 18px 18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;height:44px">
+      <div style="font:400 24px 'Jua',sans-serif">고양이 뽑기</div>
+      <div style="font-size:14px;color:var(--sub)">{{ gachaCount }}</div>
+    </div>
+    <div style="font-size:12px;color:var(--sub)">데모 버전 · 테스트용 츄르가 무제한이에요</div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:20px;border:1.5px solid var(--ink);background:var(--chip1, #F6E3C8)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;flex:none"><sc-for list="{{ legendImgs }}" as="l" hint-placeholder-count="3"><div style="width:30px;height:30px;margin-right:-8px;border-radius:50%;border:1.5px solid var(--ink);background-image:{{ l.img }};background-size:cover;background-position:center;box-sizing:border-box"></div></sc-for></div>
+        <div style="flex:1;min-width:0;padding-left:6px"><div style="font:400 17px 'Jua',sans-serif">고양이 뽑기</div><div style="font-size:12px;color:var(--sub)">집중해서 모은 츄르로 뽑기 전용 고양이 14종을 만나요</div></div>
+        <span style="flex:none;font:400 13px 'Jua',sans-serif;padding:4px 10px;border-radius:14px;border:1.5px solid var(--ink)">◆ {{ gachaChuru }}</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onClick="{{ gPull1 }}" style="flex:1;height:54px;border-radius:27px;border:none;background:{{ gBtn1 }};color:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:400 16px 'Jua',sans-serif">1회 뽑기</span><span style="font-size:11px">40 츄르</span></button>
+        <button onClick="{{ gPull5 }}" style="flex:1;height:54px;border-radius:27px;border:none;background:{{ gBtn5 }};color:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:400 16px 'Jua',sans-serif">5회 뽑기</span><span style="font-size:11px">180 츄르 (10% 할인)</span></button>
+      </div>
+      <div style="font-size:11px;line-height:1.5;color:var(--sub)">{{ gachaInfo }}<br>{{ gachaInfo2 }}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:20px;background:var(--card)">
+      <div style="font:400 17px 'Jua',sans-serif">새로운 고양이 만나기</div>
+      <div style="font-size:13px;line-height:1.5;color:var(--sub)">츄르 30개로 창밖의 고양이를 불러요. 아직 못 만난 고양이만 나와요.</div>
+      <button onClick="{{ pull }}" style="height:50px;border-radius:25px;border:none;background:{{ pullBg }};color:var(--bg);font:400 17px 'Jua',sans-serif;cursor:pointer">{{ pullLabel }}</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between"><div style="font:400 18px 'Jua',sans-serif">뽑기 고양이</div><div style="font-size:12px;color:var(--sub)">{{ gachaCount }}</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <sc-for list="{{ gachaCards }}" as="g" hint-placeholder-count="6">
+        <button onClick="{{ g.select }}" style="display:flex;flex-direction:column;gap:5px;padding:7px;border-radius:16px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;text-align:left">
+          <div style="width:100%;aspect-ratio:1;border-radius:11px;background-color:var(--card);overflow:hidden"><div style="width:100%;height:100%;background-image:{{ g.img }};background-size:{{ g.size }};background-repeat:no-repeat;background-position:center;filter:{{ g.filter }}"></div></div>
+          <span style="font:400 12px 'Jua',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ g.label }}</span>
+          <span style="font-size:10px;padding:1px 6px;border-radius:7px;background:{{ g.tierBg }};color:#2B221D">{{ g.tier }}</span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
   <!-- COLLECTION TAB -->
   <sc-if value="{{ isDex }}">
   <div style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:8px 18px 18px">
     <div style="display:flex;align-items:center;justify-content:space-between;height:44px">
-      <div style="font:400 24px 'Jua',sans-serif">도감</div>
+      <div style="display:flex;align-items:center"><button onClick="{{ goBack }}" style="width:36px;height:40px;border:none;background:none;font-size:24px;cursor:pointer;padding:0">‹</button><div style="font:400 24px 'Jua',sans-serif">도감</div></div>
       <div style="font-size:14px;color:var(--sub)">{{ dexCount }}</div>
     </div>
     <div style="display:flex;gap:2px;padding:3px;border-radius:14px;background:var(--line);flex:none">
@@ -278,23 +316,6 @@ button{font-family:inherit;color:inherit}
           <sc-if value="{{ c.locked }}"><span style="font-size:11px;color:#C9772F">{{ c.lockText }}</span></sc-if>
         </button>
       </sc-for>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:20px;background:var(--card)">
-      <div style="font:400 17px 'Jua',sans-serif">새로운 고양이 만나기</div>
-      <div style="font-size:13px;line-height:1.5;color:var(--sub)">츄르 30개로 창밖의 고양이를 불러요. 아직 못 만난 고양이만 나와요.</div>
-      <button onClick="{{ pull }}" style="height:50px;border-radius:25px;border:none;background:{{ pullBg }};color:var(--bg);font:400 17px 'Jua',sans-serif;cursor:pointer">{{ pullLabel }}</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:20px;border:1.5px solid var(--ink);background:var(--chip1, #F6E3C8)">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="display:flex;flex:none"><sc-for list="{{ legendImgs }}" as="l" hint-placeholder-count="3"><div style="width:30px;height:30px;margin-right:-8px;border-radius:50%;border:1.5px solid var(--ink);background-image:{{ l.img }};background-size:cover;background-position:center;box-sizing:border-box"></div></sc-for></div>
-        <div style="flex:1;min-width:0;padding-left:6px"><div style="font:400 17px 'Jua',sans-serif">고양이 뽑기</div><div style="font-size:12px;color:var(--sub)">집중해서 모은 츄르로 뽑기 전용 고양이 14종을 만나요</div></div>
-        <span style="flex:none;font:400 13px 'Jua',sans-serif;padding:4px 10px;border-radius:14px;border:1.5px solid var(--ink)">◆ {{ gachaChuru }}</span>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button onClick="{{ gPull1 }}" style="flex:1;height:54px;border-radius:27px;border:none;background:{{ gBtn1 }};color:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:400 16px 'Jua',sans-serif">1회 뽑기</span><span style="font-size:11px">40 츄르</span></button>
-        <button onClick="{{ gPull5 }}" style="flex:1;height:54px;border-radius:27px;border:none;background:{{ gBtn5 }};color:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:400 16px 'Jua',sans-serif">5회 뽑기</span><span style="font-size:11px">180 츄르 (10% 할인)</span></button>
-      </div>
-      <div style="font-size:11px;line-height:1.5;color:var(--sub)">{{ gachaInfo }}<br>{{ gachaInfo2 }}</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between"><div style="font:400 18px 'Jua',sans-serif">뽑기 고양이</div><div style="font-size:12px;color:var(--sub)">{{ gachaCount }}</div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
@@ -1124,7 +1145,7 @@ const MAILS = [
   { id:8, type:'reward', title:'치즈태비와 친밀도 ♥1 달성!', body:'치즈태비가 마음을 열었어요. 표정이 한 단계 부드러워졌어요. 축하 선물을 보내요.', churu:5, date:'10.25', exp:'6일 후 만료' },
   { id:6, type:'event', title:'가을 츄르 이벤트 · 선물이 도착했어요', body:'10월 한 달 동안 매일 집중하면 보너스 츄르를 드려요. 오늘의 선물을 받아가세요.', churu:15, date:'10.26', exp:'5일 후 만료' },
   { id:3, type:'report', title:'9월 기부 리포트', body:'햇살 고양이 쉼터에 냥집중 사용자들의 집중으로 사료 312kg이 전달됐어요. 새 가족을 만난 고양이 4마리의 근황도 함께 보내요.', photo:true, date:'10.01' },
-  { id:4, type:'news', title:'창밖에 낯선 고양이가 나타났어요', body:'도감에서 츄르 30개로 새 고양이를 불러보세요. 어떤 고양이가 올지는 비밀이에요.', date:'10.24' },
+  { id:4, type:'news', title:'창밖에 낯선 고양이가 나타났어요', body:'뽑기 탭에서 츄르 30개로 새 고양이를 불러보세요. 어떤 고양이가 올지는 비밀이에요.', date:'10.24' },
   { id:5, type:'news', title:'[공지] 냥집중 1.0 출시 안내', body:'방해 앱 차단, 고양이 도감, 파트너 기부 기능이 정식 오픈했어요.', date:'10.20' },
 ];
 const BEH = [
@@ -1194,7 +1215,7 @@ const TOPD = { rug:['22%','38%','50%','42%','#A9CFA0','50%'], tower:['6%','10%',
   sofa:['10%','12%','40%','24%','#B5714F','8px'], tv:['60%','4%','34%','14%','#4A3428','3px'], tunnel:['10%','44%','60%','28%','#C29D6E','40px'], ballpit:['52%','40%','40%','44%','#F2B8B5','50%'], bed:['22%','28%','56%','48%','#F2B8B5','12px'], nightlight:['78%','14%','12%','16%','#F2C46B','50%'], bowl:['40%','50%','20%','24%','#9DB6DA','50%'], table:['20%','24%','52%','46%','#D9B98C','6px'], flowers:['8%','70%','84%','20%','#F2B8B5','40%'], tree:['62%','12%','30%','42%','#6FA56B','50%'], trunk:['60%','50%','28%','30%','#8A6244','4px'], telescope:['64%','10%','10%','46%','#4A3428','3px'], desk:['10%','10%','60%','30%','#8A6244','4px'], books:['76%','60%','16%','26%','#B8A2D9','2px'], bookshelf:['4%','-2%','40%','14%','#8A6244','3px'], fireplace:['56%','-2%','28%','18%','#B5714F','4px'], seesaw:['20%','52%','50%','12%','#E59A4C','6px'], slide:['64%','20%','20%','50%','#7E9CC8','8px'], blanket:['30%','36%','44%','36%','#B8A2D9','8px'], curtain:['2%','-2%','14%','40%','#F2B8B5','2px'], fridge:['4%','-2%','20%','26%','#DCE8F3','4px'], fishbowl:['70%','60%','16%','22%','#9DB6DA','50%'], fence:['2%','-2%','96%','8%','#D9B98C','2px'], pond:['10%','50%','46%','34%','#7E9CC8','50%'], globe:['70%','12%','16%','22%','#7E9CC8','50%'], lantern:['8%','60%','12%','18%','#F2C46B','4px'], standlamp:['6%','10%','8%','30%','#F2C46B','50%'], cabinet:['60%','4%','34%','16%','#8A6244','3px'] };
 const MOODS_ = ['새침함','경계 풀림','편안함','기분 좋음','골골송','애교 만점'];
 const PARTNER_ROWS = [['단체명','냠냠펫푸드 (가칭)'],['기부 방식','집중 목표 달성 1회당 사료 100g'],['전달 주기','매월 말 보호소 2곳에 일괄 전달'],['검증','전달 영수증과 보호소 확인서를 기부 리포트로 공개'],['문의','partner@nyangjibjung.example']];
-const LD = [['홈','Home','ホーム'],['도감','Collection','図鑑'],['후원','Support','応援'],['우편함','Mailbox','郵便受け'],['메뉴','Menu','メニュー'],
+const LD = [['홈','Home','ホーム'],['도감','Collection','図鑑'],['뽑기','Draw','ガチャ'],['고양이 뽑기','Cat draw','ねこガチャ'],['뽑기 고양이','Draw-only cats','ガチャのねこ'],['후원','Support','応援'],['우편함','Mailbox','郵便受け'],['메뉴','Menu','メニュー'],
 ['얼마나 집중할까요?','How long will you focus?','どのくらい集中する?'],['종료 시각 · 숫자를 눌러 설정','End time · tap the numbers','終了時刻・数字をタップ'],['24시간','24-hour','24時間'],['12시간','12-hour','12時間'],['확인','OK','OK'],['변경 ›','Change ›','変更 ›'],
 ['방 꾸미기 ›','Decorate ›','部屋を飾る ›'],['방 꾸미기','Decorate room','部屋を飾る'],['이 방 꾸미기 ›','Decorate this room ›','この部屋を飾る ›'],['츄르','Churu','チュール'],['집중 시작 · 보상','Start focus · reward','集中スタート・報酬'],['집중 시간','Focus time','集中時間'],['개 앱 차단','apps blocked','個のアプリをブロック'],
 ['오늘 집중','Today','今日の集中'],['분','min','分'],['지금 표정 ·','Mood ·','今の表情 ·'],['다음 하트까지','Next heart','次のハートまで'],['포기하기','Give up','あきらめる'],['집중으로 돌아가기','Back to focus','集中に戻る'],['잘했어요!','Great job!','よくできました!'],['홈으로','Home','ホームへ'],['후원 현황','Support status','応援状況'],['휴식 5분','5-min break','5分休憩'],
@@ -1227,7 +1248,7 @@ const GACHA = [
   { id:"bengal", name:"\ubcb5\uac08", tier:3, desc:"\ud45c\ubc94 \ubb34\ub2ac\ub97c \uc785\uc740 \ud65c\ubc1c\ud55c \uace0\uc591\uc774.", img:'url(/_blob/c7f4a4b66fb175c9ba2551f99f9167be)', cut:'url(/_blob/534276fdb31d448b11068841c509b3ee)' }
 ];
 const TIER = { 1:{ name:'일반', color:'#8DBF93', rate:65, refund:10 }, 2:{ name:'희귀', color:'#7E9CC8', rate:28, refund:20 }, 3:{ name:'전설', color:'#E59A4C', rate:7, refund:40 } };
-const GACHA_COST = { one:40, five:180 }, GACHA_PITY = 10;
+const GACHA_COST = { one:40, five:180 }, GACHA_PITY = 10, DEMO_CHURU = 99999;
 
 // ── 불멍 장면 (앱 src/stage/Hearth.tsx · pixelCat.ts와 같은 그림·동작) ──
 const PIX_FRAMES = {"walk1": ["....................", "...............O..O.", "..............OQOOQO", ".O............OQNNQO", "OSO..........OBBBBBO", "OBO..........OBEBEBO", ".OQO.OOOOOOOOOBBNBBO", "..OBOBSBBSBBSBOWWWO.", "...OBBSPPBSBBSBBWWO.", "...OBBPPPBBBBBBWWO..", "...OBWWWWWWWWWBBO...", "...OQBO.OQO.OBQO....", "....OQO..OQO.OQO....", ".....O....O...O....."], "walk2": ["....................", "...............O..O.", "..............OQOOQO", "..............OQNNQO", ".OSO.........OBBBBBO", ".OBO.........OBEBEBO", "..OQOOOOOOOOOOBBNBBO", "..OBOBSBBSBBSBOWWWO.", "...OBBSPPBSBBSBBWWO.", "...OBBPPPBBBBBBWWO..", "...OBWWWWWWWWWBBO...", "...OQBO.OQO.OBQO....", "...OQO..OQO..OQO....", "....O....O....O....."], "walk3": ["....................", "...............O..O.", "..............OQOOQO", ".O............OQNNQO", "OSO..........OBBBBBO", "OBO..........OBEBEBO", ".OQO.OOOOOOOOOBBNBBO", "..OBOBSBBSBBSBOWWWO.", "...OBBSPPBSBBSBBWWO.", "...OBBPPPBBBBBBWWO..", "...OBWWWWWWWWWBBO...", "....OQO.OBQO.OQO....", "....OQO..OQO..OQO...", ".....O....O....O...."], "sit": [".........O..O.......", "........OQOOQO......", "........OQNNQO......", ".......OBBBBBBO.....", ".......OBEBBEBO.....", ".......OBBNNBBO.....", "........OWWWWO......", ".......OBWWWWBO.....", "......OBSBWWBSBO....", "......OPPSWWSBBO.OO.", "......OPPBWWBBBO.OSO", "......OBBBWWBBBOOBO.", "......OQWOOOOWQBBO..", ".......OO....OOOO..."], "sitTail": [".........O..O.......", "........OQOOQO......", "........OQNNQO......", ".......OBBBBBBO.....", ".......OBEBBEBO.....", ".......OBBNNBBO.....", "........OWWWWO......", ".......OBWWWWBO.....", "......OBSBWWBSBO....", "......OPPSWWSBBO....", "......OPPBWWBBBO....", "......OBBBWWBBBO.OO.", "......OQWOOOOWQOOBSO", ".......OO....OOOOOO."], "blink": [".........O..O.......", "........OQOOQO......", "........OQNNQO......", ".......OBBBBBBO.....", ".......OBOOBOOO.....", ".......OBBNNBBO.....", "........OWWWWO......", ".......OBWWWWBO.....", "......OBSBWWBSBO....", "......OPPSWWSBBO.OO.", "......OPPBWWBBBO.OSO", "......OBBBWWBBBOOBO.", "......OQWOOOOWQBBO..", ".......OO....OOOO..."], "groom": [".........O..O.......", "........OQOOQO......", "........OQNNQO......", ".......OBBBBBBO.....", ".......OBOOBOOO.....", ".......OBBNNWWO.....", "........OWWOWWO.....", ".......OBWWOQWO.....", "......OBSBWWOQO.....", "......OPPSWWBOBO.OO.", "......OPPBWWBBBO.OSO", "......OBBBWWBBBOOBO.", "......OQWOOOOOOBBO..", ".......OO......OO..."], "loaf": ["....................", "....................", "....................", "....................", "...............O..O.", "..............OQOOQO", "..............OQNNQO", "....OOOOOOOOOOBBBBBO", "...OBBSPPSBBSBBEBEBO", "..OBBBPPPBBSBBBBNBBO", "OOBBBBBBBBBBBBBOWWO.", "OSOBBBBBBBBBBBBBWO..", ".OOQWWWWWWWWWWWQO...", "...OOOOOOOOOOOOOO..."], "sleep1": ["....................", "....................", "....................", "....................", "....................", "....................", "..............O..O..", ".....OOOOOOOOOQOOQO.", "...OOBBSPPSBBOQNNQO.", "..OBBBPPPBBSBBBBBBO.", ".OBBBBBBBBBBBOOBOOBO", "OSBBBBBBBBBBBBBNNBO.", "OQBBWWWWWWWWBBWWWO..", ".OOOOOOOOOOOOOOOO..."], "sleep2": ["....................", "....................", "....................", "....................", "....................", "....................", "....................", ".....OOOOOOOO.O..O..", "...OOBBSPPSBBOQOOQO.", "..OBBBPPPBBSBBQNNQO.", ".OBBBBBBBBBBBBBBBBO.", "OSBBBBBBBBBBBOOBOOBO", "OQBBWWWWWWWWBBBNNBO.", ".OOOOOOOOOOOOOOOOO.."], "stretch": ["....................", "....................", "....................", "................O..O", ".O.............OQOOQ", "OSO............OQNNQ", "OBO...........OBBBBB", ".OQO.........OBBEBEB", "..OBOOOOO...OBBBBNBB", "..OBBSBBSOOOBBBBOWWO", "...OBBSBBSBBSBBOOWO.", "...OBBBBBBBBBBBBQWO.", "...OQWOOOOOOOOOOQWO.", "....OO.........OOO.."]};
@@ -1280,7 +1301,7 @@ class Component extends DCLogic {
   state = { decor:{ wall:'cream', floor:'wood', struct:'basic', outfit:'none' }, ownedDecor:['cream','wood','basic','none'], decorCat:'wall', preview:null,
     mails: MAILS, mailRead:[], claimed:[], mailFilter:'all', openMail:null, menuPage:null, prevTab:'menu',
     plus:false, plusPlan:'life', plusKind:null, toggles:{ notif:true, sound:true, strict:false, dark:false }, user:{ name:'김집중', email:'focus.kim@gmail.com', provider:'Google' }, linked:{ Google:true },
-    screen:'splash', email:'', pw:'', emailMode:false, acct:false, loginErr:'', tab:'home', dur:25, remain:0, total:0, churu:124, xp:60, catId:'cheese', owned:['cheese'],
+    screen:'splash', email:'', pw:'', emailMode:false, acct:false, loginErr:'', tab:'home', dur:25, remain:0, total:0, churu:99999, xp:60, catId:'cheese', owned:['cheese'],
     blocked:{ig:true,yt:true,tt:true,wt:true,kk:false,gm:false}, sheet:false, gacha:null, gachaRes:null, gachaPity:0, gOwned:[], perm:{a:false,b:false},
     showBlocked:false, shelters:[{kg:12.4},{kg:6.1}], donated:0, thanks:'', sessions:[], last:null, msg:0,
     aff:{cheese:34}, sulky:false, pick:0, items:['rug'], equipped:['rug'],
@@ -1321,6 +1342,7 @@ class Component extends DCLogic {
   navKey(l) { return l.screen === 'decor' ? 'decor' : l.tab + '|' + (l.tab === 'menu' ? l.menuPage || '' : ''); }
   // 디자인 런타임은 componentDidUpdate에 이전 state를 넘겨주지 않으므로 직전 위치를 직접 기억해 둔다
   componentDidUpdate() { const s = this.state, ok = sc => sc === 'tabs' || sc === 'decor';
+    if (s.churu < DEMO_CHURU) this.setState({ churu: DEMO_CHURU }); // 데모: 테스트용 츄르 무제한
     const ps = this.lastLoc, cur = { screen: s.screen, tab: s.tab, menuPage: s.tab === 'menu' ? s.menuPage : null }; this.lastLoc = cur;
     // 뒤로가기로 메뉴 첫 화면에 돌아오면 떠날 때의 스크롤 위치로
     if (this.wentBack) { this.wentBack = false; if (ps && ps.tab === 'menu' && ps.menuPage && cur.tab === 'menu' && !cur.menuPage) requestAnimationFrame(() => { const el = document.querySelector('[data-menuroot]'); if (el) el.scrollTop = this.menuY || 0; }); }
@@ -1476,6 +1498,7 @@ class Component extends DCLogic {
     if (s.screen === 'onboard') return this.setState({ screen: 'login' });
     if (s.screen === 'login') return s.emailMode ? this.setState({ emailMode: false }) : null;
     if (s.screen === 'tabs') { if (s.tab === 'menu' && s.menuPage) return this.setState({ menuPage: null }); if (s.tab === 'shelter') return this.setState({ tab: 'donate' });
+      if (s.tab === 'dex') return this.setState({ tab: 'menu' });
       if (['shop', 'stats'].includes(s.tab)) return this.setState({ tab: s.prevTab === 'home' ? 'home' : 'menu' }); if (s.tab !== 'home') return this.setState({ tab: 'home' }); return this.toast('한 번 더 누르면 앱이 종료돼요 (데모)'); } }
   applyLang() { const root = document.querySelector('[data-phone]'); if (!root) return; const L = this.state.lang === 'English' ? 1 : this.state.lang === '日本語' ? 2 : 0;
     this._orig = this._orig || new WeakMap(); if (!L && !this._langOn) return; this._langOn = !!L;
@@ -1639,7 +1662,8 @@ class Component extends DCLogic {
       { name:'햇살 고양이 쉼터', place:'경기 파주', cats:38, goal:20, photo:'보호소 고양이 사진' },
       { name:'골목냥 돌봄 협회', place:'서울 마포', cats:21, goal:15, photo:'길고양이 급식소 사진' },
     ];
-    const tabs = [['home','홈','4px','none'],['dex','도감','50%','none'],['donate','후원','3px','rotate(45deg)'],['mail','우편함','2px','none'],['menu','메뉴','7px 7px 2px 2px','none']];
+    const onT = id => s.tab === id || (id === 'menu' && s.tab === 'dex');
+    const tabs = [['home','홈','4px','none'],['gacha','뽑기','50%','none'],['donate','후원','3px','rotate(45deg)'],['mail','우편함','2px','none'],['menu','메뉴','7px 7px 2px 2px','none']];
     const unread = s.mails.filter(m => !s.mailRead.includes(m.id)).length;
     const isTab = s.screen === 'tabs';
     const dkg = (s.donated / 10 + s.sponsorships.reduce((a, r) => a + r.kg, 0)).toFixed(1);
@@ -1697,7 +1721,7 @@ class Component extends DCLogic {
         const BT = [['연속 집중 일수','일',[3,7,14,30],streakOf([...s.att, ...s.fdays]),'var(--chip1)'],['누적 집중 시간','분',[60,300,1000,3000],310 + todayMin,'var(--mint)'],['츄르 획득량','개',[50,200,500,1500],s.earnedTotal,'var(--pink)'],['후원 횟수','회',[1,5,15,30],s.donated + s.sponsorships.length,'var(--blue)'],['고양이 도감 수집','마리',[1,2,3,4],s.owned.length,'var(--purple)'],['방 꾸미기 아이템','개',[3,6,10,15],s.ownedDecor.length + s.items.length,'#EDE3C9'],['노래 수집','곡',[3,5,9,13],s.seenSongs.length,'var(--mint)']];
         const gotBadges = BT.reduce((a, b) => a + b[2].filter(x => b[3] >= x).length, 0);
         const SECS = [
-          ['내 활동', [row('냥집중 Plus', s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', page('냥집중 Plus'), { color: '#C9772F' }), row('집중 기록', '', go('stats')), row('상점 · 꾸미기', s.churu + ' 츄르', go('shop')), row('고양이 도감', (s.owned.length + (s.plus ? 4 : 0)) + '/8', go('dex')), row('업적 · 배지', gotBadges + '/24', page('업적 · 배지')), row('출석 체크', streakOf(s.att) + '일', page('출석 체크')), row('주간 리포트 · 월간 회고', '', page('주간 리포트 · 월간 회고')), row('친구와 비교', '', page('친구와 비교')), row('고양이 성장', this.growth().name, page('고양이 성장')), row('츄르 내역', '', page('츄르 내역'))]],
+          ['내 활동', [row('냥집중 Plus', s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', page('냥집중 Plus'), { color: '#C9772F' }), row('집중 기록', '', go('stats')), row('상점 · 꾸미기', s.churu + ' 츄르', go('shop')), row('고양이 도감', (s.owned.length + s.gOwned.length + (s.plus ? 4 : 0)) + '/' + (CATS.length + GACHA.length), go('dex')), row('업적 · 배지', gotBadges + '/24', page('업적 · 배지')), row('출석 체크', streakOf(s.att) + '일', page('출석 체크')), row('주간 리포트 · 월간 회고', '', page('주간 리포트 · 월간 회고')), row('친구와 비교', '', page('친구와 비교')), row('고양이 성장', this.growth().name, page('고양이 성장')), row('츄르 내역', '', page('츄르 내역'))]],
           ['후원', [row('후원 현황', dkg + 'kg 전달', go('donate')), row('기부 영수증 · 증명서', '', () => this.setState({ tab:'donate', donTab:'mine' })), row('파트너 단체 소개', '', page('파트너 단체 소개'))]],
           ['집중 설정', [row('기본 차단 앱', APPS.filter(a => s.blocked[a.id]).length + '개', () => this.setState({ sheet: true })),
             row('시계 형식', s.fmt === '12' ? '12시간 (AM/PM)' : '24시간', () => this.setState(st => ({ fmt: st.fmt === '12' ? '24' : '12' }))),
@@ -1725,7 +1749,7 @@ class Component extends DCLogic {
           menuSections: ml === 'tabbed' ? [menuSections[Math.min(s.menuSec, menuSections.length - 1)]] : ml === 'grid' ? menuSections.slice(1) : menuSections,
           menuTabbed: ml === 'tabbed', menuGrid: ml === 'grid',
           menuTabs: SECS.map((x, i) => ({ label: x[0], bg: s.menuSec === i ? 'var(--ink)' : 'var(--bg)', fg: s.menuSec === i ? 'var(--bg)' : 'var(--ink)', pick: () => this.setState({ menuSec: i }) })),
-          quickTiles: [['집중 기록', '오늘 ' + todayMin + '분', go('stats'), 'var(--chip1)'], ['상점 · 꾸미기', s.churu + ' 츄르', go('shop'), 'var(--mint)'], ['도감', s.owned.length + '/4 만남', go('dex'), 'var(--purple)'], ['업적 · 배지', gotBadges + '/24', page('업적 · 배지'), 'var(--blue)']].map(([label, sub, goFn, bg]) => ({ label, sub, bg, go: goFn })),
+          quickTiles: [['집중 기록', '오늘 ' + todayMin + '분', go('stats'), 'var(--chip1)'], ['상점 · 꾸미기', s.churu + ' 츄르', go('shop'), 'var(--mint)'], ['도감', (s.owned.length + s.gOwned.length) + '/' + (CATS.length + GACHA.length) + ' 만남', go('dex'), 'var(--purple)'], ['업적 · 배지', gotBadges + '/24', page('업적 · 배지'), 'var(--blue)']].map(([label, sub, goFn, bg]) => ({ label, sub, bg, go: goFn })),
           menuTitle: s.menuPage === 'login' ? '로그인 관리' : s.menuPage, isLoginPage: s.menuPage === 'login', isPlaceholderPage: !!s.menuPage && s.menuPage !== 'login' && !HANDLED.includes(s.menuPage) && !Object.values(PG).includes(s.menuPage),
           pgNotice: s.menuPage === '공지사항', pgFaq: s.menuPage === '자주 묻는 질문', pgBadge: s.menuPage === '업적 · 배지', pgInquiry: s.menuPage === '문의하기',
           pgDoc: !!DOCS[s.menuPage], pgAbout: s.menuPage === '앱 정보', pgLang: s.menuPage === '언어 선택', pgPerm: s.menuPage === '권한 설정',
@@ -2071,7 +2095,7 @@ class Component extends DCLogic {
       navBarBg: s.screen === 'rest' ? 'var(--mint)' : s.screen === 'focus' ? ((p.timerLayout ?? 'ring') === 'night' ? '#2B221D' : 'var(--card)') : isTab ? (ns === 'floating' ? 'var(--bg)' : 'var(--card)') : 'var(--bg)',
       indicatorW: ios ? '120px' : '90px',
       isOnboard: s.screen === 'onboard',
-      isHome: isTab && s.tab === 'home', isDex: isTab && s.tab === 'dex', isDonate: isTab && s.tab === 'donate', isStats: isTab && s.tab === 'stats',
+      isHome: isTab && s.tab === 'home', isDex: isTab && s.tab === 'dex', isGacha: isTab && s.tab === 'gacha', isDonate: isTab && s.tab === 'donate', isStats: isTab && s.tab === 'stats',
       isFocus: s.screen === 'focus', isDone: s.screen === 'done', isFail: s.screen === 'fail', showNav: isTab,
       permRows: (ios
         ? [['a','스크린 타임 접근','집중 중 선택한 앱을 잠가요'],['b','알림 허용','세션 종료·고양이 소식을 알려드려요']]
@@ -2159,7 +2183,7 @@ class Component extends DCLogic {
       todayMin, streak: streakOf([...s.att, ...s.fdays]), noSessions: s.sessions.length === 0,
       week: ['월','화','수','목','금','토','오늘'].map((d, i) => ({ d, h: Math.min(110, weekVals[i] * 1.1) + 'px', bg: i === 6 ? '#E59A4C' : 'var(--sage)' })),
       sessions: s.sessions.map(x => ({ label: (x.tag ? x.tag + ' · ' : '') + x.min + '분 집중', result: x.ok ? `+${this.reward(x.min).churu} 츄르` : '포기', color: x.ok ? 'var(--gink)' : 'var(--red)' })),
-      navItems: tabs.map(([id,label,radius,rot]) => ({ label, radius, rot, pill: s.tab === id ? (ns === 'floating' ? '#E59A4C' : ns === 'underline' ? 'transparent' : 'var(--sage)') : 'transparent', ic: ns === 'floating' ? (s.tab === id ? '#2B221D' : 'var(--bg)') : 'var(--ink)', lc: ns === 'floating' ? 'var(--bg)' : 'var(--ink)', ul: ns === 'underline' && s.tab === id ? '2.5px solid #C9772F' : '2.5px solid transparent', weight: s.tab === id ? 700 : 400,
+      navItems: tabs.map(([id,label,radius,rot]) => ({ label, radius, rot, pill: onT(id) ? (ns === 'floating' ? '#E59A4C' : ns === 'underline' ? 'transparent' : 'var(--sage)') : 'transparent', ic: ns === 'floating' ? (onT(id) ? '#2B221D' : 'var(--bg)') : 'var(--ink)', lc: ns === 'floating' ? 'var(--bg)' : 'var(--ink)', ul: ns === 'underline' && onT(id) ? '2.5px solid #C9772F' : '2.5px solid transparent', weight: onT(id) ? 700 : 400,
         badge: id === 'mail' && unread ? String(unread) : '',
         go: () => { this.navMute = true; this.setState({ tab: id, thanks: '', menuPage: null }, () => { this.navMute = false; this.nav = []; }); } })),
     };

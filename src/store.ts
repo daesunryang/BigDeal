@@ -10,7 +10,7 @@ import type { Lang } from './i18n';
 import { markBack, scrollKey } from './ui/scrollMemory';
 
 export type Screen = 'splash' | 'login' | 'onboard' | 'tabs' | 'decor' | 'focus' | 'done' | 'fail' | 'rest';
-export type Tab = 'home' | 'dex' | 'donate' | 'mail' | 'menu' | 'shop' | 'stats' | 'shelter';
+export type Tab = 'home' | 'gacha' | 'dex' | 'donate' | 'mail' | 'menu' | 'shop' | 'stats' | 'shelter';
 export type Decor = { wall: string; floor: string; struct: string; outfit: string };
 export type RoomData = { decor: Omit<Decor, 'outfit'> & { outfit?: string }; equipped: string[]; pos: Record<string, [number, number]> };
 export type Session = { min: number; ok: boolean; tag: string; at: number };
@@ -347,7 +347,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     set({ churu: st.churu + sum, earnedTotal: st.earnedTotal + sum, claimed: [...st.claimed, ...cl.map(m => m.id)], mailRead: [...st.mailRead, ...cl.map(m => m.id)] });
   },
   pull: () => {
-    const s = get(); if (s.churu < 30 || s.owned.length >= 4) return;
+    const s = get(); if (s.churu < 30 || baseLeft(s.owned) === 0) return;
     const pool = CATS.filter(c => !c.plus && !s.owned.includes(c.id)), g = pool[Math.floor(Math.random() * pool.length)];
     get().log('새 고양이 만나기', -30); sfx('coin');
     set({ churu: s.churu - 30, owned: [...s.owned, g.id], gacha: g.id });
@@ -396,6 +396,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     if (s.screen === 'tabs') {
       if (s.tab === 'menu' && s.menuPage) { markBack(scrollKey('menu', null)); return S({ menuPage: null }); }
       if (s.tab === 'shelter') { markBack('donate'); return S({ tab: 'donate' }); }
+      if (s.tab === 'dex') { markBack(scrollKey('menu', null)); return S({ tab: 'menu', menuPage: null }); }
       if (s.tab === 'shop' || s.tab === 'stats') { markBack(scrollKey(s.prevTab === 'home' ? 'home' : 'menu', null)); return S({ tab: s.prevTab === 'home' ? 'home' : 'menu' }); }
       if (s.tab !== 'home') return S({ tab: 'home' });
     }
@@ -445,6 +446,9 @@ export const navDepth = () => navStack.length;
 export function clearNav() { navStack = []; }
 // 하단 탭을 눌러 이동할 때: 기록을 비우고 새로 시작한다 (탭 사이를 오가며 기록이 쌓이지 않게)
 export function switchTab(patch: Partial<State>) { navMute = true; try { useApp.getState().set(patch); } finally { navMute = false; } navStack = []; }
+// 창밖 고양이 부르기로 아직 만날 수 있는 기본 고양이 수 (뽑기 고양이 · Plus 고양이 제외)
+export const baseLeft = (owned: string[]) => CATS.filter(c => !c.plus && !owned.includes(c.id)).length;
+
 export function popNav(): boolean {
   while (navStack.length) {
     const l = navStack.pop()!, cur = useApp.getState();

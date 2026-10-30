@@ -2,7 +2,7 @@
 // <Txt>가 문자열 자식을 받으면 자동으로 이 함수를 거친다.
 export type Lang = '한국어' | 'English' | '日本語';
 
-const LD: [string, string, string][] = [['홈', 'Home', 'ホーム'], ['도감', 'Collection', '図鑑'], ['후원', 'Support', '応援'], ['우편함', 'Mailbox', '郵便受け'], ['메뉴', 'Menu', 'メニュー'],
+const LD: [string, string, string][] = [['홈', 'Home', 'ホーム'], ['도감', 'Collection', '図鑑'], ['뽑기', 'Draw', 'ガチャ'], ['고양이 뽑기', 'Cat draw', 'ねこガチャ'], ['뽑기 고양이', 'Draw-only cats', 'ガチャのねこ'], ['후원', 'Support', '応援'], ['우편함', 'Mailbox', '郵便受け'], ['메뉴', 'Menu', 'メニュー'],
   ['얼마나 집중할까요?', 'How long will you focus?', 'どのくらい集中する?'], ['종료 시각 · 숫자를 눌러 설정', 'End time · tap the numbers', '終了時刻・数字をタップ'], ['24시간', '24-hour', '24時間'], ['12시간', '12-hour', '12時間'], ['확인', 'OK', 'OK'], ['변경 ›', 'Change ›', '変更 ›'],
   ['방 꾸미기 ›', 'Decorate ›', '部屋を飾る ›'], ['방 꾸미기', 'Decorate room', '部屋を飾る'], ['이 방 꾸미기 ›', 'Decorate this room ›', 'この部屋を飾る ›'], ['츄르', 'Churu', 'チュール'], ['집중 시작 · 보상', 'Start focus · reward', '集中スタート・報酬'], ['집중 시간', 'Focus time', '集中時間'], ['개 앱 차단', 'apps blocked', '個のアプリをブロック'],
   ['오늘 집중', 'Today', '今日の集中'], ['분', 'min', '分'], ['지금 표정 ·', 'Mood ·', '今の表情 ·'], ['다음 하트까지', 'Next heart', '次のハートまで'], ['포기하기', 'Give up', 'あきらめる'], ['집중으로 돌아가기', 'Back to focus', '集中に戻る'], ['잘했어요!', 'Great job!', 'よくできました!'], ['홈으로', 'Home', 'ホームへ'], ['후원 현황', 'Support status', '応援状況'], ['휴식 5분', '5-min break', '5分休憩'],

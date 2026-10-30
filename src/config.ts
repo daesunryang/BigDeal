@@ -9,6 +9,8 @@ const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, any>;
 
 export const FLAVOR: Flavor = extra.flavor === 'full' ? 'full' : 'demo';
 export const IS_DEMO = FLAVOR === 'demo';
+// 데모 빌드의 테스트용 츄르: 이 값 아래로 내려가면 다시 채운다 (App.tsx)
+export const DEMO_CHURU = 99999;
 export const IS_FULL = FLAVOR === 'full';
 
 export const FIREBASE = {

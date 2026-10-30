@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { AppState, BackHandler, PermissionsAndroid, Platform, View, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
-import { IS_FULL } from './src/config';
+import { DEMO_CHURU, IS_DEMO, IS_FULL } from './src/config';
 import { catById } from './src/data';
 import { AccountPicker, Login, Onboard, Splash, usePermSync } from './src/screens/Entry';
 import { Decor } from './src/screens/Decor';
@@ -16,7 +16,7 @@ import { Menu } from './src/screens/Menu';
 import { Nav } from './src/screens/Nav';
 import { AdView, AppSheet, Cert, Coach, Dialog, Gacha, GachaResult, HouseModal, PaySheet, Receipt, ShareCard, Toast, loadInstalledApps } from './src/screens/Overlays';
 import { Done, Fail, Focus, Rest } from './src/screens/Session';
-import { Dex, Donate, Mailbox, Shelter, Shop, Stats } from './src/screens/Tabs';
+import { Dex, Donate, GachaTab, Mailbox, Shelter, Shop, Stats } from './src/screens/Tabs';
 import { coachRefs } from './src/screens/coach';
 import { authEnabled, toUser, watchAuth } from './src/services/auth';
 import { blocker } from './src/services/blocker';
@@ -69,6 +69,14 @@ function Root() {
     const bh = BackHandler.addEventListener('hardwareBackPress', () => getS().back());
     return () => { clearInterval(t); clearInterval(m); bh.remove(); };
   }, []);
+
+  // 데모: 테스트용 츄르 무제한 · 쓰면 바로 다시 채운다
+  useEffect(() => {
+    if (!IS_DEMO || !hydrated) return;
+    const top = () => { if (getS().churu < DEMO_CHURU) S({ churu: DEMO_CHURU }); };
+    top();
+    return useApp.subscribe(top);
+  }, [hydrated]);
 
   // 저장된 상태를 불러온 뒤: 집중 중에 앱이 강제 종료됐다면 복구 안내
   useEffect(() => {
@@ -131,7 +139,7 @@ function Root() {
   else if (screen === 'done') body = <Done width={width} height={height} />;
   else if (screen === 'fail') body = <Fail />;
   else if (screen === 'rest') body = <Rest />;
-  else body = tab === 'home' ? <Home width={width} /> : tab === 'dex' ? <Dex /> : tab === 'donate' ? <Donate /> : tab === 'shelter' ? <Shelter />
+  else body = tab === 'home' ? <Home width={width} /> : tab === 'gacha' ? <GachaTab /> : tab === 'dex' ? <Dex /> : tab === 'donate' ? <Donate /> : tab === 'shelter' ? <Shelter />
     : tab === 'mail' ? <Mailbox /> : tab === 'shop' ? <Shop /> : tab === 'stats' ? <Stats /> : <Menu width={width} />;
 
   return (

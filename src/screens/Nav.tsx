@@ -5,7 +5,7 @@ import { useC } from '../theme';
 import { Btn, Txt } from '../ui/kit';
 
 // 하단 탭 (pill 스타일). 아이콘은 프로토타입처럼 테두리 도형.
-const TABS: [Tab, string, number | 'round', boolean][] = [['home', '홈', 4, false], ['dex', '도감', 'round', false], ['donate', '후원', 3, true], ['mail', '우편함', 2, false], ['menu', '메뉴', 7, false]];
+const TABS: [Tab, string, number | 'round', boolean][] = [['home', '홈', 4, false], ['gacha', '뽑기', 'round', false], ['donate', '후원', 3, true], ['mail', '우편함', 2, false], ['menu', '메뉴', 7, false]];
 
 export function Nav() {
   const C = useC();
@@ -13,7 +13,7 @@ export function Nav() {
   return (
     <View style={{ height: 72, flexDirection: 'row', backgroundColor: C.card, borderTopWidth: 1.5, borderTopColor: C.line }}>
       {TABS.map(([id, label, rad, rot]) => {
-        const on = tab === id || (id === 'donate' && tab === 'shelter');
+        const on = tab === id || (id === 'donate' && tab === 'shelter') || (id === 'menu' && tab === 'dex');
         return (
           <Btn key={id} onPress={() => switchTab({ tab: id, thanks: '', menuPage: null })} accessibilityRole="tab" accessibilityLabel={label + (id === 'mail' && unread ? `, 안 읽은 우편 ${unread}개` : '')} accessibilityState={{ selected: on }} style={{ flex: 1, gap: 4 }}>
             <View style={{ width: 56, height: 30, borderRadius: 15, backgroundColor: on ? C.sage : 'transparent', alignItems: 'center', justifyContent: 'center' }}>

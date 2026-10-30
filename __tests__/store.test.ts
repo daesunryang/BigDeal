@@ -156,7 +156,8 @@ describe('뒤로가기는 바로 전 화면으로', () => {
   const at = () => { const s = getS(); return [s.screen, s.tab, s.menuPage]; };
 
   test('도감에서 잠긴 Plus 고양이를 누르면 Plus 페이지, 뒤로가면 도감', () => {
-    switchTab({ tab: 'dex' });
+    switchTab({ tab: 'menu', menuPage: null });
+    useApp.setState({ tab: 'dex', prevTab: 'menu' });
     useApp.setState({ tab: 'menu', menuPage: '냥집중 Plus' });
     expect(at()).toEqual(['tabs', 'menu', '냥집중 Plus']);
     getS().back();
@@ -199,8 +200,20 @@ describe('뒤로가기는 바로 전 화면으로', () => {
 
   test('하단 탭으로 옮기면 기록을 새로 시작한다', () => {
     useApp.setState({ tab: 'menu', menuPage: '앱 정보' });
-    switchTab({ tab: 'dex', menuPage: null });
+    switchTab({ tab: 'gacha', menuPage: null });
     getS().back(); expect(at()).toEqual(['tabs', 'home', null]);
+  });
+
+  test('도감은 메뉴 안에 있다: 메뉴 → 도감 → 뒤로가면 메뉴, 한 번 더 가면 홈', () => {
+    switchTab({ tab: 'menu', menuPage: null });
+    useApp.setState({ tab: 'dex', prevTab: 'menu' });
+    getS().back(); expect(at()).toEqual(['tabs', 'menu', null]);
+    getS().back(); expect(at()).toEqual(['tabs', 'home', null]);
+  });
+
+  test('기록이 없어도 도감에서 뒤로가면 메뉴', () => {
+    switchTab({ tab: 'dex', menuPage: null });
+    getS().back(); expect(at()).toEqual(['tabs', 'menu', null]);
   });
 });
 
@@ -331,6 +344,12 @@ describe('고양이 뽑기', () => {
     getS().gachaPull(1, seq(0.99, 0));
     expect(getS().gachaRes![0].tier).toBe(2);
     expect(getS().gachaPity).toBe(0);
+  });
+  test('뽑기 고양이를 만나도 창밖 고양이 부르기는 기본 고양이가 남아 있으면 된다', () => {
+    useApp.setState({ churu: 100, owned: ['cheese', 'bombay', 'singapura', 'bsh'] });
+    getS().pull();
+    expect(getS().churu).toBe(70);
+    expect(['blue', 'calico', 'tux']).toContain(getS().gacha);
   });
   test('5회 뽑기는 180 츄르에 다섯 마리', () => {
     useApp.setState({ churu: 200 });
