@@ -464,3 +464,7 @@ describe('츄르 충전', () => {
     expect(getS().spotPop).toBe(false);
   });
 });
+
+test('얼룩은 얼굴 가운데(세로 0.3~0.56)를 덮지 않는다', () => {
+  for (let seed = 0; seed < 300; seed++) for (const [, cy, rx, ry] of spotsOf(seed, '#E9AC7C').blobs) { const e = Math.max(rx, ry); expect(cy - e >= 0.5599 || cy + e <= 0.3001).toBe(true); }
+});

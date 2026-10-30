@@ -19,7 +19,7 @@ export function rng(seed: number) {
 }
 
 // 털이 어두운 고양이에게는 밝은 얼룩, 밝은 고양이에게는 어두운 얼룩이 잘 보인다
-const DARK = ['#4A3428', '#2B221D', '#6B4A36', '#7A7470'];
+const DARK = ['#4A3428', '#6B4A36', '#7A7470'];
 const WARM = ['#D98A4A', '#B8744A'];
 const LIGHT = ['#F6EBDD', '#FFF6EC', '#E9C9A4'];
 const lum = (hex: string) => { const n = parseInt(hex.slice(1), 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
@@ -30,8 +30,10 @@ export function spotsOf(seed: number, fur: string): Spots {
   const color = dark ? pick([...LIGHT, WARM[0]]) : pick(r() < 0.3 ? WARM : DARK);
   const kind: Spots['kind'] = r() < 0.35 ? 'dot' : 'patch';
   const blobs: Blob[] = [];
-  // 눈 · 코가 있는 얼굴 가운데(세로 0.3~0.55)는 비워 둔다. 몸통은 아래쪽, 머리 얼룩은 이마 · 귀 쪽에만
+  // 눈 · 코가 있는 얼굴 가운데(세로 0.3~0.56)는 비워 둔다. 몸통은 아래쪽, 머리 얼룩은 이마 · 귀 쪽에만
   const spotY = (head: boolean) => (head ? 0.1 + r() * 0.16 : 0.6 + r() * 0.3);
+  // 얼룩이 얼굴 높이까지 번지지 않게: 몸통 얼룩은 위끝이 0.56 아래, 머리 얼룩은 아래끝이 0.3 위
+  const fit = (b: Blob, head: boolean): Blob => { const e = Math.max(b[2], b[3]); return [b[0], head ? Math.min(b[1], 0.3 - e) : Math.max(b[1], 0.56 + e), b[2], b[3], b[4]]; };
   if (kind === 'patch') {
     // 큰 얼룩 2~4개(가끔 머리에 하나). 한 얼룩은 타원 여러 개를 겹쳐 울퉁불퉁하게
     const n = 2 + Math.floor(r() * 3);
@@ -39,12 +41,12 @@ export function spotsOf(seed: number, fur: string): Spots {
       const head = i === 0 && r() < 0.35, s = head ? 0.06 + r() * 0.05 : 0.08 + r() * 0.07;
       const cx = 0.18 + r() * 0.64, cy = spotY(head);
       const parts = 2 + Math.floor(r() * 2);
-      for (let k = 0; k < parts; k++) blobs.push([cx + (r() - 0.5) * s, cy + (r() - 0.5) * s, s * (0.7 + r() * 0.5), s * (0.55 + r() * 0.4), Math.round(r() * 180)]);
+      for (let k = 0; k < parts; k++) blobs.push(fit([cx + (r() - 0.5) * s, cy + (r() - 0.5) * s, s * (0.7 + r() * 0.5), s * (0.55 + r() * 0.4), Math.round(r() * 180)], head));
     }
   } else {
     // 작은 점 7~12개
     const n = 7 + Math.floor(r() * 6);
-    for (let i = 0; i < n; i++) { const s = 0.035 + r() * 0.035; blobs.push([0.15 + r() * 0.7, spotY(r() < 0.2), s, s * (0.75 + r() * 0.3), Math.round(r() * 180)]); }
+    for (let i = 0; i < n; i++) { const s = 0.035 + r() * 0.035; const head = r() < 0.2; blobs.push(fit([0.15 + r() * 0.7, spotY(head), s, s * (0.75 + r() * 0.3), Math.round(r() * 180)], head)); }
   }
   return { kind, name: kind === 'dot' ? '점박이' : '얼룩무늬', color, blobs };
 }

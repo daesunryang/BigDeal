@@ -76,7 +76,8 @@ button{font-family:inherit;color:inherit}
     <div style="font:400 15px 'Jua',sans-serif">Android 우선 · iOS 확장</div>
     <div>Android: UsageStats + 다른 앱 위에 표시(오버레이)로 차단. Material 3 하단 내비, 시스템 뒤로가기 대응.</div>
     <div>iOS: Screen Time(FamilyControls) 권한, 차단 화면은 Shield 확장으로 대체. 레이아웃은 동일, 상태바·홈 인디케이터만 교체.</div>
-    <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.4.0 반영</div>
+    <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.5.0 반영</div>
+    <div>v1.5.0 얼룩 · 츄르 충전: 고양이마다 얼룩무늬 · 점박이가 랜덤으로 생겨 홈 방 고양이에 보여요(도감은 원래 그림). 홈 방의 "얼룩 ›"에서 200 츄르로 얼룩을 다시 뽑아요. 츄르 배지(＋) · 메뉴 › 츄르 충전 · 츄르가 모자랄 때 "츄르 충전하기"로 충전 창(100 · 300 · 600+60 · 1,500+300)을 열고 결제창으로 이어져요(데모 결제).</div>
     <div>v1.4.0 고양이 뽑기: 하단 '뽑기' 탭의 "새로운 고양이 만나기" → 고양이 뽑기 창. 일반 뽑기(기본 고양이)와 Plus 전용 뽑기(Plus 구독 전용 고양이 14종, 일반·희귀·전설, 보내준 일러스트), 1회 · 10회. 도트 고양이는 집중 화면의 불멍 장면에만 나와요. 도감은 메뉴 › 고양이 도감으로 옮겼고(뒤로 → 메뉴), 데모는 테스트용 츄르가 무제한이에요. 10번째는 희귀 이상 보장, 이미 만난 고양이는 츄르로 돌려받아요.</div>
     <div>뒤로가기는 바로 전 화면으로 (탭·메뉴 하위 화면·방 꾸미기 기록). 앱 정보의 업데이트 확인, 새 버전 안내 배너, 화면 오류 복구 화면. 메뉴 → 데모 상황에서 확인해요.</div>
     <div style="color:var(--sub)">Tweaks: 플랫폼 전환, 홈 레이아웃 3종(방 카드 / 풀블리드 / 원형), 타이머 레이아웃 3종(링 / 방 / 나이트), 빠른 타이머.</div>
@@ -190,20 +191,20 @@ button{font-family:inherit;color:inherit}
     <div data-coach="0" onClick="{{ openRoom }}" style="position:relative;border-radius:24px;overflow:hidden;border:2px solid var(--ink);width:320px;height:262px;filter:{{ catFilter }};flex:none;cursor:pointer;align-self:center">
       {{ homeStage }}
       <div style="position:absolute;left:12px;top:12px;max-width:150px;padding:8px 12px;border-radius:14px 14px 14px 4px;background:var(--bg);border:1.5px solid var(--ink);font-size:13px;line-height:1.35">{{ bubble }}</div>
-      <div onClick="{{ openDecorStop }}" style="position:absolute;right:10px;bottom:10px;padding:7px 12px;border-radius:12px;background:var(--bg);border:1.5px solid var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer">방 꾸미기 ›</div>
+      <div style="position:absolute;right:10px;bottom:10px;display:flex;gap:6px"><div onClick="{{ openSpotsStop }}" style="padding:7px 12px;border-radius:12px;background:var(--bg);border:1.5px solid var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer">얼룩 ›</div><div onClick="{{ openDecorStop }}" style="padding:7px 12px;border-radius:12px;background:var(--bg);border:1.5px solid var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer">방 꾸미기 ›</div></div>
     </div>
     </sc-if>
     <sc-if value="{{ homeBleed }}">
     <div data-coach="0" onClick="{{ openRoom }}" style="position:relative;margin:-8px -18px 0;height:295px;filter:{{ catFilter }};flex:none;border-bottom:2px solid var(--ink);overflow:hidden;cursor:pointer">
       {{ bleedStage }}
       <div style="position:absolute;left:18px;top:14px;max-width:180px;padding:8px 12px;border-radius:14px 14px 14px 4px;background:var(--bg);border:1.5px solid var(--ink);font-size:13px;line-height:1.35">{{ bubble }}</div>
-      <div onClick="{{ openDecorStop }}" style="position:absolute;right:14px;bottom:12px;padding:7px 12px;border-radius:12px;background:var(--bg);border:1.5px solid var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer">방 꾸미기 ›</div>
+      <div style="position:absolute;right:14px;bottom:12px;display:flex;gap:6px"><div onClick="{{ openSpotsStop }}" style="padding:7px 12px;border-radius:12px;background:var(--bg);border:1.5px solid var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer">얼룩 ›</div><div onClick="{{ openDecorStop }}" style="padding:7px 12px;border-radius:12px;background:var(--bg);border:1.5px solid var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer">방 꾸미기 ›</div></div>
     </div>
     </sc-if>
     <sc-if value="{{ homeCircle }}">
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:6px;flex:none">
       <div style="padding:8px 14px;border-radius:14px;background:var(--card);font-size:13px">{{ bubble }}</div>
-      <button onClick="{{ openDecorStop }}" style="height:34px;padding:0 14px;border-radius:17px;border:1.5px solid var(--ink);background:var(--bg);font:400 14px 'Jua',sans-serif;cursor:pointer">방 꾸미기 ›</button>
+      <div style="display:flex;gap:6px"><button onClick="{{ openSpotsStop }}" style="height:34px;padding:0 14px;border-radius:17px;border:1.5px solid var(--ink);background:var(--bg);font:400 14px 'Jua',sans-serif;cursor:pointer">얼룩 ›</button><button onClick="{{ openDecorStop }}" style="height:34px;padding:0 14px;border-radius:17px;border:1.5px solid var(--ink);background:var(--bg);font:400 14px 'Jua',sans-serif;cursor:pointer">방 꾸미기 ›</button></div>
       <div data-coach="0" onClick="{{ openRoom }}" style="cursor:pointer;width:220px;height:220px;border-radius:50%;border:2px solid var(--ink);background-color:var(--card);background-image:var(--ca);background-size:{{ cat.homeSize }};background-position:{{ cat.homePos }};filter:{{ catFilter }};animation:bob 3s ease-in-out infinite"></div>
     </div>
     </sc-if>
@@ -264,7 +265,7 @@ button{font-family:inherit;color:inherit}
   <div style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:8px 18px 18px">
     <div style="display:flex;align-items:center;justify-content:space-between;height:44px">
       <div style="font:400 24px 'Jua',sans-serif">뽑기</div>
-      <span style="font:400 13px 'Jua',sans-serif;padding:5px 11px;border-radius:16px;border:1.5px solid var(--ink);background:var(--chip1)">◆ {{ gachaChuru }} 츄르</span>
+      <span onClick="{{ openShop }}" style="font:400 13px 'Jua',sans-serif;padding:5px 11px;border-radius:16px;border:1.5px solid var(--ink);background:var(--chip1);cursor:pointer">◆ {{ gachaChuru }} 츄르 +</span>
     </div>
     <div style="font-size:12px;color:var(--sub)">데모 버전 · 테스트용 츄르가 무제한이에요</div>
     <div style="display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:22px;border:1.5px solid var(--ink);background:var(--card)">
@@ -645,7 +646,7 @@ button{font-family:inherit;color:inherit}
       <sc-for list="{{ docSections }}" as="ds" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:6px"><div style="font:400 15px 'Jua',sans-serif">{{ ds.t }}</div><div style="font-size:13px;line-height:1.65;color:var(--body);text-wrap:pretty">{{ ds.b }}</div></div></sc-for>
       <div style="font-size:11px;color:var(--mute)">시행일 2026년 10월 20일</div></div></sc-if>
     <sc-if value="{{ pgAbout }}"><div style="display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.aboutSize }};background-position:{{ cat.aboutPos }}"></div><div style="font:400 26px 'Jua',sans-serif">냥집중</div><div style="font-size:13px;color:var(--sub)">버전 1.4.0 (빌드 8)</div><sc-if value="{{ updOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;padding:3px 10px;border-radius:10px;background:var(--mint)">최신 버전을 사용 중이에요</span></sc-if><sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="font-size:12px;padding:5px 12px;border-radius:12px;border:0;background:#F6D58E;color:#4A3428;cursor:pointer">새 버전 v1.2.0 받기 ›</button></sc-if><button onClick="{{ checkUpd }}" style="min-height:44px;padding:0 12px;border:0;background:none;font-size:13px;color:var(--sub);text-decoration:underline;cursor:pointer">업데이트 확인</button></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.aboutSize }};background-position:{{ cat.aboutPos }}"></div><div style="font:400 26px 'Jua',sans-serif">냥집중</div><div style="font-size:13px;color:var(--sub)">버전 1.5.0 (빌드 9)</div><sc-if value="{{ updOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;padding:3px 10px;border-radius:10px;background:var(--mint)">최신 버전을 사용 중이에요</span></sc-if><sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="font-size:12px;padding:5px 12px;border-radius:12px;border:0;background:#F6D58E;color:#4A3428;cursor:pointer">새 버전 v1.2.0 받기 ›</button></sc-if><button onClick="{{ checkUpd }}" style="min-height:44px;padding:0 12px;border:0;background:none;font-size:13px;color:var(--sub);text-decoration:underline;cursor:pointer">업데이트 확인</button></div>
       <div style="border-radius:18px;background:var(--card);overflow:hidden;display:flex;flex-direction:column"><sc-for list="{{ aboutRows }}" as="ar"><button onClick="{{ ar.go }}" style="display:flex;align-items:center;min-height:50px;padding:0 14px;border:none;border-top:{{ ar.divider }};background:none;cursor:pointer;text-align:left"><span style="flex:1;font-size:15px">{{ ar.label }}</span><span style="font-size:16px;color:var(--mute)">›</span></button></sc-for></div>
       <div style="font-size:11px;line-height:1.6;color:var(--mute);text-align:center">© 2026 냥집중 · 고양이 일러스트 © 냥집중</div></div></sc-if>
     <sc-if value="{{ pgLang }}"><div style="display:flex;flex-direction:column;gap:12px">
@@ -949,6 +950,35 @@ button{font-family:inherit;color:inherit}
   </div>
   </sc-if>
 
+  <!-- SPOTS (홈 › 얼룩) -->
+  <sc-if value="{{ spotView }}">
+  <div onClick="{{ spotView.close }}" style="position:absolute;inset:0;background:rgba(43,34,29,.5);z-index:8;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
+    <div onClick="{{ stop }}" style="width:100%;background:var(--bg);border-radius:24px;border:2px solid var(--ink);padding:20px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:12px;animation:pop .35s ease-out">
+      <div style="font:400 20px 'Jua',sans-serif">{{ spotView.title }}</div>
+      <div style="width:170px;height:170px;border-radius:20px;background:var(--card);position:relative;overflow:hidden">{{ spotView.art }}</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub)"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:{{ spotView.color }}"></span>{{ spotView.name }} · 고양이마다 랜덤으로 생겨요</div>
+      <div style="font-size:12px;line-height:1.5;color:var(--sub);text-align:center">홈 방과 집중 화면의 고양이에 보여요.<br>도감은 원래 그림 그대로예요.</div>
+      <button onClick="{{ spotView.reroll }}" style="align-self:stretch;height:48px;border-radius:24px;border:none;background:var(--ink);color:var(--bg);font:400 16px 'Jua',sans-serif;cursor:pointer">얼룩 다시 뽑기 · 200 츄르</button>
+      <button onClick="{{ spotView.close }}" style="align-self:stretch;height:44px;border-radius:22px;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font:400 15px 'Jua',sans-serif;cursor:pointer">닫기</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- CHURU SHOP -->
+  <sc-if value="{{ shopView }}">
+  <div onClick="{{ shopView.close }}" style="position:absolute;inset:0;background:rgba(43,34,29,.5);display:flex;align-items:flex-end;z-index:8">
+    <div onClick="{{ stop }}" style="width:100%;background:var(--bg);border-radius:28px 28px 0 0;padding:12px 20px 24px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
+      <div style="width:36px;height:4px;border-radius:2px;background:var(--line);align-self:center;margin-bottom:6px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><div style="font:400 20px 'Jua',sans-serif">츄르 충전</div><div style="font:400 15px 'Jua',sans-serif">◆ 보유 {{ shopView.churu }}</div></div>
+      <div style="font-size:12px;line-height:1.5;color:var(--sub)">츄르는 집중하면 모을 수 있어요. 더 빨리 모으고 싶을 때 충전해요.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <sc-for list="{{ shopView.packs }}" as="pk"><button onClick="{{ pk.buy }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;border-radius:18px;border:{{ pk.bd }};background:{{ pk.bg }};cursor:pointer;text-align:left;color:var(--ink)"><span style="color:#E59A4C;font-size:13px">{{ pk.gems }}</span><span style="font:400 18px 'Jua',sans-serif">{{ pk.label }}</span><span style="font-size:11px;color:#C9772F;min-height:14px">{{ pk.bonus }}</span><span style="align-self:stretch;margin-top:4px;height:32px;border-radius:16px;background:var(--ink);color:var(--bg);font:400 14px 'Jua',sans-serif;display:flex;align-items:center;justify-content:center">{{ pk.price }}</span></button></sc-for>
+      </div>
+      <div style="font-size:11px;color:var(--mute);text-align:center">데모 결제예요. 실제로 돈이 나가지 않아요.</div>
+    </div>
+  </div>
+  </sc-if>
+
   <!-- RECEIPT -->
   <sc-if value="{{ rcptView }}">
   <div onClick="{{ closeRcpt }}" style="position:absolute;inset:0;background:rgba(43,34,29,.6);z-index:8;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
@@ -1037,7 +1067,7 @@ button{font-family:inherit;color:inherit}
   <sc-if value="{{ gp }}">
   <div onClick="{{ gp.close }}" style="position:absolute;inset:0;background:rgba(43,34,29,.55);display:flex;align-items:center;justify-content:center;z-index:5;padding:16px;box-sizing:border-box">
     <div onClick="{{ gp.stop }}" style="width:100%;background:var(--bg);border-radius:26px;border:2px solid var(--ink);padding:16px;display:flex;flex-direction:column;gap:11px;box-sizing:border-box">
-      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font:400 20px 'Jua',sans-serif">고양이 뽑기</div><div style="display:flex;align-items:center;gap:6px"><span style="font:400 12px 'Jua',sans-serif;padding:4px 9px;border-radius:14px;border:1.5px solid var(--ink);background:var(--chip1)">◆ {{ gachaChuru }}</span><button onClick="{{ gp.close }}" aria-label="닫기" style="width:32px;height:32px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--ink)">✕</button></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font:400 20px 'Jua',sans-serif">고양이 뽑기</div><div style="display:flex;align-items:center;gap:6px"><span onClick="{{ openShop }}" style="font:400 12px 'Jua',sans-serif;padding:4px 9px;border-radius:14px;border:1.5px solid var(--ink);background:var(--chip1);cursor:pointer">◆ {{ gachaChuru }} +</span><button onClick="{{ gp.close }}" aria-label="닫기" style="width:32px;height:32px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--ink)">✕</button></div></div>
       <div style="display:flex;gap:2px;padding:3px;border-radius:14px;background:var(--line)"><button onClick="{{ gp.toBasic }}" style="flex:1;height:34px;border:none;border-radius:11px;background:{{ gp.bBg }};color:var(--ink);font:400 14px 'Jua',sans-serif;cursor:pointer">일반 뽑기</button><button onClick="{{ gp.toPlus }}" style="flex:1;height:34px;border:none;border-radius:11px;background:{{ gp.pBg }};color:var(--ink);font:400 14px 'Jua',sans-serif;cursor:pointer">Plus 전용 뽑기</button></div>
       <div style="padding:12px;border-radius:16px;background:{{ gp.boxBg }};color:{{ gp.boxFg }};display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:400 15px 'Jua',sans-serif">{{ gp.title }}</span><span style="font-size:11px;opacity:.8">{{ gp.met }}</span></div>
@@ -1237,6 +1267,25 @@ const LD = [['홈','Home','ホーム'],['도감','Collection','図鑑'],['뽑기
 ['벽지','Wallpaper','壁紙'],['바닥','Floor','床'],['구조','Layout','構造'],['가구','Furniture','家具'],['소품','Props','小物'],['옷','Outfits','服'],['간식','Snacks','おやつ'],['시즌','Season','シーズン'],['전용','Room only','専用'],['집중 중','Focusing','集中中'],['다음','Next','次へ'],['건너뛰기','Skip','スキップ']];
 const LPAT = [[/^(\d+)시간 (\d+)분$/, '$1h $2m', '$1時間$2分'], [/^(\d+)분 집중 완료$/, '$1 min focus done', '$1分の集中が完了'], [/^내 후원 (.+)kg$/, 'My support $1kg', '私の応援 $1kg']];
 const HANDLED = ['냥집중 Plus','공지사항','자주 묻는 질문','업적 · 배지','문의하기','이용약관','개인정보 처리방침','앱 정보','언어 선택','권한 설정'];
+// ── 고양이 얼룩 (앱 src/spots.ts와 같은 규칙) · 츄르 충전 (앱 src/data.ts CHURU_PACKS) ──
+const SPOT_COST = 200, CHURU_PACKS = [[100, 0, 1200], [300, 0, 3300], [600, 60, 5900], [1500, 300, 14000]];
+const SPOT_DARK = ['tux', 'bombay', 'mainecoon']; // 털이 어두운 고양이는 밝은 얼룩
+const hashSeed = str => { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; };
+const rngOf = seed => { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+function spotsOf(seed, dark) {
+  const r = rngOf(seed), pick = a => a[Math.floor(r() * a.length) % a.length];
+  const color = dark ? pick(['#F6EBDD', '#FFF6EC', '#E9C9A4', '#D98A4A']) : pick(r() < 0.3 ? ['#D98A4A', '#B8744A'] : ['#4A3428', '#6B4A36', '#7A7470']);
+  const kind = r() < 0.35 ? 'dot' : 'patch', blobs = [];
+  const spotY = head => (head ? 0.1 + r() * 0.16 : 0.6 + r() * 0.3);
+  const fit = (b, head) => { const e = Math.max(b[2], b[3]); return [b[0], head ? Math.min(b[1], 0.3 - e) : Math.max(b[1], 0.56 + e), b[2], b[3], b[4]]; };
+  if (kind === 'patch') { const n = 2 + Math.floor(r() * 3); for (let i = 0; i < n; i++) { const head = i === 0 && r() < 0.35, sz = head ? 0.06 + r() * 0.05 : 0.08 + r() * 0.07, cx = 0.18 + r() * 0.64, cy = spotY(head), parts = 2 + Math.floor(r() * 2); for (let k = 0; k < parts; k++) blobs.push(fit([cx + (r() - 0.5) * sz, cy + (r() - 0.5) * sz, sz * (0.7 + r() * 0.5), sz * (0.55 + r() * 0.4), Math.round(r() * 180)], head)); } }
+  else { const n = 7 + Math.floor(r() * 6); for (let i = 0; i < n; i++) { const sz = 0.035 + r() * 0.035; const head = r() < 0.2; blobs.push(fit([0.15 + r() * 0.7, spotY(head), sz, sz * (0.75 + r() * 0.3), Math.round(r() * 180)], head)); } }
+  return { kind, name: kind === 'dot' ? '점박이' : '얼룩무늬', color, blobs };
+}
+// 얼룩을 CSS 배경으로 (고양이 그림을 마스크로 써서 고양이 모양대로 자른다)
+const spotLayer = (sp, cut) => ({ position:'absolute', inset:0, pointerEvents:'none', opacity:.78, background: sp.blobs.map(([cx, cy, rx, ry]) => `radial-gradient(ellipse ${(rx * 100).toFixed(1)}% ${(ry * 100).toFixed(1)}% at ${(cx * 100).toFixed(1)}% ${(cy * 100).toFixed(1)}%, ${sp.color} 96%, transparent 100%)`).join(','),
+  WebkitMaskImage: cut, maskImage: cut, WebkitMaskSize:'contain', maskSize:'contain', WebkitMaskRepeat:'no-repeat', maskRepeat:'no-repeat', WebkitMaskPosition:'center bottom', maskPosition:'center bottom' });
+
 // ── 고양이 뽑기 (앱 src/data.ts GACHA_CATS · store.gachaPull과 같은 규칙). 그림은 앱 assets/img/gacha/의 초상(face)과 배경 지운 그림(cut) ──
 const GACHA = [
   { id:"bombay", name:"\ubd04\ubca0\uc774", tier:1, desc:"\ud751\ud45c\ubc94\ucc98\ub7fc \ubc18\uc9dd\uc774\ub294 \uae4c\ub9cc \uace0\uc591\uc774.", img:'url(/_blob/e586dbaa3643f5bbe31cbc33b0511a92)', cut:'url(/_blob/bc60cf2bf4f522465121f7107196fc37)' },
@@ -1317,6 +1366,7 @@ class Component extends DCLogic {
     goal:60, restOn:true, restEvery:25, restLen:5, singUntil:0, seenSongs:[0], playingSong:null, songBonus:{ basic:false, cat:false }, goalHit:false, goalNotify:true, attendDone:[1,1,1,0,0,0,0], attendToday:3, remind:{ on:true, time:'21:00', days:[1,1,1,1,1,0,0] }, reportTab:'week', nick:null, avatarCat:null,
     wd:{ reason:'', agree:false }, bk:{ auto:true, wifi:true, last:'방금 전', busy:false }, offline:false, upd:false, big:false, cb:false, haptic:true, openOss:null,
     ledger:[{ l:'집중 50분 완료', a:20, d:'10.27' }, { l:'출석 보상', a:8, d:'10.26' }, { l:'털실 장난감 구매', a:-12, d:'10.25' }, { l:'집중 25분 완료', a:10, d:'10.24' }, { l:'웰컴 선물', a:20, d:'10.20' }],
+    spots:{}, spotSalt: Math.floor(Math.random() * 2 ** 31), churuShop:false, spotPop:false,
     house:false, hs:'liv', rooms:['liv','nap'], catRoom:'liv', jumping:false, pinUntil:0, rstore:{}, dRoom:'liv', roomNames:{}, extra:false, houseHint:true, renaming:false, nameDraft:'', themeMode:null, friends:FRIENDS, friendCode:'', friendErr:'', tries:{ ig:7, yt:4, tt:3, kk:2 }, share:false, att:[], fdays:[], blockedNow:0, coach:-1, coachRect:null, coachSeen:false, adLeft:3, ad:null, pay:null, rcpt:null, shIdx:0, dlg:null, fedUntil:0, toastMsg:'' };
 
   setEnd(h, m) {
@@ -1452,10 +1502,21 @@ class Component extends DCLogic {
   trySponsor() { const st = this.state; if (st.sMode === 'cash') { if (st.offline) { this.toast('오프라인에서는 결제할 수 없어요'); return; } this.setState({ pay:{ method: this.props.platform === 'ios' ? 'Apple Pay' : 'Google Play 결제', agree:[0,0,0] } }); } else this.sponsor(); }
   watchAd() { if (this.state.adLeft <= 0) { this.toast('오늘 광고 보상을 모두 받았어요'); return; } this.setState({ ad:5 }); clearInterval(this.adI);
     this.adI = setInterval(() => { const a = this.state.ad; if (a == null || a <= 0) { clearInterval(this.adI); return; } this.setState({ ad: a - 1 }); }, 1000); }
+  spotSeed(id) { const s = this.state; return s.spots[id] != null ? s.spots[id] : hashSeed(id + ':' + s.spotSalt); }
+  spotsFor(id) { return spotsOf(this.spotSeed(id), SPOT_DARK.includes(id)); }
+  needChuru(n) { this.setState({ dlg: { kind: 'nochuru', id: n } }); }
+  rerollSpots(id) { const st = this.state, c = CATS.find(x => x.id === id) || GACHA.find(x => x.id === id);
+    if (st.churu < SPOT_COST) { this.needChuru(SPOT_COST - st.churu); return; }
+    let seed = Math.floor(Math.random() * 2 ** 31); if (seed === this.spotSeed(id)) seed++;
+    this.log(c.name + ' 얼룩 다시 뽑기', -SPOT_COST); this.sfx('coin');
+    this.setState({ churu: st.churu - SPOT_COST, spots: { ...st.spots, [id]: seed } }); this.toast(c.name + '에게 새 얼룩이 생겼어요'); }
+  buyChuru(i) { const p = CHURU_PACKS[i]; if (!p) return; const n = p[0] + p[1];
+    this.log('츄르 충전 ' + p[0] + (p[1] ? ' + 보너스 ' + p[1] : ''), n); this.sfx('coin');
+    this.setState(st => ({ churu: st.churu + n, pay: null, churuShop: false })); this.toast('츄르 ' + n + '개를 충전했어요 (데모)'); }
   gachaPull(kind, n) {
     const st = this.state, cost = n === 10 ? GACHA_COST[kind].ten : GACHA_COST[kind].one;
     if (kind === 'plus' && !st.plus) { this.toast('Plus 전용 뽑기는 Plus 구독 중에 할 수 있어요'); return; }
-    if (st.churu < cost) { this.toast('츄르가 ' + (cost - st.churu) + '개 더 필요해요 · 집중하면 모을 수 있어요'); return; }
+    if (st.churu < cost) { this.needChuru(cost - st.churu); return; }
     let pity = st.gachaPity, refund = 0; const owned = [...st.owned], gOwned = [...st.gOwned], res = [], basic = CATS.filter(c => !c.plus);
     for (let i = 0; i < n; i++) {
       let tier = 1, g, list = owned;
@@ -1500,7 +1561,7 @@ class Component extends DCLogic {
     return { rooms, tx: here.cx + '%', ty: here.cy + '%', here }; }
   back() { const s = this.state; this.wentBack = true;
     if (s.dlg) { if (['bye', 'expired'].includes(s.dlg.kind)) return; return this.setState({ dlg: null }); }
-    if (s.pay) return this.setState({ pay: null }); if (s.rcpt) return this.setState({ rcpt: null }); if (s.cert) return this.setState({ cert: null });
+    if (s.pay) return this.setState({ pay: null }); if (s.churuShop) return this.setState({ churuShop: false }); if (s.spotPop) return this.setState({ spotPop: false }); if (s.rcpt) return this.setState({ rcpt: null }); if (s.cert) return this.setState({ cert: null });
     if (s.ad != null) return this.closeAd(); if (s.share) return this.setState({ share: false }); if (s.gacha) return this.setState({ gacha: null }); if (s.gachaRes) return this.setState({ gachaRes: null }); if (s.gachaPop) return this.setState({ gachaPop: null });
     if (s.sheet) return this.setState({ sheet: false }); if (s.acct) return this.setState({ acct: false }); if (s.house) return this.setState({ house: false });
     if (s.coach >= 0) return this.coachGo(9);
@@ -1621,7 +1682,7 @@ class Component extends DCLogic {
         return h('div', { key: 'cat-' + bh.id, onClick: drag ? () => this.nextBehavior() : e => { e.stopPropagation(); this.sing(); },
           style: { position:'absolute', left:L, bottom:Bt, width:cw, height:chh, animation:'behin .5s ease-out', cursor:'pointer', pointerEvents:'auto' } },
           h('div', { style: { position:'absolute', inset:0, backgroundImage:`var(--cut-${catObj.id})`, backgroundSize:'contain', backgroundRepeat:'no-repeat', backgroundPosition:'center bottom',
-            transformOrigin:'50% 100%', animation: bh.anim, filter: bh.id === 'nap' ? 'brightness(.94) saturate(.9)' : 'none' } }, ofEl),
+            transformOrigin:'50% 100%', animation: bh.anim, filter: bh.id === 'nap' ? 'brightness(.94) saturate(.9)' : 'none' } }, h('div', { style: spotLayer(this.spotsFor(catObj.id), `var(--cut-${catObj.id})`) }), ofEl),
           bh.id === 'nap' && [0, 1, 2].map(i => fx({ key:'z' + i, right: '8%', top: '4%', fontSize: fs + i * 3, animation:`zfloat 2.4s ${i * 0.8}s ease-out infinite`, opacity:0 }, 'z')),
           bh.id === 'sing' && fx({ key:'sg', right:'-10%', top:'-8%', padding:'4px 10px', borderRadius:'12px 12px 12px 3px', background:'#FBF6EE', border:'1.5px solid #4A3428', fontSize: fs, whiteSpace:'nowrap', transformOrigin:'0 100%', animation:'bubblepop 1.6s ease-out infinite' }, '야옹야옹♪'),
           bh.id === 'sing' && [['-18px', 0, '♪'], ['14px', .5, '♫'], ['-4px', 1, '♪'], ['22px', 1.4, '♬']].map(([dx, dl, n], i) => fx({ key:'n' + i, left: (20 + i * 16) + '%', top:'6%', fontSize: fs + 2, '--dx': dx, animation:`note 1.6s ${dl}s ease-out infinite`, opacity:0 }, n)),
@@ -1734,7 +1795,7 @@ class Component extends DCLogic {
         const BT = [['연속 집중 일수','일',[3,7,14,30],streakOf([...s.att, ...s.fdays]),'var(--chip1)'],['누적 집중 시간','분',[60,300,1000,3000],310 + todayMin,'var(--mint)'],['츄르 획득량','개',[50,200,500,1500],s.earnedTotal,'var(--pink)'],['후원 횟수','회',[1,5,15,30],s.donated + s.sponsorships.length,'var(--blue)'],['고양이 도감 수집','마리',[1,2,3,4],s.owned.length,'var(--purple)'],['방 꾸미기 아이템','개',[3,6,10,15],s.ownedDecor.length + s.items.length,'#EDE3C9'],['노래 수집','곡',[3,5,9,13],s.seenSongs.length,'var(--mint)']];
         const gotBadges = BT.reduce((a, b) => a + b[2].filter(x => b[3] >= x).length, 0);
         const SECS = [
-          ['내 활동', [row('냥집중 Plus', s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 18종 더', page('냥집중 Plus'), { color: '#C9772F' }), row('집중 기록', '', go('stats')), row('상점 · 꾸미기', s.churu + ' 츄르', go('shop')), row('고양이 도감', (s.owned.length + s.gOwned.length + (s.plus ? 4 : 0)) + '/' + (CATS.length + GACHA.length), go('dex')), row('업적 · 배지', gotBadges + '/24', page('업적 · 배지')), row('출석 체크', streakOf(s.att) + '일', page('출석 체크')), row('주간 리포트 · 월간 회고', '', page('주간 리포트 · 월간 회고')), row('친구와 비교', '', page('친구와 비교')), row('고양이 성장', this.growth().name, page('고양이 성장')), row('츄르 내역', '', page('츄르 내역'))]],
+          ['내 활동', [row('냥집중 Plus', s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 18종 더', page('냥집중 Plus'), { color: '#C9772F' }), row('집중 기록', '', go('stats')), row('상점 · 꾸미기', s.churu + ' 츄르', go('shop')), row('고양이 도감', (s.owned.length + s.gOwned.length + (s.plus ? 4 : 0)) + '/' + (CATS.length + GACHA.length), go('dex')), row('업적 · 배지', gotBadges + '/24', page('업적 · 배지')), row('출석 체크', streakOf(s.att) + '일', page('출석 체크')), row('주간 리포트 · 월간 회고', '', page('주간 리포트 · 월간 회고')), row('친구와 비교', '', page('친구와 비교')), row('고양이 성장', this.growth().name, page('고양이 성장')), row('츄르 충전', s.churu + ' 츄르', () => this.setState({ churuShop: true })), row('츄르 내역', '', page('츄르 내역'))]],
           ['후원', [row('후원 현황', dkg + 'kg 전달', go('donate')), row('기부 영수증 · 증명서', '', () => this.setState({ tab:'donate', donTab:'mine' })), row('파트너 단체 소개', '', page('파트너 단체 소개'))]],
           ['집중 설정', [row('기본 차단 앱', APPS.filter(a => s.blocked[a.id]).length + '개', () => this.setState({ sheet: true })),
             row('시계 형식', s.fmt === '12' ? '12시간 (AM/PM)' : '24시간', () => this.setState(st => ({ fmt: st.fmt === '12' ? '24' : '12' }))),
@@ -1940,7 +2001,8 @@ class Component extends DCLogic {
         const BTN = (label, kind, go) => ({ label, go, bg: kind === 'primary' ? 'var(--ink)' : kind === 'danger' ? 'var(--red)' : 'var(--bg)', fg: kind === 'ghost' ? 'var(--ink)' : 'var(--bg)', bd: kind === 'ghost' ? '1.5px solid var(--ink)' : 'none' });
         const setS = o => () => this.setState(o);
         const mmr = Math.floor(Math.ceil(s.remain) / 60);
-        const an = ANIMALS.find(x => x.id === s.sAnimal), cashAmt = [3000, 5000, 10000][s.sAmt], PM = s.pay;
+        const PM = s.pay, PK = PM && PM.pack != null ? CHURU_PACKS[PM.pack] : null; // PK = 츄르 충전 상품 (없으면 후원 결제)
+        const an = ANIMALS.find(x => x.id === s.sAnimal), cashAmt = PK ? PK[2] : [3000, 5000, 10000][s.sAmt];
         const allAgree = !!PM && PM.agree.every(Boolean);
         const days = ['월', '화', '수', '목', '금', '토', '일'];
         const rec = s.sponsorships.filter(r => !r.refunded);
@@ -1952,6 +2014,8 @@ class Component extends DCLogic {
           expired: () => ({ title: '로그인이 만료됐어요', lines: L(['보안을 위해 다시 로그인해 주세요.', '진행 중이던 기록은 안전하게 저장돼 있어요.']), btns: [BTN('다시 로그인', 'primary', setS({ dlg: null, screen: 'login', menuPage: null, emailMode: false }))] }),
           conflict: () => ({ title: '이미 연결된 계정이에요', lines: L(['이 Apple 계정은 다른 냥집중 계정에 연결돼 있어요.', '그 계정으로 전환하면 지금 기록은 이 기기에서 보이지 않아요.']), btns: [BTN('취소', 'ghost', closeD), BTN('그 계정으로 전환', 'primary', () => { closeD(); this.toast('계정을 전환했어요 (데모)'); })] }),
           refund: () => { const r = s.sponsorships.find(x => x.id === D.id); return { title: (r ? r.animal : '') + ' 후원 환불을 요청할까요?', lines: L(['전달 전이라면 영업일 3일 안에 환불돼요.', '환불을 요청하면 인증서가 취소돼요.']), btns: [BTN('닫기', 'ghost', closeD), BTN('환불 요청', 'danger', () => { this.setState(st => ({ dlg: null, sponsorships: st.sponsorships.map(x => x.id === D.id ? { ...x, refunded: true } : x) })); this.toast('환불을 요청했어요'); })] }; },
+          nochuru: () => ({ title: '츄르가 ' + (D.id || 0) + '개 더 필요해요', lines: L(['집중하면 츄르를 모을 수 있어요.', '지금 바로 충전할 수도 있어요.']), btns: [BTN('츄르 충전하기', 'primary', () => this.setState({ dlg: null, churuShop: true, gachaPop: null })), BTN('닫기', 'ghost', closeD)] }),
+          spots: () => ({ cat: true, title: (CATS.find(x => x.id === s.catId) || CATS[0]).name + '의 얼룩을 다시 뽑을까요?', lines: L(['츄르 200개로 새 얼룩이 랜덤으로 생겨요.', '지금 얼룩으로는 되돌릴 수 없어요.']), btns: [BTN('취소', 'ghost', closeD), BTN('다시 뽑기', 'primary', () => { closeD(); this.rerollSpots(s.catId); })] }),
           refundinfo: () => ({ title: '취소·환불 안내', lines: L(['결제 후원은 보호소로 전달되기 전(7일 이내)에 환불할 수 있어요.', '전달이 끝난 후원은 환불할 수 없어요.', '츄르 후원은 환불되지 않아요.', '그 밖의 문의는 문의하기에서 남겨 주세요.']), btns: [BTN('확인', 'primary', closeD)] }),
           call: () => ({ cat: true, title: '전화가 왔어요', lines: L(['집중 시간이 잠시 멈췄어요.', '통화 중에는 벌점이 없어요.']), btns: [BTN('받기', 'primary', setS({ dlg: { kind: 'incall' } })), BTN('거절', 'ghost', closeD)] }),
           incall: () => ({ title: '통화 중', lines: L(['타이머가 멈춰 있어요.']), btns: [BTN('통화 종료', 'primary', () => { closeD(); this.toast('집중을 이어가요'); })] }),
@@ -2087,12 +2151,21 @@ class Component extends DCLogic {
           coachView: s.coach >= 0 && cr ? { ...cr, ty: cr.t > 360 ? cr.t - 160 : cr.t + cr.h + 14, n: s.coach + 1, title: CO[s.coach][0], body: CO[s.coach][1], nextLabel: s.coach === 3 ? '시작하기' : '다음', next: () => this.coachGo(s.coach + 1), skip: () => this.coachGo(9) } : null,
           adLabel: '광고 보고 츄르 5개 (' + s.adLeft + '/3)', watchAd: () => this.watchAd(),
           adView: s.ad != null ? { t: s.ad > 0 ? s.ad + '초' : '완료', msg: s.ad > 0 ? '끝까지 보면 츄르 5개를 받아요' : '시청 완료!', btn: s.ad > 0 ? '닫기 (보상 없음)' : '츄르 5개 받기', bg: s.ad > 0 ? 'var(--sub)' : '#E59A4C', go: () => s.ad > 0 ? this.closeAd() : this.claimAd() } : null,
-          paySheet: !!PM, closePay: () => this.setState({ pay: null }), payTitle: an.name + ' 후원', payAmt: '₩' + cashAmt.toLocaleString(),
+          paySheet: !!PM, closePay: () => this.setState({ pay: null }), payTitle: PK ? '츄르 ' + PK[0] + (PK[1] ? ' + 보너스 ' + PK[1] : '') : an.name + ' 후원', payAmt: '₩' + cashAmt.toLocaleString(),
           payMethods: (ios ? ['Apple Pay', '신용·체크카드', '카카오페이'] : ['Google Play 결제', '신용·체크카드', '카카오페이', '토스페이']).map(l => ({ label: l, bd: PM && PM.method === l ? '2px solid var(--ink)' : '1.5px solid var(--line)', dot: PM && PM.method === l ? 'var(--ink)' : 'transparent', pick: () => this.setState(st => ({ pay: { ...st.pay, method: l } })) })),
-          payAgree: ['전체 동의', '(필수) 결제 서비스 이용약관', '(필수) 후원 환불 정책 확인', '(필수) 개인정보 제3자 제공 동의 (보호소 전달용)'].map((label, i) => { const on = PM ? (i === 0 ? allAgree : !!PM.agree[i - 1]) : false; return { label, w: i ? 400 : 700, divider: i === 1 ? '1px solid var(--line)' : 'none', bg: on ? 'var(--ink)' : '#FFFFFF', mark: on ? '✓' : '',
+          payAgree: (PK ? ['전체 동의', '(필수) 결제 서비스 이용약관', '(필수) 츄르는 현금으로 환급되지 않고, 쓰지 않은 츄르는 7일 안에 청약철회할 수 있어요'] : ['전체 동의', '(필수) 결제 서비스 이용약관', '(필수) 후원 환불 정책 확인', '(필수) 개인정보 제3자 제공 동의 (보호소 전달용)']).map((label, i) => { const on = PM ? (i === 0 ? allAgree : !!PM.agree[i - 1]) : false; return { label, w: i ? 400 : 700, divider: i === 1 ? '1px solid var(--line)' : 'none', bg: on ? 'var(--ink)' : '#FFFFFF', mark: on ? '✓' : '',
             pick: () => this.setState(st => ({ pay: { ...st.pay, agree: i === 0 ? st.pay.agree.map(() => (allAgree ? 0 : 1)) : st.pay.agree.map((v, j) => j === i - 1 ? (v ? 0 : 1) : v) } })) }; }),
           payBg: allAgree ? 'var(--ink)' : 'var(--disabled)', payBtn: allAgree ? '₩' + cashAmt.toLocaleString() + ' 결제하기' : '약관에 동의해 주세요',
-          payGo: () => { if (!allAgree) return; this.sponsor(); this.setState({ pay: null }); },
+          payGo: () => { if (!allAgree) return; if (PK) return this.buyChuru(PM.pack); this.sponsor(); this.setState({ pay: null }); },
+          openShop: e => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ churuShop: true }); },
+          openSpotsStop: e => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ spotPop: true }); },
+          shopView: s.churuShop ? { churu: s.churu, close: () => this.setState({ churuShop: false }),
+            packs: CHURU_PACKS.map(([n, b, w], i) => ({ label: n.toLocaleString() + ' 츄르', bonus: b ? '+ 보너스 ' + b : '', price: '₩' + w.toLocaleString(), gems: '◆'.repeat(i + 1), bd: b ? '1.5px solid var(--ink)' : '1.5px solid var(--line)', bg: b ? 'var(--chip1)' : 'var(--card)',
+              buy: () => this.setState({ churuShop: false, pay: { method: ios ? 'Apple Pay' : 'Google Play 결제', agree: [0, 0], pack: i } }) })) } : null,
+          spotView: s.spotPop ? (() => { const h = React.createElement, c = CATS.find(x => x.id === s.catId) || CATS[0], sp = this.spotsFor(c.id), cut = `var(--cut-${c.id})`;
+            return { title: c.name + '의 얼룩', name: sp.name, color: sp.color, close: () => this.setState({ spotPop: false }),
+              reroll: () => (s.churu < SPOT_COST ? this.needChuru(SPOT_COST - s.churu) : this.setState({ dlg: { kind: 'spots' } })),
+              art: h('div', { style: { position:'absolute', left:10, right:10, top:10, bottom:8, backgroundImage: cut, backgroundSize:'contain', backgroundRepeat:'no-repeat', backgroundPosition:'center bottom' } }, h('div', { style: spotLayer(sp, cut) })) }; })() : null,
           mineCount: s.sponsorships.length,
           openCum: () => this.setState({ rcpt: 'cum' }), openRcpt: () => this.setState({ rcpt: 'rcpt' }), closeRcpt: () => this.setState({ rcpt: null }),
           saveRcpt: () => { this.setState({ rcpt: null }); this.toast('PDF로 저장했어요 (데모)'); },
