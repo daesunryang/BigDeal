@@ -2,7 +2,8 @@ import * as Sharing from 'expo-sharing';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
-import { IS_DEMO, IS_FULL } from '../config';
+import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
+import { openUpdate } from '../services/update';
 import { ANIMALS, APPS, DEFAULT_BLOCK_PKGS, MOODS, ROOM_DESC, catById, won } from '../data';
 import { affOf, dkg, focusStreak } from '../derive';
 import { authEnabled, deleteAccount, unlinkProvider } from '../services/auth';
@@ -247,6 +248,8 @@ export function Dialog() {
     recover: () => ({ cat: true, title: '집중이 중단됐어요', lines: ['앱이 종료되기 전에 ' + mm + '분이 남아 있었어요.', '3분 안에 돌아오면 벌점 없이 이어갈 수 있어요.'], btns: [
       ['이어서 집중하기', 'primary', () => { S({ dlg: null, screen: 'focus' }); hooks.onStart?.(getS()); }],
       ['이번엔 쉬기', 'ghost', () => { S({ dlg: null, remain: 0, total: 0, screen: 'tabs' }); getS().toast('벌점 없이 종료했어요'); }]] }),
+    update: () => ({ title: '새 버전 ' + (s.update?.tag ?? '') + '이 나왔어요', lines: ['지금 버전 ' + APP_VERSION + ' → ' + (s.update?.tag ?? '').replace(/^v/, ''), ios ? '눌러서 릴리스 페이지에서 새 버전을 받아요.' : '받은 APK를 설치하면 기록은 그대로 이어져요.'], btns: [
+      ['지금 업데이트', 'primary', () => { close(); openUpdate(); }], ['나중에', 'ghost', close]] }),
     permlost: () => ({ title: '권한이 꺼져 있어요', lines: ['방해 앱을 막으려면 다시 허용해야 해요.', '설정 → ' + (ios ? '스크린 타임' : '사용 정보 접근') + ' → 냥집중 켜기'], btns: [
       ['설정 열기', 'primary', () => { if (blocker.available) { close(); blocker.openUsage(); return; } S({ dlg: null, perm: { a: true, b: true } }); getS().toast('권한이 다시 켜졌어요'); }], ['나중에', 'ghost', close]] }),
   };

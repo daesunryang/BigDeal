@@ -76,7 +76,7 @@ button{font-family:inherit;color:inherit}
     <div style="font:400 15px 'Jua',sans-serif">Android 우선 · iOS 확장</div>
     <div>Android: UsageStats + 다른 앱 위에 표시(오버레이)로 차단. Material 3 하단 내비, 시스템 뒤로가기 대응.</div>
     <div>iOS: Screen Time(FamilyControls) 권한, 차단 화면은 Shield 확장으로 대체. 레이아웃은 동일, 상태바·홈 인디케이터만 교체.</div>
-    <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.2.0 반영</div>
+    <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.2.1 반영</div>
     <div>뒤로가기는 바로 전 화면으로 (탭·메뉴 하위 화면·방 꾸미기 기록). 앱 정보의 업데이트 확인, 새 버전 안내 배너, 화면 오류 복구 화면. 메뉴 → 데모 상황에서 확인해요.</div>
     <div style="color:var(--sub)">Tweaks: 플랫폼 전환, 홈 레이아웃 3종(방 카드 / 풀블리드 / 원형), 타이머 레이아웃 3종(링 / 방 / 나이트), 빠른 타이머.</div>
   </div>
@@ -272,7 +272,7 @@ button{font-family:inherit;color:inherit}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <sc-for list="{{ catCards }}" as="c" hint-placeholder-count="4">
         <button onClick="{{ c.select }}" style="display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:20px;border:{{ c.border }};background:var(--bg);cursor:pointer;text-align:left">
-          <div style="width:100%;aspect-ratio:1;border-radius:14px;background-color:var(--card);background-image:var(--ca);background-size:{{ c.bgSize }};background-position:{{ c.bgPos }};filter:{{ c.filter }}"></div>
+          <div style="width:100%;aspect-ratio:1;border-radius:14px;background-color:var(--card);overflow:hidden"><div style="width:100%;height:100%;background-image:{{ c.bgImg }};background-repeat:no-repeat;background-size:{{ c.bgSize }};background-position:{{ c.bgPos }};filter:{{ c.filter }}"></div></div>
           <div style="display:flex;justify-content:space-between;align-items:center;width:100%"><span style="font:400 15px 'Jua',sans-serif">{{ c.label }}</span><span style="font-size:11px;padding:2px 7px;border-radius:8px;background:{{ c.tagBg }}">{{ c.tag }}</span></div>
           <sc-if value="{{ c.locked }}"><span style="font-size:11px;color:#C9772F">{{ c.lockText }}</span></sc-if>
         </button>
@@ -618,7 +618,7 @@ button{font-family:inherit;color:inherit}
       <sc-for list="{{ docSections }}" as="ds" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:6px"><div style="font:400 15px 'Jua',sans-serif">{{ ds.t }}</div><div style="font-size:13px;line-height:1.65;color:var(--body);text-wrap:pretty">{{ ds.b }}</div></div></sc-for>
       <div style="font-size:11px;color:var(--mute)">시행일 2026년 10월 20일</div></div></sc-if>
     <sc-if value="{{ pgAbout }}"><div style="display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.aboutSize }};background-position:{{ cat.aboutPos }}"></div><div style="font:400 26px 'Jua',sans-serif">냥집중</div><div style="font-size:13px;color:var(--sub)">버전 1.2.0 (빌드 4)</div><sc-if value="{{ updOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;padding:3px 10px;border-radius:10px;background:var(--mint)">최신 버전을 사용 중이에요</span></sc-if><sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="font-size:12px;padding:5px 12px;border-radius:12px;border:0;background:#F6D58E;color:#4A3428;cursor:pointer">새 버전 v1.2.0 받기 ›</button></sc-if><button onClick="{{ checkUpd }}" style="min-height:44px;padding:0 12px;border:0;background:none;font-size:13px;color:var(--sub);text-decoration:underline;cursor:pointer">업데이트 확인</button></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.aboutSize }};background-position:{{ cat.aboutPos }}"></div><div style="font:400 26px 'Jua',sans-serif">냥집중</div><div style="font-size:13px;color:var(--sub)">버전 1.2.1 (빌드 5)</div><sc-if value="{{ updOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;padding:3px 10px;border-radius:10px;background:var(--mint)">최신 버전을 사용 중이에요</span></sc-if><sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="font-size:12px;padding:5px 12px;border-radius:12px;border:0;background:#F6D58E;color:#4A3428;cursor:pointer">새 버전 v1.2.0 받기 ›</button></sc-if><button onClick="{{ checkUpd }}" style="min-height:44px;padding:0 12px;border:0;background:none;font-size:13px;color:var(--sub);text-decoration:underline;cursor:pointer">업데이트 확인</button></div>
       <div style="border-radius:18px;background:var(--card);overflow:hidden;display:flex;flex-direction:column"><sc-for list="{{ aboutRows }}" as="ar"><button onClick="{{ ar.go }}" style="display:flex;align-items:center;min-height:50px;padding:0 14px;border:none;border-top:{{ ar.divider }};background:none;cursor:pointer;text-align:left"><span style="flex:1;font-size:15px">{{ ar.label }}</span><span style="font-size:16px;color:var(--mute)">›</span></button></sc-for></div>
       <div style="font-size:11px;line-height:1.6;color:var(--mute);text-align:center">© 2026 냥집중 · 고양이 일러스트 © 냥집중</div></div></sc-if>
     <sc-if value="{{ pgLang }}"><div style="display:flex;flex-direction:column;gap:12px">
@@ -1761,6 +1761,7 @@ class Component extends DCLogic {
           incall: () => ({ title: '통화 중', lines: L(['타이머가 멈춰 있어요.']), btns: [BTN('통화 종료', 'primary', () => { closeD(); this.toast('집중을 이어가요'); })] }),
           alarm: () => ({ title: '알람이 울려요', lines: L(['집중 시간이 잠시 멈췄어요.']), btns: [BTN('알람 끄기', 'primary', () => { closeD(); this.toast('집중을 이어가요'); })] }),
           recover: () => ({ cat: true, title: '집중이 중단됐어요', lines: L(['앱이 종료되기 전에 ' + mmr + '분이 남아 있었어요.', '3분 안에 돌아오면 벌점 없이 이어갈 수 있어요.']), btns: [BTN('이어서 집중하기', 'primary', setS({ dlg: null, screen: 'focus' })), BTN('이번엔 쉬기', 'ghost', () => { this.setState({ dlg: null, remain: 0, total: 0 }); this.toast('벌점 없이 종료했어요'); })] }),
+          update: () => ({ title: '새 버전 v1.2.2가 나왔어요', lines: L(['지금 버전 1.2.1 → 1.2.2', '받은 APK를 설치하면 기록은 그대로 이어져요.']), btns: [BTN('지금 업데이트', 'primary', () => { closeD(); this.toast('데모: 실제 앱에서는 이 빌드에 맞는 APK를 받아요'); }), BTN('나중에', 'ghost', closeD)] }),
           crash: () => ({ title: '앗, 화면에 문제가 생겼어요', lines: L(['기록은 안전하게 저장돼 있어요.', '다시 시도하거나 홈으로 돌아가 주세요.']), btns: [BTN('다시 시도', 'primary', closeD), BTN('홈으로', 'ghost', setS({ dlg: null, screen: 'tabs', tab: 'home', menuPage: null }))] }),
           permlost: () => ({ title: '권한이 꺼져 있어요', lines: L(['방해 앱을 막으려면 다시 허용해야 해요.', '설정 → ' + (ios ? '스크린 타임' : '사용 정보 접근') + ' → 냥집중 켜기']), btns: [BTN('설정 열기', 'primary', () => { this.setState({ dlg: null, perm: { a: true, b: true } }); this.toast('권한이 다시 켜졌어요'); }), BTN('나중에', 'ghost', closeD)] }),
         }; dlgView = M[D.kind] ? M[D.kind]() : null; }
@@ -1879,7 +1880,7 @@ class Component extends DCLogic {
             ['로그인 만료', '다시 로그인 화면으로 이동해요', () => this.setState({ dlg: { kind: 'expired' } })],
             ['계정 연결 충돌', '이미 다른 계정에 연결된 경우', () => this.setState({ dlg: { kind: 'conflict' } })],
             ['오프라인 전환', '배너와 결제 제한을 확인해요', () => this.setState(st => ({ offline: !st.offline }))],
-            ['새 버전 안내', '메뉴 맨 위에 업데이트 배너가 떠요 (다시 누르면 꺼짐)', () => this.setState(st => ({ upd: !st.upd }))],
+            ['새 버전 안내', '앱을 열 때 업데이트할지 묻고, 메뉴 맨 위에 배너가 떠요 (다시 누르면 꺼짐)', () => this.setState(st => ({ upd: !st.upd, dlg: st.upd ? st.dlg : { kind: 'update' } }))],
             ['화면 오류 복구', '오류가 나도 앱이 꺼지지 않고 복구 화면을 보여줘요', () => this.setState({ dlg: { kind: 'crash' } })],
           ].map(([label, sub, go]) => ({ label, sub, go })),
           dlgView,
@@ -1966,7 +1967,7 @@ class Component extends DCLogic {
       ownedCount: s.owned.length,
       catCards: CATS.map(c => { const own = s.owned.includes(c.id) || (c.plus && s.plus), cr = crop(c, 140); return {
         lockText: c.plus ? 'Plus 구독으로 만나요' : '츄르 30개로 만나요',
-        label: own ? c.name : '???', bgSize: cr.size, bgPos: cr.pos, filter: own ? 'none' : c.plus ? 'brightness(.35) opacity(.55)' : 'brightness(0) opacity(.18)',
+        label: own ? c.name : '???', ...(own || c.plus ? { bgImg: 'var(--ca)', bgSize: cr.size, bgPos: cr.pos } : { bgImg: 'var(--cut-' + c.id + ')', bgSize: '84% auto', bgPos: 'center 70%' }), filter: own ? 'none' : c.plus ? 'brightness(.35) opacity(.55)' : 'brightness(0) opacity(.3)',
         border: c.id === s.catId ? '2.5px solid var(--ink)' : '1.5px solid var(--line)',
         tag: own ? '♥ ' + Math.floor((s.aff[c.id]||0)/20) + (c.id === s.catId ? ' · 함께' : '') : c.plus ? 'PLUS' : '잠김', tagBg: c.id === s.catId ? 'var(--mint)' : c.plus && !own ? '#F6D58E' : 'var(--card)',
         locked: !own, select: () => own ? this.setState({ catId: c.id }) : c.plus ? this.setState({ tab: 'menu', menuPage: PG.plus, prevTab: 'dex' }) : null }; }),

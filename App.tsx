@@ -22,7 +22,7 @@ import { authEnabled, toUser, watchAuth } from './src/services/auth';
 import { blocker } from './src/services/blocker';
 import { pullOnLogin, startSync } from './src/services/sync';
 import { initNotify, notifyGoal, syncReminders } from './src/services/notify';
-import { checkUpdate } from './src/services/update';
+import { promptUpdate } from './src/services/update';
 import { initSfx } from './src/sfx';
 import { ErrorBoundary } from './src/screens/ErrorBoundary';
 import { S, getS, hooks, useApp } from './src/store';
@@ -83,7 +83,7 @@ function Root() {
     } else if (s.screen !== 'splash') S({ screen: 'splash' });
     if (blocker.available && !s.apps.some(a => a.pkg)) loadInstalledApps().catch(() => {});
     getS().dailyMail();
-    checkUpdate().catch(() => {});
+    promptUpdate().catch(() => {});
   }, [hydrated]);
 
   // 리마인더 알림을 설정에 맞춰 다시 예약하고, 앱으로 돌아올 때 새 날의 출석 우편을 확인한다
@@ -94,7 +94,7 @@ function Root() {
     const un = useApp.subscribe((st, prev) => {
       if (st.remind !== prev.remind || st.toggles.notif !== prev.toggles.notif || st.catId !== prev.catId) { clearTimeout(t); t = setTimeout(() => syncReminders(getS()).catch(() => {}), 800); }
     });
-    const c = AppState.addEventListener('change', st => { if (st === 'active') getS().dailyMail(); });
+    const c = AppState.addEventListener('change', st => { if (st === 'active') { getS().dailyMail(); promptUpdate().catch(() => {}); } });
     return () => { un(); c.remove(); clearTimeout(t); };
   }, [hydrated]);
 

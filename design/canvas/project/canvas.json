@@ -3,18 +3,18 @@
   "attachments": {},
   "boards": {
     "Main.dc.html": {
-      "h": 880,
+      "h": 1016,
       "is_interactive": true,
       "page": "proto",
       "title": "냥집중 앱 프로토타입",
-      "w": 860,
+      "w": 1276,
       "x": -583,
-      "y": -17
+      "y": -153
     },
     "RealApp.dc.html": {
       "h": 2620,
       "page": "real",
-      "title": "실제 앱 화면 v1.2.0",
+      "title": "실제 앱 화면 v1.2.1",
       "w": 1160,
       "x": 0,
       "y": 0
@@ -37,11 +37,11 @@
   "pages": [
     {
       "id": "proto",
-      "name": "프로토타입 (v1.2.0 반영)"
+      "name": "프로토타입 (v1.2.1 반영)"
     },
     {
       "id": "real",
-      "name": "실제 앱 v1.2.0"
+      "name": "실제 앱 v1.2.1"
     }
   ],
   "title": "냥집중"

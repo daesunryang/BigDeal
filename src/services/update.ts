@@ -36,6 +36,16 @@ export async function checkUpdate(manual = false) {
   }
 }
 
+// 앱을 열 때와 앱으로 돌아올 때(6시간에 한 번) 새 버전을 확인하고, 있으면 바로 업데이트할지 묻는다
+let lastAsk = 0;
+export async function promptUpdate() {
+  if (Date.now() - lastAsk < 6 * 3600e3) return;
+  lastAsk = Date.now();
+  const info = await checkUpdate();
+  const s = getS();
+  if (info && !s.dlg && s.screen !== 'focus') S({ dlg: { kind: 'update' } });
+}
+
 export function openUpdate() {
   const u = getS().update; if (!u) return;
   Linking.openURL(u.url).catch(() => Linking.openURL(u.page).catch(() => {}));

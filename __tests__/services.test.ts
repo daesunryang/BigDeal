@@ -1,7 +1,8 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, jest, test } from '@jest/globals';
 import { tr } from '../src/i18n';
 import { reminderPlan, toWeekday } from '../src/services/notify';
-import { isNewer, parseVer, pickApk } from '../src/services/update';
+import { isNewer, parseVer, pickApk, promptUpdate } from '../src/services/update';
+import { getS, useApp } from '../src/store';
 
 describe('업데이트 확인', () => {
   test('버전 비교', () => {
@@ -21,6 +22,16 @@ describe('업데이트 확인', () => {
     expect(pickApk(assets, true)?.browser_download_url).toBe('demo');
     expect(pickApk(assets, false)?.browser_download_url).toBe('full');
     expect(pickApk([], false)).toBeNull();
+  });
+});
+
+describe('앱을 열 때 업데이트 묻기', () => {
+  test('새 버전이 있으면 업데이트 창을 띄운다', async () => {
+    useApp.setState({ dlg: null, screen: 'tabs', update: null });
+    (globalThis as any).fetch = jest.fn(async () => ({ ok: true, json: async () => ({ tag_name: 'v99.0.0', html_url: 'page', assets: [{ name: 'nyangjibjung-demo-v99.0.0.apk', browser_download_url: 'apk' }] }) }));
+    await promptUpdate();
+    expect(getS().dlg).toEqual({ kind: 'update' });
+    expect(getS().update?.tag).toBe('v99.0.0');
   });
 });
 

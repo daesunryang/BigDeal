@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import { Image, Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
 import { ANIMALS, BEH, CATS, DECOR, SONGS, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
 import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
@@ -7,7 +7,7 @@ import { S, getS, listOf, useApp } from '../store';
 import { sfx } from '../sfx';
 import { useC } from '../theme';
 import { useScrollMemory } from '../ui/scrollMemory';
-import { Bar, Btn, CatFace, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
+import { Bar, Btn, CUTOUT, CatFace, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
 
 const pad = { paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18 };
 const back = () => { getS().back(); };
@@ -37,7 +37,7 @@ export function Dex() {
                 style={{ width: '47.5%', flexGrow: 1, alignItems: 'stretch', gap: 8, padding: 10, borderRadius: 20, borderWidth: c.id === s.catId ? 2.5 : 1.5, borderColor: c.id === s.catId ? C.ink : C.line, backgroundColor: C.bg }}>
                 <View style={{ aspectRatio: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' }}>
                   {o || c.plus ? <CatFace cat={c} size={140} border={0} round={false} bg={C.card} dim={o ? 1 : 0.55} shade={o ? 0 : 0.36} style={{ borderRadius: 14 }} />
-                    : <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.18)' }} />}
+                    : <Image source={CUTOUT[c.id]} resizeMode="contain" accessibilityLabel="아직 못 만난 고양이 실루엣" style={{ width: '84%', height: '84%', tintColor: C.ink, opacity: 0.3 }} />}
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Txt jua style={{ fontSize: 15, flexShrink: 1 }} numberOfLines={1}>{o ? c.name : '???'}</Txt>
