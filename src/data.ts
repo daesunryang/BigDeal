@@ -46,6 +46,8 @@ export const TIER = { 1: { name: '일반', color: '#8DBF93', rate: 65, refund: 1
 export type GachaKind = 'basic' | 'plus';
 export const GACHA_COST: Record<GachaKind, { one: number; ten: number }> = { basic: { one: 30, ten: 270 }, plus: { one: 40, ten: 360 } };
 export const GACHA_PITY = 10; // Plus 전용 뽑기: 10번째 뽑기는 희귀 이상
+// 츄르 충전 상품: [츄르, 보너스, 가격(원)]
+export const CHURU_PACKS: [number, number, number][] = [[100, 0, 1200], [300, 0, 3300], [600, 60, 5900], [1500, 300, 14000]];
 export const IMG_W = 2752, IMG_H = 3072, WIN = 560;
 
 export type AppInfo = { id: string; name: string; letter: string; color: string; usage: string; pkg?: string; icon?: string };

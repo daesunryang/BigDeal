@@ -44,7 +44,7 @@ function MenuRoot() {
       { label: '집중 기록', onPress: go('stats') }, { label: '상점 · 꾸미기', value: s.churu + ' 츄르', onPress: go('shop') },
       { label: '고양이 도감', value: (s.owned.length + (s.plus ? CATS.filter(c => c.plus).length : 0)) + '/' + ALL_CATS.length, onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/' + badges(s).length * 4, onPress: page('업적 · 배지') },
       { label: '출석 체크', value: streakOf(s.att) + '일', onPress: page(PG.attend) }, { label: '주간 리포트 · 월간 회고', onPress: page(PG.report) }, { label: '친구와 비교', onPress: page(PG.friends) },
-      { label: '고양이 성장', value: growth(s).name, onPress: page(PG.growth) }, { label: '츄르 내역', onPress: page(PG.ledger) }]],
+      { label: '고양이 성장', value: growth(s).name, onPress: page(PG.growth) }, { label: '츄르 충전', value: s.churu + ' 츄르', onPress: () => S({ churuShop: true }) }, { label: '츄르 내역', onPress: page(PG.ledger) }]],
     ['후원', [{ label: '후원 현황', value: dkg(s) + 'kg 전달', onPress: go('donate') }, { label: '기부 영수증 · 증명서', onPress: () => S({ tab: 'donate', donTab: 'mine' }) }, { label: '파트너 단체 소개', onPress: page(PG.partner) }]],
     ['집중 설정', [
       { label: '기본 차단 앱', value: s.apps.filter(a => s.blocked[a.id]).length + '개', onPress: () => S({ sheet: true }) },

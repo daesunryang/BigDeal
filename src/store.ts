@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { IS_DEMO } from './config';
+import { IS_DEMO, IS_FULL } from './config';
 import {
   APPS, CATS, DECOR, DecorKind, FRIENDS, MAILS, Mail, ROOMS, ROOM_DEF, SHN, ANIMALS, BEH, BehId,
-  Cat, GachaKind, catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
+  Cat, GachaKind, CHURU_PACKS, catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
 } from './data';
 import type { Lang } from './i18n';
 import { SPOT_COST, hashSeed } from './spots';
@@ -53,7 +53,8 @@ export type State = {
   // 후원
   shelters: { kg: number }[]; donated: number; pick: number; thanks: string; donTab: 'give' | 'feed' | 'mine';
   sAnimal: string; sMode: 'churu' | 'cash'; sAmt: number; sponsorships: Sponsorship[]; cert: number | null; shIdx: number;
-  pay: null | { method: string; agree: number[] }; rcpt: null | 'cum' | 'rcpt';
+  pay: null | { method: string; agree: number[]; pack?: number }; rcpt: null | 'cum' | 'rcpt'; // pack = 츄르 충전 상품 번호 (없으면 후원 결제)
+  churuShop: boolean; spotPop: boolean; // 츄르 충전 창 · 얼룩 창
   // 우편
   mails: Mail[]; mailRead: number[]; claimed: number[]; mailFilter: 'all' | 'reward' | 'report' | 'news'; openMail: number | null;
   // 메뉴 · 설정
@@ -90,7 +91,7 @@ function initial(): State {
     sessions: [], last: null, showBlocked: false, holding: false, failPen: 3, rest: 0, blockedNow: 0, blockedApp: '인스타그램',
     churu: demo ? 124 : 0, earnedTotal: demo ? 144 : 0, catId: 'cheese', owned: ['cheese'], aff: { cheese: demo ? 34 : 0 }, sulky: false,
     msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false }, playingSong: null, gachaPity: 0, gachaTotal: 0, gachaRes: null, gachaPop: null,
-    spots: {}, spotSalt: Math.floor(Math.random() * 2 ** 31),
+    spots: {}, spotSalt: Math.floor(Math.random() * 2 ** 31), churuShop: false, spotPop: false,
     decor: { wall: 'cream', floor: 'wood', struct: 'basic', outfit: 'none' }, ownedDecor: ['cream', 'wood', 'basic', 'none'], items: ['rug'], equipped: ['rug'], pos: {},
     decorCat: 'wall', preview: null, dragSel: null,
     house: false, hs: 'liv', rooms: ['liv', 'nap'], catRoom: 'liv', jumping: false, pinUntil: 0, rstore: {}, dRoom: 'liv', roomNames: {}, extra: false, houseHint: true, renaming: false, nameDraft: '',
@@ -112,7 +113,7 @@ function initial(): State {
 
 // 저장하지 않는 화면 상태
 const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midRest', 'singUntil', 'songText', 'playingSong', 'gachaRes', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
-  'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gachaPop', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
+  'thanks', 'cert', 'pay', 'rcpt', 'churuShop', 'spotPop', 'openMail', 'sheet', 'gachaPop', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
 
 // 동기화(백업)에 올릴 게임 데이터
 export const SYNC_KEYS: (keyof State)[] = ['user', 'linked', 'churu', 'earnedTotal', 'catId', 'owned', 'aff', 'sulky', 'seenBeh', 'decor', 'ownedDecor', 'items', 'equipped', 'pos', 'rooms', 'catRoom', 'rstore', 'dRoom', 'roomNames', 'extra',
@@ -149,6 +150,8 @@ type Actions = {
   claimAll: () => void;
   gachaPull: (kind: GachaKind, n: 1 | 10, rnd?: () => number) => void;
   rerollSpots: (id: string, rnd?: () => number) => void;
+  needChuru: (n: number) => void;
+  buyChuru: (pack: number) => void;
   back: () => boolean;
   reset: () => void;
   afterLogin: (u: User, linked: Record<string, boolean>) => void;
@@ -358,7 +361,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   gachaPull: (kind, n, rnd = Math.random) => {
     const st = get(), cost = n === 10 ? GACHA_COST[kind].ten : GACHA_COST[kind].one;
     if (kind === 'plus' && !st.plus) { get().toast('Plus 전용 뽑기는 Plus 구독 중에 할 수 있어요'); return; }
-    if (st.churu < cost) { get().toast('츄르가 ' + (cost - st.churu) + '개 더 필요해요 · 집중하면 모을 수 있어요'); return; }
+    if (st.churu < cost) { get().needChuru(cost - st.churu); return; }
     let pity = st.gachaPity, refund = 0;
     const owned = [...st.owned], res: GachaHit[] = [];
     const basic = CATS.filter(c => !c.plus);
@@ -386,12 +389,23 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   rerollSpots: (id, rnd = Math.random) => {
     const st = get(), c = catById(id);
     if (!st.owned.includes(id) && !(c.plus && st.plus)) return;
-    if (st.churu < SPOT_COST) { get().toast('츄르가 ' + (SPOT_COST - st.churu) + '개 더 필요해요 · 집중하면 모을 수 있어요'); return; }
+    if (st.churu < SPOT_COST) { get().needChuru(SPOT_COST - st.churu); return; }
     const old = spotSeed(st, id);
     let seed = Math.floor(rnd() * 2 ** 31); if (seed === old) seed = (seed + 1) % 2 ** 31;
     get().log(c.name + ' 얼룩 다시 뽑기', -SPOT_COST); sfx('coin');
     set({ churu: st.churu - SPOT_COST, spots: { ...st.spots, [id]: seed } });
     get().toast(c.name + '에게 새 얼룩이 생겼어요');
+  },
+  // 츄르가 모자랄 때: 모자란 개수를 알려 주고 츄르 충전으로 바로 갈 수 있는 창
+  needChuru: n => set({ dlg: { kind: 'nochuru', id: n } }),
+  // 츄르 충전 (데모 결제). 정식 빌드는 스토어 결제를 붙이기 전까지 막아 둔다
+  buyChuru: pack => {
+    const p = CHURU_PACKS[pack]; if (!p) return;
+    if (IS_FULL) { get().toast('츄르 충전은 곧 열려요'); set({ pay: null }); return; }
+    const n = p[0] + p[1];
+    get().log('츄르 충전 ' + p[0] + (p[1] ? ' + 보너스 ' + p[1] : ''), n); sfx('coin');
+    set(st => ({ churu: st.churu + n, pay: null, churuShop: false }));
+    get().toast('츄르 ' + n + '개를 충전했어요 (데모)');
   },
 
 
@@ -399,7 +413,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   back: () => {
     const s = get(), S = (p: Partial<State>) => { set(p); return true; };
     if (s.dlg) { if (['bye', 'expired'].includes(s.dlg.kind)) return true; return S({ dlg: null }); }
-    if (s.pay) return S({ pay: null }); if (s.rcpt) return S({ rcpt: null }); if (s.cert) return S({ cert: null });
+    if (s.pay) return S({ pay: null }); if (s.churuShop) return S({ churuShop: false }); if (s.spotPop) return S({ spotPop: false }); if (s.rcpt) return S({ rcpt: null }); if (s.cert) return S({ cert: null });
     if (s.ad != null) return S({ ad: null }); if (s.share) return S({ share: false }); if (s.gachaRes) return S({ gachaRes: null }); if (s.gachaPop) return S({ gachaPop: null });
     if (s.wheel) return S({ wheel: false });
     if (s.sheet) return S({ sheet: false }); if (s.acct) return S({ acct: false }); if (s.house) return S({ house: false });

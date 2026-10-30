@@ -3,7 +3,7 @@ import { Image, Pressable, PressableProps, StyleProp, Text, TextProps, TextStyle
 import Svg, { Circle, Defs, Pattern, Rect } from 'react-native-svg';
 import { Cat, Fill, IMG_H, IMG_W, WIN } from '../data';
 import { tr } from '../i18n';
-import { useApp } from '../store';
+import { S, useApp } from '../store';
 import { FONT, useC } from '../theme';
 
 export const CATS_IMG = require('../../assets/img/cats-all.jpg');
@@ -115,13 +115,15 @@ export function Ghost({ label, onPress, h = 46, fs = 15, style, bg }: { label: s
   );
 }
 
+// 츄르 개수. 누르면 츄르 충전 창이 열린다
 export function ChuruBadge({ n, small }: { n: number; small?: boolean }) {
   const C = useC();
   return (
-    <View accessible accessibilityLabel={`츄르 ${n}개`} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: small ? 5 : 6, paddingHorizontal: small ? 10 : 12, borderRadius: 16, backgroundColor: C.chip1, borderWidth: 1.5, borderColor: C.ink }}>
+    <Btn onPress={() => S({ churuShop: true })} accessibilityLabel={`츄르 ${n}개, 눌러서 충전`} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: small ? 5 : 6, paddingHorizontal: small ? 10 : 12, borderRadius: 16, backgroundColor: C.chip1, borderWidth: 1.5, borderColor: C.ink }}>
       <View style={{ width: 10, height: 10, transform: [{ rotate: '45deg' }], backgroundColor: '#E59A4C', borderWidth: 1.5, borderColor: C.ink }} />
       <Txt jua style={{ fontSize: small ? 13 : 15 }}>{n + ' 츄르'}</Txt>
-    </View>
+      <Txt jua style={{ fontSize: small ? 13 : 15, marginLeft: -2 }}>+</Txt>
+    </Btn>
   );
 }
 

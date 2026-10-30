@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { GACHA_CATS, GACHA_COST, reward, isoDay, streakOf, growthOf } from '../src/data';
+import { CHURU_PACKS, GACHA_CATS, GACHA_COST, reward, isoDay, streakOf, growthOf } from '../src/data';
 import { clearNav, getS, spotSeed, switchTab, useApp } from '../src/store';
 import { SPOT_COST, spotsOf } from '../src/spots';
 import { runsOf as pixelRuns } from '../src/stage/pixelCat';
@@ -429,5 +429,38 @@ describe('고양이 얼룩', () => {
     const sp = { seed: 7, sp: { kind: 'patch' as const, name: '얼룩무늬', color: '#123456', blobs: [[0.5, 0.6, 0.4, 0.4, 0]] as [number, number, number, number, number][] } };
     expect(pixelRuns('sit', 'cheese', sp).some(r => r[3] === '#123456')).toBe(true);
     expect(pixelRuns('sit', 'cheese').some(r => r[3] === '#123456')).toBe(false);
+  });
+});
+
+describe('츄르 충전', () => {
+  beforeEach(fresh);
+
+  test('상품을 사면 보너스까지 츄르가 늘고 내역에 남는다', () => {
+    useApp.setState({ churu: 10, churuShop: true, pay: { method: 'Google Play 결제', agree: [1, 1], pack: 2 } });
+    getS().buyChuru(2);
+    const s = getS(), [n, bonus] = CHURU_PACKS[2];
+    expect(s.churu).toBe(10 + n + bonus);
+    expect(s.pay).toBeNull();
+    expect(s.churuShop).toBe(false);
+    expect(s.ledger[0].a).toBe(n + bonus);
+  });
+
+  test('츄르가 모자라면 충전으로 가는 창을 띄운다', () => {
+    useApp.setState({ churu: 5 });
+    getS().gachaPull('basic', 1);
+    expect(getS().dlg).toEqual({ kind: 'nochuru', id: GACHA_COST.basic.one - 5 });
+    expect(getS().churu).toBe(5);
+    useApp.setState({ dlg: null });
+    getS().rerollSpots('cheese');
+    expect(getS().dlg).toEqual({ kind: 'nochuru', id: SPOT_COST - 5 });
+  });
+
+  test('뒤로가기로 충전 창 · 얼룩 창을 닫는다', () => {
+    useApp.setState({ churuShop: true });
+    getS().back();
+    expect(getS().churuShop).toBe(false);
+    useApp.setState({ spotPop: true });
+    getS().back();
+    expect(getS().spotPop).toBe(false);
   });
 });
