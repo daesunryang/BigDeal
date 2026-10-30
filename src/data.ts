@@ -8,7 +8,7 @@ export type Fill =
   | { t: 'grid'; c: string; bg: string; size: number; w: number }
   | { t: 'diag'; a: string; b: string; wa: number; wb: number; angle: number };
 
-// tier: 뽑기 전용 고양이의 등급 (1 일반 · 2 희귀 · 3 전설). 뽑기 고양이 그림은 cats-all.jpg가 아니라 assets/img/gacha/의 고양이별 파일(kit.tsx FACE · CUTOUT).
+// tier: Plus 전용 뽑기 고양이의 등급 (1 일반 · 2 희귀 · 3 전설). 뽑기 고양이 그림은 cats-all.jpg가 아니라 assets/img/gacha/의 고양이별 파일(kit.tsx FACE · CUTOUT).
 export type Cat = { id: string; name: string; room: [number, number]; c: [number, number]; desc: string; plus?: boolean; tier?: 1 | 2 | 3 };
 
 export const CATS: Cat[] = [
@@ -42,8 +42,10 @@ export const GACHA_CATS: Cat[] = [
 export const ALL_CATS = [...CATS, ...GACHA_CATS];
 export const catById = (id: string) => ALL_CATS.find(c => c.id === id) ?? CATS[0];
 export const TIER = { 1: { name: '일반', color: '#8DBF93', rate: 65, refund: 10 }, 2: { name: '희귀', color: '#7E9CC8', rate: 28, refund: 20 }, 3: { name: '전설', color: '#E59A4C', rate: 7, refund: 40 } } as const;
-export const GACHA_COST = { one: 40, five: 180 };
-export const GACHA_PITY = 10; // 10번째 뽑기는 희귀 이상
+// 뽑기 두 가지: 일반 뽑기(기본 고양이 4종, 누구나) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종, 등급 · 보장 있음). 10회는 10% 할인.
+export type GachaKind = 'basic' | 'plus';
+export const GACHA_COST: Record<GachaKind, { one: number; ten: number }> = { basic: { one: 30, ten: 270 }, plus: { one: 40, ten: 360 } };
+export const GACHA_PITY = 10; // Plus 전용 뽑기: 10번째 뽑기는 희귀 이상
 export const IMG_W = 2752, IMG_H = 3072, WIN = 560;
 
 export type AppInfo = { id: string; name: string; letter: string; color: string; usage: string; pkg?: string; icon?: string };
@@ -104,7 +106,7 @@ export const MAILS: Mail[] = [
   { id: 8, type: 'reward', title: '치즈태비와 친밀도 ♥1 달성!', body: '치즈태비가 마음을 열었어요. 표정이 한 단계 부드러워졌어요. 축하 선물을 보내요.', churu: 5, date: '10.25', exp: '6일 후 만료' },
   { id: 6, type: 'event', title: '가을 츄르 이벤트 · 선물이 도착했어요', body: '10월 한 달 동안 매일 집중하면 보너스 츄르를 드려요. 오늘의 선물을 받아가세요.', churu: 15, date: '10.26', exp: '5일 후 만료' },
   { id: 3, type: 'report', title: '9월 기부 리포트', body: '햇살 고양이 쉼터에 냥집중 사용자들의 집중으로 사료 312kg이 전달됐어요. 새 가족을 만난 고양이 4마리의 근황도 함께 보내요.', photo: true, date: '10.01' },
-  { id: 4, type: 'news', title: '창밖에 낯선 고양이가 나타났어요', body: '뽑기 탭에서 츄르 30개로 새 고양이를 불러보세요. 어떤 고양이가 올지는 비밀이에요.', date: '10.24' },
+  { id: 4, type: 'news', title: '창밖에 낯선 고양이가 나타났어요', body: '뽑기 탭의 일반 뽑기로 새 고양이를 만나 보세요. 어떤 고양이가 올지는 비밀이에요.', date: '10.24' },
   { id: 5, type: 'news', title: '[공지] 냥집중 1.0 출시 안내', body: '방해 앱 차단, 고양이 도감, 파트너 기부 기능이 정식 오픈했어요.', date: '10.20' },
 ];
 

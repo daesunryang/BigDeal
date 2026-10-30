@@ -124,13 +124,13 @@ describe('우편 · 후원 · 도감', () => {
     expect(s.cert).toBe(s.sponsorships[0].id);
   });
 
-  test('새 고양이 만나기는 아직 못 만난 기본 고양이만 나온다', () => {
+  test('일반 뽑기는 기본 고양이 중에서 나온다', () => {
     useApp.setState({ churu: 30, owned: ['cheese'] });
-    getS().pull();
+    getS().gachaPull('basic', 1, () => 0.5);
     const s = getS();
     expect(s.churu).toBe(0);
     expect(s.owned).toHaveLength(2);
-    expect(['blue', 'calico', 'tux']).toContain(s.gacha);
+    expect(['blue', 'calico', 'tux']).toContain(s.gachaRes![0].id);
   });
 });
 
@@ -317,49 +317,60 @@ describe('고양이 뽑기', () => {
   beforeEach(fresh);
   // 0~1 값을 차례로 돌려주는 가짜 난수
   const seq = (...v: number[]) => { let i = 0; return () => v[i++ % v.length]; };
+  const P = GACHA_COST.plus, B = GACHA_COST.basic;
   test('츄르가 모자라면 뽑지 않는다', () => {
-    useApp.setState({ churu: GACHA_COST.one - 1 });
-    getS().gachaPull(1);
-    expect(getS().churu).toBe(GACHA_COST.one - 1);
+    useApp.setState({ churu: B.one - 1 });
+    getS().gachaPull('basic', 1);
+    expect(getS().churu).toBe(B.one - 1);
     expect(getS().gachaRes).toBeNull();
   });
-  test('1회 뽑기는 츄르를 쓰고 뽑기 전용 고양이를 데려온다', () => {
-    useApp.setState({ churu: 100 });
-    getS().gachaPull(1, seq(0.9, 0)); // 일반 등급, 첫 고양이
+  test('Plus 전용 뽑기는 Plus 구독 중에만 된다', () => {
+    useApp.setState({ churu: 1000, plus: false });
+    getS().gachaPull('plus', 1);
+    expect(getS().churu).toBe(1000);
+    expect(getS().gachaRes).toBeNull();
+  });
+  test('Plus 전용 1회 뽑기는 Plus 구독 전용 고양이를 데려온다', () => {
+    useApp.setState({ churu: 100, plus: true });
+    getS().gachaPull('plus', 1, seq(0.9, 0)); // 일반 등급, 첫 고양이
     const r = getS().gachaRes!;
-    expect(r).toHaveLength(1);
     expect(r[0]).toEqual({ id: GACHA_CATS.filter(c => c.tier === 1)[0].id, tier: 1, dup: false });
     expect(getS().owned).toContain(r[0].id);
-    expect(getS().churu).toBe(100 - GACHA_COST.one);
+    expect(getS().churu).toBe(100 - P.one);
   });
   test('이미 만난 고양이는 등급만큼 츄르를 돌려준다', () => {
     const id = GACHA_CATS.filter(c => c.tier === 1)[0].id;
-    useApp.setState({ churu: 100, owned: [...getS().owned, id] });
-    getS().gachaPull(1, seq(0.9, 0));
+    useApp.setState({ churu: 100, plus: true, owned: [...getS().owned, id] });
+    getS().gachaPull('plus', 1, seq(0.9, 0));
     expect(getS().gachaRes![0].dup).toBe(true);
-    expect(getS().churu).toBe(100 - GACHA_COST.one + 10);
+    expect(getS().churu).toBe(100 - P.one + 10);
   });
-  test('10번째 뽑기는 희귀 이상이 나온다', () => {
-    useApp.setState({ churu: 1000, gachaPity: 9 });
-    getS().gachaPull(1, seq(0.99, 0));
+  test('Plus 전용 뽑기 10번째는 희귀 이상, 일반 뽑기는 보장 횟수에 들어가지 않는다', () => {
+    useApp.setState({ churu: 1000, plus: true, gachaPity: 9 });
+    getS().gachaPull('basic', 1, () => 0.1);
+    expect(getS().gachaPity).toBe(9);
+    getS().gachaPull('plus', 1, seq(0.99, 0));
     expect(getS().gachaRes![0].tier).toBe(2);
     expect(getS().gachaPity).toBe(0);
   });
-  test('뽑기 고양이를 만나도 창밖 고양이 부르기는 기본 고양이가 남아 있으면 된다', () => {
-    useApp.setState({ churu: 100, owned: ['cheese', 'bombay', 'singapura', 'bsh'] });
-    getS().pull();
-    expect(getS().churu).toBe(70);
-    expect(['blue', 'calico', 'tux']).toContain(getS().gacha);
+  test('10회 뽑기는 열 마리 · 일반 270 / Plus 360 츄르', () => {
+    useApp.setState({ churu: 1000, plus: true });
+    getS().gachaPull('basic', 10, () => 0.3);
+    expect(getS().gachaRes).toHaveLength(10);
+    expect(getS().churu).toBe(1000 - B.ten + 9 * 10); // 같은 고양이 9번 중복 → 츄르 10씩 돌려받기
+    useApp.setState({ churu: 1000, gachaRes: null });
+    getS().gachaPull('plus', 10, seq(0.9, 0.1, 0.9, 0.3, 0.9, 0.5, 0.9, 0.7, 0.9, 0.9));
+    expect(getS().gachaRes).toHaveLength(10);
+    expect(getS().gachaTotal).toBe(20);
   });
-  test('5회 뽑기는 180 츄르에 다섯 마리', () => {
-    useApp.setState({ churu: 200 });
-    getS().gachaPull(5, seq(0.9, 0.1, 0.9, 0.3, 0.9, 0.5, 0.9, 0.7, 0.9, 0.9));
-    expect(getS().gachaRes).toHaveLength(5);
-    expect(getS().gachaTotal).toBe(5);
-    expect(getS().back()).toBe(true);
-    expect(getS().gachaRes).toBeNull();
+  test('뒤로가기는 결과 → 뽑기 창 순서로 닫는다', () => {
+    useApp.setState({ churu: 100, gachaPop: 'basic' });
+    getS().gachaPull('basic', 1, () => 0.5);
+    expect(getS().back()).toBe(true); expect(getS().gachaRes).toBeNull(); expect(getS().gachaPop).toBe('basic');
+    expect(getS().back()).toBe(true); expect(getS().gachaPop).toBeNull();
   });
 });
+
 
 describe('뽑기 고양이 그림', () => {
   test('모든 뽑기 고양이에 일러스트(초상·배경 지운 그림)와 집중 화면용 도트 색이 있다', () => {

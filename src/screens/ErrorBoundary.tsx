@@ -15,7 +15,7 @@ export class ErrorBoundary extends React.Component<Props, { err: Error | null }>
   componentDidCatch(err: Error) { console.warn('화면 오류', err); }
 
   retry = () => this.setState({ err: null });
-  home = () => { S({ screen: 'tabs', tab: 'home', menuPage: null, dlg: null, house: false, sheet: false, pay: null, rcpt: null, share: false, cert: null, gacha: null, coach: -1 }); this.setState({ err: null }); };
+  home = () => { S({ screen: 'tabs', tab: 'home', menuPage: null, dlg: null, house: false, sheet: false, pay: null, rcpt: null, share: false, cert: null, gachaPop: null, gachaRes: null, coach: -1 }); this.setState({ err: null }); };
 
   render() {
     if (!this.state.err) return this.props.children;

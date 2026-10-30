@@ -1,10 +1,10 @@
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View, useWindowDimensions } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
 import { openUpdate } from '../services/update';
-import { ANIMALS, APPS, DEFAULT_BLOCK_PKGS, MOODS, ROOM_DESC, TIER, catById, won } from '../data';
+import { ANIMALS, APPS, CATS, DEFAULT_BLOCK_PKGS, GACHA_CATS, GACHA_COST, GACHA_PITY, MOODS, PG, ROOM_DESC, TIER, catById, won } from '../data';
 import { affOf, dkg, focusStreak } from '../derive';
 import { authEnabled, deleteAccount, unlinkProvider } from '../services/auth';
 import { blocker } from '../services/blocker';
@@ -15,7 +15,7 @@ import { sfx } from '../sfx';
 import { BlockApp, S, getS, hooks, useApp } from '../store';
 import { FONT, useC } from '../theme';
 import { Anim, EZ } from '../ui/anim';
-import { Btn, CatFace, CatScene, FACE, Primary, Toggle, Txt } from '../ui/kit';
+import { Btn, CUTOUT, CatFace, ChuruBadge, Primary, Seg, Toggle, Txt } from '../ui/kit';
 import { coachRefs } from './coach';
 
 const FULL = { position: 'absolute' as const, left: 0, top: 0, right: 0, bottom: 0 };
@@ -377,60 +377,96 @@ export function Cert() {
 }
 
 // ── 새 고양이 등장 ──
-// 고양이 뽑기 결과: 1회는 크게, 5회는 다섯 칸. 새로 만난 고양이에는 NEW, 이미 만난 고양이는 돌려받은 츄르를 보여준다.
+// 고양이 뽑기 창: 일반 뽑기(기본 고양이) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종), 1회 · 10회
+export function GachaPop() {
+  const C = useC();
+  const s = useApp(st => st);
+  const kind = s.gachaPop!, plus = kind === 'plus', cost = GACHA_COST[kind];
+  const cats = plus ? GACHA_CATS : CATS.filter(c => !c.plus);
+  const met = cats.filter(c => s.owned.includes(c.id)).length, left = GACHA_PITY - s.gachaPity;
+  const locked = plus && !s.plus;
+  const btn = (n: 1 | 10) => {
+    const price = n === 10 ? cost.ten : cost.one, ok = s.churu >= price;
+    return (
+      <Btn key={n} onPress={() => getS().gachaPull(kind, n)} accessibilityLabel={(plus ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회, 츄르 ' + price + '개'} style={{ flex: 1, height: 54, borderRadius: 27, backgroundColor: ok ? C.ink : C.disabled, gap: 0 }}>
+        <Txt jua style={{ fontSize: 17, color: C.bg }}>{n + '회 뽑기'}</Txt>
+        <Txt style={{ fontSize: 11, color: C.bg }}>{price + ' 츄르' + (n === 10 ? ' (10% 할인)' : '')}</Txt>
+      </Btn>
+    );
+  };
+  return (
+    <Pressable onPress={() => S({ gachaPop: null })} accessibilityLabel="고양이 뽑기 닫기" style={[FULL, { zIndex: 5, backgroundColor: 'rgba(43,34,29,0.55)', alignItems: 'center', justifyContent: 'center', padding: 18 }]}>
+      <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 440, backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 18, gap: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Txt jua style={{ fontSize: 21 }}>고양이 뽑기</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <ChuruBadge n={s.churu} small />
+            <Btn onPress={() => S({ gachaPop: null })} accessibilityLabel="닫기" hitSlop={8} style={{ width: 36, height: 36 }}><Txt style={{ fontSize: 20 }}>✕</Txt></Btn>
+          </View>
+        </View>
+        <Seg items={[['basic', '일반 뽑기'], ['plus', 'Plus 전용 뽑기']]} value={kind} onPick={k => S({ gachaPop: k })} h={38} />
+        <View style={{ padding: 14, borderRadius: 18, backgroundColor: plus ? '#F6E3C9' : C.card, gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Txt jua style={{ fontSize: 16, color: plus ? '#4A3428' : C.ink }}>{plus ? 'Plus 구독 전용 고양이 ' + cats.length + '종' : '기본 고양이 ' + cats.length + '종'}</Txt>
+            <Txt style={{ fontSize: 12, color: plus ? '#6B5444' : C.sub }}>{met + '/' + cats.length + ' 만남'}</Txt>
+          </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+            {cats.map(c => s.owned.includes(c.id) ? <CatFace key={c.id} cat={c} size={plus ? 34 : 44} border={1.5} />
+              : <View key={c.id} style={{ width: plus ? 34 : 44, height: plus ? 34 : 44, borderRadius: 22, borderWidth: 1.5, borderColor: plus ? '#C9B79F' : C.line, backgroundColor: plus ? '#EAD8BF' : C.card2, alignItems: 'center', justifyContent: 'center' }}>
+                <Image source={CUTOUT[c.id]} resizeMode="contain" style={{ width: '78%', height: '78%', tintColor: '#4A3428', opacity: 0.3 }} /></View>)}
+          </View>
+          <Txt style={{ fontSize: 11, lineHeight: 17, color: plus ? '#6B5444' : C.sub }}>{plus
+            ? `확률 · 일반 ${TIER[1].rate}% · 희귀 ${TIER[2].rate}% · 전설 ${TIER[3].rate}%\n${left <= 1 ? '다음 뽑기는 희귀 이상 보장!' : `희귀 이상 보장까지 ${left}번`} · 이미 만난 고양이는 츄르로 돌려받아요 (일반 ${TIER[1].refund} · 희귀 ${TIER[2].refund} · 전설 ${TIER[3].refund})`
+            : `기본 고양이 중 한 마리가 같은 확률로 나와요.\n이미 만난 고양이는 츄르 ${TIER[1].refund}개로 돌려받아요.`}</Txt>
+        </View>
+        {locked
+          ? <View style={{ gap: 8 }}>
+            <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center' }}>Plus 구독 중에만 뽑을 수 있어요. 만난 고양이는 도감에서 볼 수 있어요.</Txt>
+            <Primary h={52} label="Plus 구독하고 뽑기" bg="#C9772F" onPress={() => S({ gachaPop: null, tab: 'menu', menuPage: PG.plus, prevTab: 'gacha' })} />
+          </View>
+          : <View style={{ flexDirection: 'row', gap: 8 }}>{btn(1)}{btn(10)}</View>}
+      </Pressable>
+    </Pressable>
+  );
+}
+
+// 뽑기 결과: 1회는 크게, 10회는 5×2 칸. 새로 만난 고양이에는 NEW, 이미 만난 고양이는 돌려받은 츄르를 보여준다.
 export function GachaResult() {
   const C = useC();
+  const { width: sw } = useWindowDimensions();
   const res = useApp(s => s.gachaRes)!;
   const one = res.length === 1, first = res[0];
   const newOnes = res.filter(r => !r.dup);
   const close = () => S({ gachaRes: null });
+  const cell = Math.floor((Math.min(440, sw - 36) - 36 - 4 * 6) / 5); // 카드 안쪽 폭(패딩 · 테두리 제외)을 5칸으로
   const card = (r: (typeof res)[number], i: number, big: boolean) => {
-    const c = catById(r.id), t = TIER[r.tier];
+    const c = catById(r.id), t = TIER[r.tier], sz = big ? 212 : cell - 4, plusCat = !!c.tier;
     return (
-      <Anim key={i} name="pop" dur={0.45} delay={big ? 0 : i * 0.18} loop={false} easing={EZ.out} style={{ width: big ? '100%' : '30%', flexGrow: big ? 0 : 1, alignItems: 'center', gap: big ? 8 : 4, opacity: 0 }}>
-        <View style={{ width: big ? 220 : '100%', aspectRatio: 1, borderRadius: big ? 28 : 16, borderWidth: big ? 4 : 3, borderColor: t.color, overflow: 'hidden', backgroundColor: C.card }}>
-          <Image source={FACE[c.id]} resizeMode="cover" accessibilityLabel={c.name} style={{ width: '100%', height: '100%' }} />
-          {r.tier === 3 && <View style={{ position: 'absolute', left: 5, right: 5, top: 5, bottom: 5, borderRadius: big ? 22 : 11, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFF3E0' }} />}
-          {!r.dup && <View style={{ position: 'absolute', top: big ? 10 : 4, right: big ? 10 : 4, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, backgroundColor: '#E07F7F' }}><Txt jua style={{ fontSize: big ? 13 : 10, color: '#FFFFFF' }}>NEW</Txt></View>}
+      <Anim key={i} name="pop" dur={0.45} delay={big ? 0 : i * 0.08} loop={false} easing={EZ.out} style={{ width: big ? '100%' : cell, alignItems: 'center', gap: big ? 8 : 2, opacity: 0 }}>
+        <View style={{ borderRadius: big ? 28 : 12, borderWidth: 2, borderColor: plusCat ? t.color : C.ink, overflow: 'hidden' }}>
+          <CatFace cat={c} size={sz} border={0} round={false} bg={C.card} />
+          {r.tier === 3 && <View style={{ position: 'absolute', left: 4, right: 4, top: 4, bottom: 4, borderRadius: big ? 22 : 9, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFF3E0' }} />}
+          {!r.dup && <View style={{ position: 'absolute', top: big ? 10 : 2, right: big ? 10 : 2, paddingHorizontal: big ? 6 : 3, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: '#E07F7F' }}><Txt jua style={{ fontSize: big ? 13 : 8, color: '#FFFFFF' }}>NEW</Txt></View>}
         </View>
-        <Txt jua numberOfLines={1} style={{ fontSize: big ? 24 : 12 }}>{c.name}</Txt>
-        <View style={{ paddingHorizontal: 8, paddingVertical: 1, borderRadius: 8, backgroundColor: t.color }}><Txt style={{ fontSize: big ? 12 : 10, color: '#2B221D' }}>{t.name}</Txt></View>
-        {r.dup ? <Txt style={{ fontSize: big ? 13 : 10, color: C.sub, textAlign: 'center' }}>{'이미 만났어요 · 츄르 +' + t.refund}</Txt>
+        <Txt jua numberOfLines={1} style={{ fontSize: big ? 24 : 10 }}>{c.name}</Txt>
+        {plusCat && <View style={{ paddingHorizontal: big ? 8 : 4, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: t.color }}><Txt style={{ fontSize: big ? 12 : 9, color: '#2B221D' }}>{t.name}</Txt></View>}
+        {r.dup ? <Txt style={{ fontSize: big ? 13 : 9, color: C.sub, textAlign: 'center' }}>{big ? '이미 만났어요 · 츄르 +' + t.refund : '츄르 +' + t.refund}</Txt>
           : big ? <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 19 }}>{c.desc}</Txt> : null}
       </Anim>
     );
   };
   return (
-    <View style={[FULL, { zIndex: 6, backgroundColor: 'rgba(43,34,29,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24 }]}>
-      <View style={{ width: '100%', maxWidth: 420, backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 20, alignItems: 'center', gap: 14 }}>
+    <View style={[FULL, { zIndex: 7, backgroundColor: 'rgba(43,34,29,0.6)', alignItems: 'center', justifyContent: 'center', padding: 18 }]}>
+      <View style={{ width: '100%', maxWidth: 440, backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 16, alignItems: 'center', gap: 14 }}>
         <Txt jua style={{ fontSize: 18 }}>{one ? '뽑기 결과' : `뽑기 결과 · 새 고양이 ${newOnes.length}마리`}</Txt>
-        {one ? card(first, 0, true) : <View style={{ width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>{res.map((r, i) => card(r, i, false))}</View>}
+        {one ? card(first, 0, true) : <View style={{ width: '100%', flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 10, justifyContent: 'center' }}>{res.map((r, i) => card(r, i, false))}</View>}
         <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
           {one && !first.dup ? <>
             <Btn onPress={close} style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 16 }}>도감에 두기</Txt></Btn>
-            <Btn onPress={() => S({ catId: first.id, gachaRes: null })} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>함께 지내기</Txt></Btn>
+            <Btn onPress={() => S({ catId: first.id, gachaRes: null, gachaPop: null })} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>함께 지내기</Txt></Btn>
           </> : <Btn onPress={close} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>확인</Txt></Btn>}
         </View>
       </View>
-    </View>
-  );
-}
-
-export function Gacha({ width }: { width: number }) {
-  const C = useC();
-  const id = useApp(s => s.gacha)!; const cat = catById(id);
-  return (
-    <View style={[FULL, { zIndex: 6, backgroundColor: 'rgba(43,34,29,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24 }]}>
-      <Anim name="pop" dur={0.5} loop={false} easing={EZ.out} style={{ width: '100%', backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 22, alignItems: 'center', gap: 12 }}>
-        <Txt style={{ fontSize: 13, color: C.sub }}>창밖에서 누가 찾아왔어요</Txt>
-        <CatScene cat={cat} width={width - 48 - 44} style={{ borderRadius: 18 }} />
-        <Txt jua style={{ fontSize: 24 }}>{cat.name}</Txt>
-        <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center' }}>{cat.desc}</Txt>
-        <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
-          <Btn onPress={() => S({ gacha: null })} style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 16 }}>도감에 두기</Txt></Btn>
-          <Btn onPress={() => S({ catId: id, gacha: null })} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>함께 지내기</Txt></Btn>
-        </View>
-      </Anim>
     </View>
   );
 }

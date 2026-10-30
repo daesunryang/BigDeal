@@ -4,12 +4,13 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { IS_DEMO } from './config';
 import {
   APPS, CATS, DECOR, DecorKind, FRIENDS, MAILS, Mail, ROOMS, ROOM_DEF, SHN, ANIMALS, BEH, BehId,
-  catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
+  Cat, GachaKind, catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
 } from './data';
 import type { Lang } from './i18n';
 import { markBack, scrollKey } from './ui/scrollMemory';
 
 export type Screen = 'splash' | 'login' | 'onboard' | 'tabs' | 'decor' | 'focus' | 'done' | 'fail' | 'rest';
+export type GachaHit = { id: string; tier: 1 | 2 | 3; dup: boolean };
 export type Tab = 'home' | 'gacha' | 'dex' | 'donate' | 'mail' | 'menu' | 'shop' | 'stats' | 'shelter';
 export type Decor = { wall: string; floor: string; struct: string; outfit: string };
 export type RoomData = { decor: Omit<Decor, 'outfit'> & { outfit?: string }; equipped: string[]; pos: Record<string, [number, number]> };
@@ -40,7 +41,7 @@ export type State = {
   singUntil: number; songText: string; seenSongs: number[]; songBonus: { basic: boolean; cat: boolean };
   playingSong: number | null; // 도감에서 ▶ 듣기로 재생 중인 노래
   // 고양이 뽑기: gachaPity = 희귀 이상이 안 나온 연속 횟수, gachaRes = 방금 뽑은 결과(결과 창)
-  gachaPity: number; gachaTotal: number; gachaRes: null | { id: string; tier: 1 | 2 | 3; dup: boolean }[];
+  gachaPity: number; gachaTotal: number; gachaRes: null | GachaHit[]; gachaPop: GachaKind | null; // 뽑기 결과 · 열린 뽑기 창
   // 방 · 집
   decor: Decor; ownedDecor: string[]; items: string[]; equipped: string[]; pos: Record<string, [number, number]>;
   decorCat: DecorKind; preview: null | { kind: DecorKind; id: string }; dragSel: string | null;
@@ -65,7 +66,7 @@ export type State = {
   dexTab: 'cat' | 'beh' | 'song' | 'item'; openNotice: number | null; openFaq: number | null; openOss: number | null;
   inq: { cat: string; text: string; sent: boolean };
   // 오버레이
-  sheet: boolean; gacha: string | null; share: boolean; coach: number; coachSeen: boolean;
+  sheet: boolean; share: boolean; coach: number; coachSeen: boolean;
   adLeft: number; adDay: string; ad: number | null; dlg: Dlg | null; toastMsg: string; acct: boolean; emailMode: boolean; email: string; pw: string; loginErr: string;
   lastBack: number; mailDay: string; update: null | { tag: string; url: string; page: string; notes: string };
 };
@@ -85,7 +86,7 @@ function initial(): State {
     blocked: { ig: true, yt: true, tt: true, wt: true, kk: false, gm: false }, apps: APPS,
     sessions: [], last: null, showBlocked: false, holding: false, failPen: 3, rest: 0, blockedNow: 0, blockedApp: '인스타그램',
     churu: demo ? 124 : 0, earnedTotal: demo ? 144 : 0, catId: 'cheese', owned: ['cheese'], aff: { cheese: demo ? 34 : 0 }, sulky: false,
-    msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false }, playingSong: null, gachaPity: 0, gachaTotal: 0, gachaRes: null,
+    msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false }, playingSong: null, gachaPity: 0, gachaTotal: 0, gachaRes: null, gachaPop: null,
     decor: { wall: 'cream', floor: 'wood', struct: 'basic', outfit: 'none' }, ownedDecor: ['cream', 'wood', 'basic', 'none'], items: ['rug'], equipped: ['rug'], pos: {},
     decorCat: 'wall', preview: null, dragSel: null,
     house: false, hs: 'liv', rooms: ['liv', 'nap'], catRoom: 'liv', jumping: false, pinUntil: 0, rstore: {}, dRoom: 'liv', roomNames: {}, extra: false, houseHint: true, renaming: false, nameDraft: '',
@@ -100,14 +101,14 @@ function initial(): State {
     friends: demo ? FRIENDS : [], friendCode: '', friendErr: '', myCode: 'CAT-4821',
     tries: demo ? { ig: 7, yt: 4, tt: 3, kk: 2 } : {}, att: demo ? [isoDay(3), isoDay(2), isoDay(1)] : [], fdays: demo ? [isoDay(3), isoDay(2), isoDay(1)] : [],
     dexTab: 'cat', openNotice: 0, openFaq: null, openOss: null, inq: { cat: '기능 제안', text: '', sent: false },
-    sheet: false, gacha: null, share: false, coach: -1, coachSeen: false, adLeft: 3, adDay: today(), ad: null, dlg: null, toastMsg: '', acct: false, emailMode: false, email: '', pw: '', loginErr: '',
+    sheet: false, share: false, coach: -1, coachSeen: false, adLeft: 3, adDay: today(), ad: null, dlg: null, toastMsg: '', acct: false, emailMode: false, email: '', pw: '', loginErr: '',
     lastBack: 0, mailDay: '', update: null,
   };
 }
 
 // 저장하지 않는 화면 상태
 const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midRest', 'singUntil', 'songText', 'playingSong', 'gachaRes', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
-  'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gacha', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
+  'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gachaPop', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
 
 // 동기화(백업)에 올릴 게임 데이터
 export const SYNC_KEYS: (keyof State)[] = ['user', 'linked', 'churu', 'earnedTotal', 'catId', 'owned', 'aff', 'sulky', 'seenBeh', 'decor', 'ownedDecor', 'items', 'equipped', 'pos', 'rooms', 'catRoom', 'rstore', 'dRoom', 'roomNames', 'extra',
@@ -142,8 +143,7 @@ type Actions = {
   trySponsor: (platformMethod: string) => void;
   claimMail: (id: number) => void;
   claimAll: () => void;
-  pull: () => void;
-  gachaPull: (n: 1 | 5, rnd?: () => number) => void;
+  gachaPull: (kind: GachaKind, n: 1 | 10, rnd?: () => number) => void;
   back: () => boolean;
   reset: () => void;
   afterLogin: (u: User, linked: Record<string, boolean>) => void;
@@ -346,42 +346,45 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     const sum = cl.reduce((a, m) => a + (m.churu || 0), 0);
     set({ churu: st.churu + sum, earnedTotal: st.earnedTotal + sum, claimed: [...st.claimed, ...cl.map(m => m.id)], mailRead: [...st.mailRead, ...cl.map(m => m.id)] });
   },
-  pull: () => {
-    const s = get(); if (s.churu < 30 || baseLeft(s.owned) === 0) return;
-    const pool = CATS.filter(c => !c.plus && !s.owned.includes(c.id)), g = pool[Math.floor(Math.random() * pool.length)];
-    get().log('새 고양이 만나기', -30); sfx('coin');
-    set({ churu: s.churu - 30, owned: [...s.owned, g.id], gacha: g.id });
-  },
+
 
   // 고양이 뽑기: 1회 40 츄르, 5회 180 츄르. 일반 65% · 희귀 28% · 전설 7%, 10번째마다 희귀 이상 보장.
   // 이미 만난 고양이가 나오면 등급에 따라 츄르를 돌려준다(일반 10 · 희귀 20 · 전설 40).
-  gachaPull: (n, rnd = Math.random) => {
-    const st = get(), cost = n === 5 ? GACHA_COST.five : GACHA_COST.one;
+  gachaPull: (kind, n, rnd = Math.random) => {
+    const st = get(), cost = n === 10 ? GACHA_COST[kind].ten : GACHA_COST[kind].one;
+    if (kind === 'plus' && !st.plus) { get().toast('Plus 전용 뽑기는 Plus 구독 중에 할 수 있어요'); return; }
     if (st.churu < cost) { get().toast('츄르가 ' + (cost - st.churu) + '개 더 필요해요 · 집중하면 모을 수 있어요'); return; }
     let pity = st.gachaPity, refund = 0;
-    const owned = [...st.owned], res: { id: string; tier: 1 | 2 | 3; dup: boolean }[] = [];
+    const owned = [...st.owned], res: GachaHit[] = [];
+    const basic = CATS.filter(c => !c.plus);
     for (let i = 0; i < n; i++) {
-      pity++;
-      const r = rnd() * 100;
-      let tier: 1 | 2 | 3 = r < TIER[3].rate ? 3 : r < TIER[3].rate + TIER[2].rate ? 2 : 1;
-      if (pity >= GACHA_PITY && tier < 2) tier = 2;
-      if (tier >= 2) pity = 0;
-      const pool = GACHA_CATS.filter(c => c.tier === tier), c = pool[Math.floor(rnd() * pool.length) % pool.length];
+      let tier: 1 | 2 | 3 = 1, c: Cat;
+      if (kind === 'basic') c = basic[Math.floor(rnd() * basic.length) % basic.length];
+      else {
+        pity++;
+        const r = rnd() * 100;
+        tier = r < TIER[3].rate ? 3 : r < TIER[3].rate + TIER[2].rate ? 2 : 1;
+        if (pity >= GACHA_PITY && tier < 2) tier = 2;
+        if (tier >= 2) pity = 0;
+        const pool = GACHA_CATS.filter(g => g.tier === tier);
+        c = pool[Math.floor(rnd() * pool.length) % pool.length];
+      }
       const dup = owned.includes(c.id);
       if (dup) refund += TIER[tier].refund; else owned.push(c.id);
       res.push({ id: c.id, tier, dup });
     }
-    get().log('고양이 뽑기 ' + n + '회', -cost); if (refund) get().log('이미 만난 고양이 · 츄르 돌려받기', refund);
+    get().log((kind === 'plus' ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회', -cost); if (refund) get().log('이미 만난 고양이 · 츄르 돌려받기', refund);
     sfx('coin');
     set({ churu: st.churu - cost + refund, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
   },
+
 
   // Android 뒤로가기 · 순서: 팝업 → 시트 → 하위 화면 → 탭 → 홈 → "한 번 더 누르면 종료". false를 돌려주면 앱을 닫는다.
   back: () => {
     const s = get(), S = (p: Partial<State>) => { set(p); return true; };
     if (s.dlg) { if (['bye', 'expired'].includes(s.dlg.kind)) return true; return S({ dlg: null }); }
     if (s.pay) return S({ pay: null }); if (s.rcpt) return S({ rcpt: null }); if (s.cert) return S({ cert: null });
-    if (s.ad != null) return S({ ad: null }); if (s.share) return S({ share: false }); if (s.gacha) return S({ gacha: null }); if (s.gachaRes) return S({ gachaRes: null });
+    if (s.ad != null) return S({ ad: null }); if (s.share) return S({ share: false }); if (s.gachaRes) return S({ gachaRes: null }); if (s.gachaPop) return S({ gachaPop: null });
     if (s.wheel) return S({ wheel: false });
     if (s.sheet) return S({ sheet: false }); if (s.acct) return S({ acct: false }); if (s.house) return S({ house: false });
     if (s.showBlocked) return S({ showBlocked: false });
@@ -446,9 +449,6 @@ export const navDepth = () => navStack.length;
 export function clearNav() { navStack = []; }
 // 하단 탭을 눌러 이동할 때: 기록을 비우고 새로 시작한다 (탭 사이를 오가며 기록이 쌓이지 않게)
 export function switchTab(patch: Partial<State>) { navMute = true; try { useApp.getState().set(patch); } finally { navMute = false; } navStack = []; }
-// 창밖 고양이 부르기로 아직 만날 수 있는 기본 고양이 수 (뽑기 고양이 · Plus 고양이 제외)
-export const baseLeft = (owned: string[]) => CATS.filter(c => !c.plus && !owned.includes(c.id)).length;
-
 export function popNav(): boolean {
   while (navStack.length) {
     const l = navStack.pop()!, cur = useApp.getState();

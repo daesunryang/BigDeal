@@ -40,7 +40,7 @@ function MenuRoot() {
   const strictRow: Row = { label: '엄격 모드', value: (s.cb ? (s.toggles.strict ? '켜짐 ' : '꺼짐 ') : '') + '포기 버튼 숨김', onPress: tog('strict'), toggle: true, on: s.toggles.strict };
   const SECS: [string, Row[]][] = [
     ['내 활동', [
-      { label: '냥집중 Plus', value: s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', onPress: page(PG.plus), color: '#C9772F' },
+      { label: '냥집중 Plus', value: s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 18종 더', onPress: page(PG.plus), color: '#C9772F' },
       { label: '집중 기록', onPress: go('stats') }, { label: '상점 · 꾸미기', value: s.churu + ' 츄르', onPress: go('shop') },
       { label: '고양이 도감', value: (s.owned.length + (s.plus ? CATS.filter(c => c.plus).length : 0)) + '/' + ALL_CATS.length, onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/' + badges(s).length * 4, onPress: page('업적 · 배지') },
       { label: '출석 체크', value: streakOf(s.att) + '일', onPress: page(PG.attend) }, { label: '주간 리포트 · 월간 회고', onPress: page(PG.report) }, { label: '친구와 비교', onPress: page(PG.friends) },
@@ -500,11 +500,12 @@ function PlusPage() {
     <View style={{ paddingVertical: 20, paddingHorizontal: 16, borderRadius: 22, backgroundColor: '#F6D58E', borderWidth: 2, borderColor: '#4A3428', alignItems: 'center', gap: 12 }}>
       <View style={{ paddingHorizontal: 12, paddingVertical: 3, borderRadius: 12, backgroundColor: '#4A3428' }}><Txt jua style={{ fontSize: 13, color: '#F6D58E', letterSpacing: 1 }}>PLUS</Txt></View>
       <View style={{ flexDirection: 'row', gap: 8 }}>{plusCats.map(c => <CatFace key={c.id} cat={c} size={62} bg="#FBF6EE" style={{ borderColor: '#4A3428' }} />)}</View>
-      <Txt jua style={{ fontSize: 22, lineHeight: 29, textAlign: 'center', color: '#4A3428' }}>{'새로운 고양이 4종과\n함께 집중해요'}</Txt>
-      <Txt style={{ fontSize: 13, color: '#4A3428' }}>랙돌 · 샴 · 페르시안 · 터키시 앙고라</Txt>
+      <Txt jua style={{ fontSize: 22, lineHeight: 29, textAlign: 'center', color: '#4A3428' }}>{'Plus 고양이 18종과\n함께 집중해요'}</Txt>
+      <Txt style={{ fontSize: 13, color: '#4A3428', textAlign: 'center' }}>{'랙돌 · 샴 · 페르시안 · 터키시 앙고라\n+ Plus 전용 뽑기 고양이 14종'}</Txt>
     </View>
     <ListCard>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>Plus 전용 고양이 4종을 바로 만나요. 츄르를 쓰지 않아도 돼요.</Txt>
+      <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>뽑기 탭의 Plus 전용 뽑기로 Plus 구독 전용 고양이 14종을 더 만날 수 있어요.</Txt>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>기본 고양이 4종, 츄르 보상, 후원은 구독하지 않아도 그대로 쓸 수 있어요.</Txt>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20, color: C.sub }}>새 Plus 고양이와 아이템은 순서대로 추가할 예정이에요.</Txt>
     </ListCard>

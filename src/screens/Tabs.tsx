@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { Image, Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
-import { ALL_CATS, ANIMALS, BEH, CATS, DECOR, GACHA_CATS, GACHA_COST, GACHA_PITY, SONGS, TIER, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
+import { ALL_CATS, ANIMALS, BEH, CATS, DECOR, GACHA_CATS, GACHA_COST, SONGS, TIER, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
 import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
-import { S, baseLeft, getS, listOf, useApp } from '../store';
+import { S, getS, listOf, useApp } from '../store';
 import { sfx } from '../sfx';
 import { useC } from '../theme';
 import { useScrollMemory } from '../ui/scrollMemory';
@@ -12,58 +12,31 @@ import { Bar, Btn, CUTOUT, CatFace, FACE, Chip, ChuruBadge, FillView, Header, Ph
 const pad = { paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18 };
 const back = () => { getS().back(); };
 
-// 고양이 뽑기 상자: 1회 · 5회, 확률과 보장 안내
-function GachaBox() {
-  const C = useC();
-  const s = useApp(st => st);
-  const left = GACHA_PITY - s.gachaPity;
-  const btn = (n: 1 | 5) => {
-    const cost = n === 5 ? GACHA_COST.five : GACHA_COST.one, ok = s.churu >= cost;
-    return (
-      <Btn key={n} onPress={() => getS().gachaPull(n)} accessibilityLabel={'고양이 뽑기 ' + n + '회, 츄르 ' + cost + '개'} style={{ flex: 1, height: 52, borderRadius: 26, backgroundColor: ok ? C.ink : C.disabled, gap: 0 }}>
-        <Txt jua style={{ fontSize: 16, color: C.bg }}>{n + '회 뽑기'}</Txt>
-        <Txt style={{ fontSize: 11, color: C.bg }}>{cost + ' 츄르' + (n === 5 ? ' (10% 할인)' : '')}</Txt>
-      </Btn>
-    );
-  };
-  return (
-    <View style={{ gap: 10, padding: 16, borderRadius: 20, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.chip1 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View style={{ flexDirection: 'row', marginRight: 2 }}>{GACHA_CATS.filter(c => c.tier === 3).map((c, i) => <CatFace key={c.id} cat={c} size={32} border={1.5} style={{ marginLeft: i ? -10 : 0 }} />)}</View>
-        <View style={{ flex: 1 }}>
-          <Txt jua style={{ fontSize: 18 }}>고양이 뽑기</Txt>
-          <Txt style={{ fontSize: 12, color: C.sub }}>{'집중해서 모은 츄르로 뽑기 전용 고양이 ' + GACHA_CATS.length + '종을 만나요'}</Txt>
-        </View>
-        <ChuruBadge n={s.churu} />
-      </View>
-      <View style={{ flexDirection: 'row', gap: 8 }}>{btn(1)}{btn(5)}</View>
-      <Txt style={{ fontSize: 11, lineHeight: 16, color: C.sub }}>{`확률 · 일반 ${TIER[1].rate}% · 희귀 ${TIER[2].rate}% · 전설 ${TIER[3].rate}%\n${left <= 1 ? '다음 뽑기는 희귀 이상 보장!' : `희귀 이상 보장까지 ${left}번`} · 이미 만난 고양이는 츄르로 돌려받아요 (일반 ${TIER[1].refund} · 희귀 ${TIER[2].refund} · 전설 ${TIER[3].refund})`}</Txt>
-    </View>
-  );
-}
-
-// 뽑기 전용 고양이 목록 (도감과 뽑기 탭에서 함께 쓴다)
-function GachaGrid() {
+// Plus 구독 전용 고양이 (Plus 전용 뽑기로 만난다 · 도감에서만 보여준다)
+function PlusCats() {
   const C = useC();
   const s = useApp(st => st);
   return (
     <>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Txt jua style={{ fontSize: 17 }}>뽑기 고양이</Txt>
+        <Txt jua style={{ fontSize: 17 }}>Plus 구독 전용 고양이</Txt>
         <Txt style={{ fontSize: 12, color: C.sub }}>{GACHA_CATS.filter(c => s.owned.includes(c.id)).length + '/' + GACHA_CATS.length + ' 만남'}</Txt>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {GACHA_CATS.map(c => {
           const o = s.owned.includes(c.id), t = TIER[c.tier!];
           return (
-            <Btn key={c.id} onPress={() => (o ? S({ catId: c.id }) : getS().toast('뽑기에서 만날 수 있어요 · ' + t.name + ' 등급'))} accessibilityLabel={(o ? c.name : '아직 못 만난 고양이') + ', ' + t.name}
+            <Btn key={c.id} onPress={() => (o ? S({ catId: c.id }) : getS().toast(s.plus ? 'Plus 전용 뽑기에서 만날 수 있어요 · ' + t.name + ' 등급' : 'Plus 구독 후 Plus 전용 뽑기에서 만날 수 있어요'))} accessibilityLabel={(o ? c.name : '아직 못 만난 고양이') + ', ' + t.name}
               style={{ width: '31%', flexGrow: 1, alignItems: 'stretch', gap: 6, padding: 8, borderRadius: 16, borderWidth: c.id === s.catId ? 2.5 : 1.5, borderColor: c.id === s.catId ? C.ink : C.line, backgroundColor: C.bg }}>
               <View style={{ aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' }}>
                 {o ? <Image source={FACE[c.id]} resizeMode="cover" accessibilityIgnoresInvertColors style={{ width: '100%', height: '100%' }} />
                   : <Image source={CUTOUT[c.id]} resizeMode="contain" accessibilityLabel="아직 못 만난 고양이 실루엣" style={{ width: '82%', height: '82%', tintColor: C.ink, opacity: 0.3 }} />}
               </View>
               <Txt jua numberOfLines={1} style={{ fontSize: 12 }}>{o ? c.name : '???'}</Txt>
-              <View style={{ alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 7, backgroundColor: t.color }}><Txt style={{ fontSize: 10, color: '#2B221D' }}>{t.name}</Txt></View>
+              <View style={{ flexDirection: 'row', gap: 4 }}>
+                <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 7, backgroundColor: '#F6D58E' }}><Txt style={{ fontSize: 10, color: '#4A3428' }}>PLUS</Txt></View>
+                <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 7, backgroundColor: t.color }}><Txt style={{ fontSize: 10, color: '#2B221D' }}>{t.name}</Txt></View>
+              </View>
             </Btn>
           );
         })}
@@ -72,22 +45,30 @@ function GachaGrid() {
   );
 }
 
-// ── 뽑기 (하단 탭) ── 츄르로 고양이를 만나는 곳: 고양이 뽑기 · 창밖 고양이 부르기 · 뽑기 고양이 목록
+// ── 뽑기 (하단 탭) ── "새로운 고양이 만나기"의 버튼으로 뽑기 창(일반 · Plus 전용)을 연다
 export function GachaTab() {
   const sm = useScrollMemory('gacha');
   const C = useC();
   const s = useApp(st => st);
+  const basic = CATS.filter(c => !c.plus), metB = basic.filter(c => s.owned.includes(c.id)).length, metP = GACHA_CATS.filter(c => s.owned.includes(c.id)).length;
   return (
     <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
-      <Header title="고양이 뽑기" right={<Txt style={{ fontSize: 14, color: C.sub }}>{GACHA_CATS.filter(c => s.owned.includes(c.id)).length + '/' + GACHA_CATS.length + ' 만남'}</Txt>} />
+      <Header title="뽑기" right={<ChuruBadge n={s.churu} />} />
       {IS_DEMO && <Txt style={{ fontSize: 12, color: C.sub }}>데모 버전 · 테스트용 츄르가 무제한이에요</Txt>}
-      <GachaBox />
-      <View style={{ gap: 10, padding: 16, borderRadius: 20, backgroundColor: C.card }}>
-        <Txt jua style={{ fontSize: 17 }}>새로운 고양이 만나기</Txt>
-        <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>츄르 30개로 창밖의 고양이를 불러요. 아직 못 만난 고양이만 나와요.</Txt>
-        <Primary h={50} label={!baseLeft(s.owned) ? '모든 고양이를 만났어요' : s.churu >= 30 ? '츄르 30개로 부르기' : `츄르가 ${30 - s.churu}개 더 필요해요`} bg={s.churu >= 30 && baseLeft(s.owned) ? C.ink : C.disabled} onPress={() => getS().pull()} />
+      <View style={{ gap: 12, padding: 18, borderRadius: 22, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.card }}>
+        <View style={{ flexDirection: 'row' }}>{[...basic.slice(0, 3), ...GACHA_CATS.filter(c => c.tier === 3)].map((c, i) => <CatFace key={c.id} cat={c} size={40} border={1.5} style={{ marginLeft: i ? -10 : 0 }} />)}</View>
+        <Txt jua style={{ fontSize: 20 }}>새로운 고양이 만나기</Txt>
+        <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>모은 츄르로 고양이를 뽑아요. 일반 뽑기는 기본 고양이, Plus 전용 뽑기는 Plus 구독 전용 고양이가 나와요.</Txt>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {([['basic', '일반 뽑기', `기본 고양이 ${metB}/${basic.length}`], ['plus', 'Plus 전용 뽑기', `Plus 고양이 ${metP}/${GACHA_CATS.length}`]] as const).map(([k, l, sub]) => (
+            <View key={k} style={{ flex: 1, padding: 10, borderRadius: 14, backgroundColor: k === 'plus' ? '#F6E3C9' : C.bg, gap: 2 }}>
+              <Txt jua style={{ fontSize: 14, color: k === 'plus' ? '#4A3428' : C.ink }}>{l}</Txt>
+              <Txt style={{ fontSize: 11, color: k === 'plus' ? '#6B5444' : C.sub }}>{sub + '\n' + GACHA_COST[k].one + ' 츄르부터'}</Txt>
+            </View>
+          ))}
+        </View>
+        <Primary h={54} label="고양이 뽑기" onPress={() => S({ gachaPop: 'basic' })} />
       </View>
-      <GachaGrid />
     </ScrollView>
   );
 }
@@ -132,7 +113,7 @@ export function Dex() {
             );
           })}
         </View>
-        <GachaGrid />
+        <PlusCats />
       </>}
       {s.dexTab === 'beh' && <>
         <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>홈의 고양이는 6초마다 새로운 행동을 보여줘요. 한 번 본 행동은 여기에 기록돼요.</Txt>
