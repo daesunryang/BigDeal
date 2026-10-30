@@ -76,7 +76,7 @@ button{font-family:inherit;color:inherit}
     <div style="font:400 15px 'Jua',sans-serif">Android 우선 · iOS 확장</div>
     <div>Android: UsageStats + 다른 앱 위에 표시(오버레이)로 차단. Material 3 하단 내비, 시스템 뒤로가기 대응.</div>
     <div>iOS: Screen Time(FamilyControls) 권한, 차단 화면은 Shield 확장으로 대체. 레이아웃은 동일, 상태바·홈 인디케이터만 교체.</div>
-    <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.2.1 반영</div>
+    <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.3.0 반영</div>
     <div>뒤로가기는 바로 전 화면으로 (탭·메뉴 하위 화면·방 꾸미기 기록). 앱 정보의 업데이트 확인, 새 버전 안내 배너, 화면 오류 복구 화면. 메뉴 → 데모 상황에서 확인해요.</div>
     <div style="color:var(--sub)">Tweaks: 플랫폼 전환, 홈 레이아웃 3종(방 카드 / 풀블리드 / 원형), 타이머 레이아웃 3종(링 / 방 / 나이트), 빠른 타이머.</div>
   </div>
@@ -618,7 +618,7 @@ button{font-family:inherit;color:inherit}
       <sc-for list="{{ docSections }}" as="ds" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:6px"><div style="font:400 15px 'Jua',sans-serif">{{ ds.t }}</div><div style="font-size:13px;line-height:1.65;color:var(--body);text-wrap:pretty">{{ ds.b }}</div></div></sc-for>
       <div style="font-size:11px;color:var(--mute)">시행일 2026년 10월 20일</div></div></sc-if>
     <sc-if value="{{ pgAbout }}"><div style="display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.aboutSize }};background-position:{{ cat.aboutPos }}"></div><div style="font:400 26px 'Jua',sans-serif">냥집중</div><div style="font-size:13px;color:var(--sub)">버전 1.2.1 (빌드 5)</div><sc-if value="{{ updOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;padding:3px 10px;border-radius:10px;background:var(--mint)">최신 버전을 사용 중이에요</span></sc-if><sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="font-size:12px;padding:5px 12px;border-radius:12px;border:0;background:#F6D58E;color:#4A3428;cursor:pointer">새 버전 v1.2.0 받기 ›</button></sc-if><button onClick="{{ checkUpd }}" style="min-height:44px;padding:0 12px;border:0;background:none;font-size:13px;color:var(--sub);text-decoration:underline;cursor:pointer">업데이트 확인</button></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.aboutSize }};background-position:{{ cat.aboutPos }}"></div><div style="font:400 26px 'Jua',sans-serif">냥집중</div><div style="font-size:13px;color:var(--sub)">버전 1.3.0 (빌드 6)</div><sc-if value="{{ updOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;padding:3px 10px;border-radius:10px;background:var(--mint)">최신 버전을 사용 중이에요</span></sc-if><sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="font-size:12px;padding:5px 12px;border-radius:12px;border:0;background:#F6D58E;color:#4A3428;cursor:pointer">새 버전 v1.2.0 받기 ›</button></sc-if><button onClick="{{ checkUpd }}" style="min-height:44px;padding:0 12px;border:0;background:none;font-size:13px;color:var(--sub);text-decoration:underline;cursor:pointer">업데이트 확인</button></div>
       <div style="border-radius:18px;background:var(--card);overflow:hidden;display:flex;flex-direction:column"><sc-for list="{{ aboutRows }}" as="ar"><button onClick="{{ ar.go }}" style="display:flex;align-items:center;min-height:50px;padding:0 14px;border:none;border-top:{{ ar.divider }};background:none;cursor:pointer;text-align:left"><span style="flex:1;font-size:15px">{{ ar.label }}</span><span style="font-size:16px;color:var(--mute)">›</span></button></sc-for></div>
       <div style="font-size:11px;line-height:1.6;color:var(--mute);text-align:center">© 2026 냥집중 · 고양이 일러스트 © 냥집중</div></div></sc-if>
     <sc-if value="{{ pgLang }}"><div style="display:flex;flex-direction:column;gap:12px">
@@ -731,14 +731,20 @@ button{font-family:inherit;color:inherit}
   <!-- FOCUS -->
   <sc-if value="{{ isFocus }}">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:24px 22px 22px;gap:18px;background:{{ focusBg }};color:{{ focusFg }};position:relative;overflow:auto">
+    <sc-if value="{{ hearthBig }}"><button onClick="{{ closeHearth }}" aria-label="불멍 화면 닫기" style="position:absolute;inset:0;z-index:8;border:0;padding:0;background:#140E0B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;cursor:pointer">
+      <span style="font:400 44px/1 'Jua',sans-serif;color:#F3E3B0;opacity:.85;font-variant-numeric:tabular-nums">{{ timeText }}</span>
+      <div style="width:100%">{{ hearthBigEl }}</div>
+      <span style="font-size:14px;color:#C9B7A3">{{ hearthText }}</span>
+      <span style="font-size:12px;color:#7A6352">화면을 누르면 돌아가요</span>
+    </button></sc-if>
     <div style="font-size:14px;color:{{ focusSub }}">{{ focusHeader }}</div>
     <sc-if value="{{ timerRing }}" hint-placeholder-val="{{ true }}">
-    <div style="position:relative;width:260px;height:260px;margin-top:10px">
-      <svg width="260" height="260" viewBox="0 0 260 260" style="position:absolute;inset:0;transform:rotate(-90deg)">
-        <circle cx="130" cy="130" r="122" fill="none" stroke="var(--line)" stroke-width="10"></circle>
-        <circle cx="130" cy="130" r="122" fill="none" stroke="#8DBF93" stroke-width="10" stroke-linecap="round" stroke-dasharray="766.5" stroke-dashoffset="{{ ringOffset }}" style="transition:stroke-dashoffset .3s linear"></circle>
+    <div style="position:relative;width:200px;height:200px;margin-top:4px;flex:none">
+      <svg width="200" height="200" viewBox="0 0 200 200" style="position:absolute;inset:0;transform:rotate(-90deg)">
+        <circle cx="100" cy="100" r="93" fill="none" stroke="var(--line)" stroke-width="9"></circle>
+        <circle cx="100" cy="100" r="93" fill="none" stroke="#8DBF93" stroke-width="9" stroke-linecap="round" stroke-dasharray="584.3" stroke-dashoffset="{{ ringOffset }}" style="transition:stroke-dashoffset .3s linear"></circle>
       </svg>
-      <div style="position:absolute;left:25px;top:25px;width:210px;height:210px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.bigSize }};background-position:{{ cat.bigPos }};animation:bob 3s ease-in-out infinite"></div>
+      <div style="position:absolute;left:20px;top:20px;width:160px;height:160px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.ringSize }};background-position:{{ cat.ringPos }};animation:bob 3s ease-in-out infinite"></div>
     </div>
     </sc-if>
     <sc-if value="{{ timerRoom }}">
@@ -752,13 +758,10 @@ button{font-family:inherit;color:inherit}
     </sc-if>
     <div style="font:400 {{ timeSize }}/1 'Jua',sans-serif;letter-spacing:1px;font-variant-numeric:tabular-nums">{{ timeText }}</div>
     <div style="font-size:14px;color:{{ focusSub }};text-align:center;line-height:1.5">{{ focusMsg }}</div>
-    <sc-if value="{{ miniView }}"><div style="width:100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:var(--bg);border:1.5px solid var(--ink);color:var(--ink);flex:none">
-      <div style="position:relative;width:132px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:{{ miniView.rowsCss }};border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;flex:none;background:#D9CDB8">
-        <sc-for list="{{ miniView.rooms }}" as="r"><div style="grid-column:{{ r.gc }};grid-row:{{ r.gr }};position:relative;overflow:hidden;background:{{ r.bg }};outline:1px solid var(--ink);outline-offset:-1px"><sc-for list="{{ r.deco }}" as="f"><div style="position:absolute;left:{{ f.l }};top:{{ f.t }};width:{{ f.w }};height:{{ f.h }};background:{{ f.bg }};border-radius:{{ f.r }};opacity:{{ r.op }}"></div></sc-for></div></sc-for>
-        <div style="position:absolute;left:{{ miniView.tx }};top:{{ miniView.ty }};width:0;height:0;transition:left .7s cubic-bezier(.4,0,.2,1),top .7s cubic-bezier(.4,0,.2,1)"><div style="position:absolute;left:-8px;top:-8px;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink);background-color:var(--bg);background-image:var(--ca);background-size:{{ miniView.catSize }};background-position:{{ miniView.catPos }};animation:{{ miniView.jump }}"></div></div>
-      </div>
-      <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font-size:12px;line-height:1.4">{{ cat.name }}는 지금 {{ miniView.where }}에 있어요</span><button onClick="{{ callCat }}" style="height:32px;border-radius:16px;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer">고양이 부르기</button></div>
-    </div></sc-if>
+    <sc-if value="{{ hearthOn }}"><button onClick="{{ openHearth }}" aria-label="불멍 화면 크게 보기" style="width:100%;display:flex;flex-direction:column;gap:8px;padding:0;border:0;background:none;color:inherit;cursor:pointer;flex:none;text-align:left">
+      <div style="width:100%;border-radius:18px;border:2px solid var(--ink);overflow:hidden;background:#3B2D25;box-sizing:border-box">{{ hearthEl }}</div>
+      <div style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 4px;box-sizing:border-box"><span style="font-size:13px;color:{{ focusSub }}">{{ hearthText }}</span><span style="font-size:12px;color:{{ focusSub }}">크게 보기 ⤢</span></div>
+    </button></sc-if>
     <div style="flex:1"></div>
     <div style="width:100%;display:flex;flex-direction:column;gap:10px">
       <button onClick="{{ tryBlocked }}" style="height:46px;border-radius:23px;border:1.5px dashed var(--sub);background:transparent;font-size:14px;cursor:pointer">(데모) 인스타그램 열어보기</button>
@@ -1155,6 +1158,39 @@ const LD = [['홈','Home','ホーム'],['도감','Collection','図鑑'],['후원
 ['벽지','Wallpaper','壁紙'],['바닥','Floor','床'],['구조','Layout','構造'],['가구','Furniture','家具'],['소품','Props','小物'],['옷','Outfits','服'],['간식','Snacks','おやつ'],['시즌','Season','シーズン'],['전용','Room only','専用'],['집중 중','Focusing','集中中'],['다음','Next','次へ'],['건너뛰기','Skip','スキップ']];
 const LPAT = [[/^(\d+)시간 (\d+)분$/, '$1h $2m', '$1時間$2分'], [/^(\d+)분 집중 완료$/, '$1 min focus done', '$1分の集中が完了'], [/^내 후원 (.+)kg$/, 'My support $1kg', '私の応援 $1kg']];
 const HANDLED = ['냥집중 Plus','공지사항','자주 묻는 질문','업적 · 배지','문의하기','이용약관','개인정보 처리방침','앱 정보','언어 선택','권한 설정'];
+// ── 불멍 장면 (앱 src/stage/Hearth.tsx · pixelCat.ts와 같은 그림·동작) ──
+const PIX_FRAMES = {"walk1": ["....................", "...............O..O.", "..............OQOOQO", ".O............OQNNQO", "OSO..........OBBBBBO", "OBO..........OBEBEBO", ".OQO.OOOOOOOOOBBNBBO", "..OBOBSBBSBBSBOWWWO.", "...OBBSPPBSBBSBBWWO.", "...OBBPPPBBBBBBWWO..", "...OBWWWWWWWWWBBO...", "...OQBO.OQO.OBQO....", "....OQO..OQO.OQO....", ".....O....O...O....."], "walk2": ["....................", "...............O..O.", "..............OQOOQO", "..............OQNNQO", ".OSO.........OBBBBBO", ".OBO.........OBEBEBO", "..OQOOOOOOOOOOBBNBBO", "..OBOBSBBSBBSBOWWWO.", "...OBBSPPBSBBSBBWWO.", "...OBBPPPBBBBBBWWO..", "...OBWWWWWWWWWBBO...", "...OQBO.OQO.OBQO....", "...OQO..OQO..OQO....", "....O....O....O....."], "walk3": ["....................", "...............O..O.", "..............OQOOQO", ".O............OQNNQO", "OSO..........OBBBBBO", "OBO..........OBEBEBO", ".OQO.OOOOOOOOOBBNBBO", "..OBOBSBBSBBSBOWWWO.", "...OBBSPPBSBBSBBWWO.", "...OBBPPPBBBBBBWWO..", "...OBWWWWWWWWWBBO...", "....OQO.OBQO.OQO....", "....OQO..OQO..OQO...", ".....O....O....O...."], "sit": [".........O..O.......", "........OQOOQO......", "........OQNNQO......", ".......OBBBBBBO.....", ".......OBEBBEBO.....", ".......OBBNNBBO.....", "........OWWWWO......", ".......OBWWWWBO.....", "......OBSBWWBSBO....", "......OPPSWWSBBO.OO.", "......OPPBWWBBBO.OSO", "......OBBBWWBBBOOBO.", "......OQWOOOOWQBBO..", ".......OO....OOOO..."], "sitTail": [".........O..O.......", "........OQOOQO......", "........OQNNQO......", ".......OBBBBBBO.....", ".......OBEBBEBO.....", ".......OBBNNBBO.....", "........OWWWWO......", ".......OBWWWWBO.....", "......OBSBWWBSBO....", "......OPPSWWSBBO....", "......OPPBWWBBBO....", "......OBBBWWBBBO.OO.", "......OQWOOOOWQOOBSO", ".......OO....OOOOOO."], "blink": [".........O..O.......", "........OQOOQO......", "........OQNNQO......", ".......OBBBBBBO.....", ".......OBOOBOOO.....", ".......OBBNNBBO.....", "........OWWWWO......", ".......OBWWWWBO.....", "......OBSBWWBSBO....", "......OPPSWWSBBO.OO.", "......OPPBWWBBBO.OSO", "......OBBBWWBBBOOBO.", "......OQWOOOOWQBBO..", ".......OO....OOOO..."], "groom": [".........O..O.......", "........OQOOQO......", "........OQNNQO......", ".......OBBBBBBO.....", ".......OBOOBOOO.....", ".......OBBNNWWO.....", "........OWWOWWO.....", ".......OBWWOQWO.....", "......OBSBWWOQO.....", "......OPPSWWBOBO.OO.", "......OPPBWWBBBO.OSO", "......OBBBWWBBBOOBO.", "......OQWOOOOOOBBO..", ".......OO......OO..."], "loaf": ["....................", "....................", "....................", "....................", "...............O..O.", "..............OQOOQO", "..............OQNNQO", "....OOOOOOOOOOBBBBBO", "...OBBSPPSBBSBBEBEBO", "..OBBBPPPBBSBBBBNBBO", "OOBBBBBBBBBBBBBOWWO.", "OSOBBBBBBBBBBBBBWO..", ".OOQWWWWWWWWWWWQO...", "...OOOOOOOOOOOOOO..."], "sleep1": ["....................", "....................", "....................", "....................", "....................", "....................", "..............O..O..", ".....OOOOOOOOOQOOQO.", "...OOBBSPPSBBOQNNQO.", "..OBBBPPPBBSBBBBBBO.", ".OBBBBBBBBBBBOOBOOBO", "OSBBBBBBBBBBBBBNNBO.", "OQBBWWWWWWWWBBWWWO..", ".OOOOOOOOOOOOOOOO..."], "sleep2": ["....................", "....................", "....................", "....................", "....................", "....................", "....................", ".....OOOOOOOO.O..O..", "...OOBBSPPSBBOQOOQO.", "..OBBBPPPBBSBBQNNQO.", ".OBBBBBBBBBBBBBBBBO.", "OSBBBBBBBBBBBOOBOOBO", "OQBBWWWWWWWWBBBNNBO.", ".OOOOOOOOOOOOOOOOO.."], "stretch": ["....................", "....................", "....................", "................O..O", ".O.............OQOOQ", "OSO............OQNNQ", "OBO...........OBBBBB", ".OQO.........OBBEBEB", "..OBOOOOO...OBBBBNBB", "..OBBSBBSOOOBBBBOWWO", "...OBBSBBSBBSBBOOWO.", "...OBBBBBBBBBBBBQWO.", "...OQWOOOOOOOOOOQWO.", "....OO.........OOO.."]};
+const PIX_PAL = {"cheese": {"O": "#4A3428", "B": "#E9AC7C", "S": "#B8744A", "P": "#E9AC7C", "Q": "#E9AC7C", "W": "#F9E9D7", "E": "#2B221D", "N": "#E8A0A0"}, "blue": {"O": "#4A3428", "B": "#8F9DA6", "S": "#7A8B96", "P": "#8F9DA6", "Q": "#8F9DA6", "W": "#A9B4BA", "E": "#2B221D", "N": "#C9A2A6"}, "calico": {"O": "#4A3428", "B": "#FAEADA", "S": "#DEA47B", "P": "#806050", "Q": "#FAEADA", "W": "#FFF6EC", "E": "#2B221D", "N": "#E8A0A0"}, "tux": {"O": "#4A3428", "B": "#3E3032", "S": "#3E3032", "P": "#3E3032", "Q": "#3E3032", "W": "#FAEBDA", "E": "#D9C27A", "N": "#C98F8F"}, "ragdoll": {"O": "#4A3428", "B": "#EED8C3", "S": "#EED8C3", "P": "#EED8C3", "Q": "#846C5E", "W": "#FBF3EA", "E": "#5B8FC9", "N": "#E8A0A0"}, "siam": {"O": "#4A3428", "B": "#F1DEC8", "S": "#F1DEC8", "P": "#F1DEC8", "Q": "#4A3B3A", "W": "#F1DEC8", "E": "#5B8FC9", "N": "#8A6A66"}, "persian": {"O": "#4A3428", "B": "#DCD0C7", "S": "#C7B8AD", "P": "#DCD0C7", "Q": "#DCD0C7", "W": "#F4E9DF", "E": "#2B221D", "N": "#E8A0A0"}, "angora": {"O": "#4A3428", "B": "#F6ECE0", "S": "#F6ECE0", "P": "#F6ECE0", "Q": "#F6ECE0", "W": "#FFFAF3", "E": "#C9A24A", "N": "#E8A0A0"}};
+const HEARTH = { W: 120, H: 64, FLOOR: 46, FEET: 57, FX: 92, FW: 18, RUG: 64, WIN: 18 };
+const HEARTH_TEXT = { walk:'살금살금 걸어가요', sit:'불을 가만히 바라보고 있어요', groom:'앞발로 세수하고 있어요', loaf:'식빵을 굽고 있어요', sleep:'불 앞에서 꾸벅꾸벅 졸고 있어요', stretch:'쭉 기지개를 켜요' };
+function hearthNext(c, now, rnd) {
+  const s = (a, b) => (a + rnd() * (b - a)) * 1000, atRug = Math.abs(c.x - HEARTH.RUG) < 6, atWin = Math.abs(c.x - HEARTH.WIN) < 6;
+  const walkTo = tx => ({ ...c, act:'walk', tx, dir: tx > c.x ? 1 : -1, until: Infinity, t0: now });
+  switch (c.act) {
+    case 'walk': return { ...c, act:'sit', until: now + s(8, 14), t0: now };
+    case 'sit': { const r = rnd();
+      if (r < 0.3) return { ...c, act:'groom', until: now + s(4, 6), t0: now };
+      if (r < 0.65 && atRug) return { ...c, act:'loaf', until: now + s(10, 20), t0: now };
+      if (r < 0.8 && atWin) return { ...c, act:'sit', until: now + s(10, 16), t0: now };
+      return walkTo(rnd() < 0.6 ? HEARTH.RUG + (rnd() * 6 - 3) : rnd() < 0.5 ? HEARTH.WIN : 30 + rnd() * 40); }
+    case 'groom': return { ...c, act:'sit', until: now + s(6, 10), t0: now };
+    case 'loaf': return rnd() < 0.7 ? { ...c, act:'sleep', until: now + s(30, 60), t0: now } : { ...c, act:'sit', until: now + s(6, 10), t0: now };
+    case 'sleep': return { ...c, act:'stretch', until: now + 2400, t0: now };
+    default: return walkTo(rnd() < 0.5 ? HEARTH.WIN : 30 + rnd() * 30);
+  }
+}
+function hearthFrame(c, now) { const t = (now - c.t0) / 1000;
+  if (c.act === 'walk') return ['walk1','walk2','walk3','walk2'][Math.floor(t * 4) % 4];
+  if (c.act === 'sleep') return Math.floor(t / 1.4) % 2 ? 'sleep2' : 'sleep1';
+  if (c.act === 'loaf' || c.act === 'stretch') return c.act;
+  if (c.act === 'groom') return Math.floor(t * 2) % 2 ? 'groom' : 'blink';
+  const k = Math.floor(t * 2.5) % 20; return k === 7 ? 'blink' : k >= 12 && k <= 14 ? 'sitTail' : 'sit'; }
+function hearthStep(p, t) { const dt = Math.min(0.5, (t - p.now) / 1000); let c = p.cat;
+  if (c.act === 'walk') { c = { ...c, x: c.x + 6 * dt * c.dir }; if ((c.dir > 0 && c.x >= c.tx) || (c.dir < 0 && c.x <= c.tx)) c = hearthNext({ ...c, x: c.tx }, t, Math.random); }
+  else if (t >= c.until) c = hearthNext(c, t, Math.random);
+  const sparks = p.sparks.filter(q => t - q.born < 2600); if (Math.random() < 0.08) sparks.push({ x: HEARTH.FX + 4 + Math.random() * (HEARTH.FW - 8), y: 32, v: 3 + Math.random() * 3, born: t });
+  return { ...p, now: t, cat: c, sparks }; }
+function hearthNew() { const t0 = Date.now(); return { start: t0, now: t0, cat: { x: HEARTH.RUG, dir: 1, act:'sit', until: t0 + 6000, tx: HEARTH.RUG, t0 }, sparks: [] }; }
 const SONGS = [
   { name:'냐옹냐옹 왕대', t:'야옹야옹~ 냐옹냐옹♪', n:[[660,.22],[880,.3],[660,.22],[784,.3],[988,.22],[880,.22],[784,.45]] },
   { name:'츄르 송', t:'냥냥냥~ 츄르 송♫', n:[[523,.18],[523,.18],[784,.18],[784,.18],[880,.18],[880,.18],[784,.4]] },
@@ -1191,6 +1227,7 @@ class Component extends DCLogic {
   }
   armSplash() { clearTimeout(this.sp); this.sp = setTimeout(() => { if (this.state.screen === 'splash') { this.setState({ screen:'login' }); if (this.state.upd) this.setState({ dlg: { kind: 'update' } }); else this.toast('최신 버전입니다'); } }, 3600); }
   componentDidMount() {
+    this.hh = setInterval(() => { if (this.state.screen !== 'focus') return; this.hs = hearthStep(this.hs || hearthNew(), Date.now()); this.forceUpdate(); }, 160);
     this.armSplash(); this.loadDays(); this.langI = setInterval(() => this.applyLang(), 600);
     this.kd = e => { if (e.key === 'Escape') this.back(); }; window.addEventListener('keydown', this.kd);
     { const d = new Date(Date.now() + 30 * 60000), m = Math.ceil(d.getMinutes() / 5) * 5;
@@ -1221,7 +1258,7 @@ class Component extends DCLogic {
   popNav() { const st = this.nav || [], cur = this.navKey(this.state);
     while (st.length) { const l = st.pop(); if (this.navKey(l) === cur) continue; this.navMute = true; this.setState({ ...l, preview: null }, () => { this.navMute = false; }); return true; }
     return false; }
-  componentWillUnmount() { clearInterval(this.t); clearInterval(this.m); clearTimeout(this.ht); clearInterval(this.langI); window.removeEventListener('keydown', this.kd); if (this.mq) this.mq.removeEventListener('change', this.mqf); }
+  componentWillUnmount() { clearInterval(this.hh); clearInterval(this.t); clearInterval(this.m); clearTimeout(this.ht); clearInterval(this.langI); window.removeEventListener('keydown', this.kd); if (this.mq) this.mq.removeEventListener('change', this.mqf); }
 
   behavior() {
     const B = BEH;
@@ -1231,6 +1268,37 @@ class Component extends DCLogic {
     return B[((this.state.msg || 0) + (this.state.behOff || 0)) % B.length];
   }
   nextBehavior() { this.sfx('meow'); this.setState(st => ({ behOff: (st.behOff || 0) + 1 }), () => this.markBeh()); }
+  // 불멍 장면 그리기 (SVG, 가로 120 × 세로 64 도트)
+  hearthEl(width) { const h = React.createElement, p = this.hs || (this.hs = hearthNew()), c = p.cat, now = p.now, t = (now - p.start) / 1000, H = HEARTH;
+    const R = (x, y, w, hh, fill, o, k) => h('rect', { key: k, x, y, width: w, height: hh, fill, opacity: o });
+    const kids = [];
+    kids.push(h('defs', { key:'d' }, h('radialGradient', { id:'hglow', cx:'50%', cy:'50%', r:'50%' }, h('stop', { offset:'0', stopColor:'#F2A65A', stopOpacity:0.9 }), h('stop', { offset:'0.4', stopColor:'#F2A65A', stopOpacity:0.35 }), h('stop', { offset:'1', stopColor:'#F2A65A', stopOpacity:0 }))));
+    kids.push(R(0, 0, H.W, H.FLOOR, '#3B2D25', 1, 'wall'));
+    for (let i = 0; i < 12; i++) kids.push(R(i * 10 + 4, 0, 1, H.FLOOR, '#41322A', 1, 'ws' + i));
+    kids.push(R(0, H.FLOOR, H.W, H.H - H.FLOOR, '#5C4232', 1, 'floor'));
+    [50, 55, 60].forEach(y => kids.push(R(0, y, H.W, 1, '#513A2C', 1, 'fl' + y)));
+    kids.push(R(9, 7, 27, 24, '#6B5040', 1, 'wf'), R(10, 8, 25, 22, '#1E2A44', 1, 'sky'), R(10, 22, 25, 8, '#24314D', 1, 'sky2'), R(8, 30, 29, 2, '#7A5C49', 1, 'sill'));
+    kids.push(R(28, 10, 4, 4, '#F3E3B0', 1, 'm1'), R(27, 11, 6, 2, '#F3E3B0', 1, 'm2'), R(30, 10, 2, 2, '#1E2A44', 1, 'm3'));
+    [[12,11,0.3],[17,15,1.7],[23,10,2.9],[14,21,4.1],[27,19,0.9],[31,13,3.3],[20,25,5.2]].forEach(([x, y, ph]) => kids.push(R(x, y, 1, 1, '#F3E3B0', 0.35 + 0.65 * Math.max(0, Math.sin(t * 0.8 + ph)), 'st' + x)));
+    kids.push(R(84, 15, 34, 3, '#6B5040', 1, 'mantle'), R(86, 18, 30, 28, '#8A7666', 1, 'stone'));
+    [[86,22],[96,22],[106,22],[91,27],[101,27],[111,27],[86,32],[111,34],[86,40],[111,40]].forEach(([x, y]) => kids.push(R(x, y, 9, 1, '#7A6758', 1, 'b' + x + y)));
+    kids.push(R(91, 27, 20, 19, '#1A1210', 1, 'hole'), R(89, 11, 4, 4, '#B0604A', 1, 'pot'), R(88, 8, 2, 3, '#8DBF93', 1, 'l1'), R(91, 7, 2, 4, '#8DBF93', 1, 'l2'), R(108, 12, 4, 3, '#E3EFDF', 1, 'cup'));
+    kids.push(h('ellipse', { key:'rug', cx: H.RUG + 6, cy: 56, rx: 17, ry: 3.5, fill:'#8C4A3C' }), h('ellipse', { key:'rug2', cx: H.RUG + 6, cy: 56, rx: 13, ry: 2, fill:'#A35A48' }));
+    const glow = 0.13 + 0.03 * Math.sin(t * 1.3) + 0.015 * Math.sin(t * 3.7);
+    kids.push(h('circle', { key:'g1', cx: H.FX + H.FW / 2, cy: 38, r: 44, fill:'url(#hglow)', opacity: glow * 1.6 }), h('ellipse', { key:'g2', cx: H.FX + H.FW / 2, cy: 53, rx: 46, ry: 8, fill:'url(#hglow)', opacity: glow * 1.8 }));
+    for (let i = 0; i < H.FW; i++) { const mid = 1 - Math.abs(i - (H.FW - 1) / 2) / (H.FW / 2);
+      const hh = Math.max(1, Math.round((3 + 8 * mid) + 2.2 * Math.sin(i * 0.9 + t * 3.1) + 1.4 * Math.sin(i * 2.3 - t * 4.7)));
+      kids.push(R(H.FX + i, 44 - hh, 1, hh, '#C8553D', 1, 'fa' + i)); const m = Math.round(hh * 0.68); if (m > 0) kids.push(R(H.FX + i, 44 - m, 1, m, '#E59A4C', 1, 'fb' + i));
+      const cc = Math.round(hh * 0.35 * mid + 0.4); if (cc > 0) kids.push(R(H.FX + i, 44 - cc, 1, cc, '#F6D58E', 1, 'fc' + i)); }
+    kids.push(R(93, 43, 16, 2, '#6B4A32', 1, 'log1'), R(95, 42, 12, 1, '#7D5A3E', 1, 'log2'));
+    p.sparks.forEach((q, i) => { const a = (now - q.born) / 1000; kids.push(R(Math.round(q.x + Math.sin(a * 3 + i) * 1.5), Math.round(q.y - a * q.v), 1, 1, '#F6D58E', Math.max(0, 1 - a / 2.6), 'sp' + q.born)); });
+    const fr = hearthFrame(c, now), rows = PIX_FRAMES[fr], pal = PIX_PAL[this.state.catId] || PIX_PAL.cheese, x0 = Math.round(c.x - 10), y0 = H.FEET - 14;
+    const flip = c.dir < 0 && (fr.startsWith('walk') || fr === 'loaf' || fr.startsWith('sleep') || fr === 'stretch'), cat = [];
+    rows.forEach((row, y) => { for (let x = 0; x < row.length; x++) { const ch = row[x]; if (ch !== '.') cat.push(R(x, y, 1, 1, pal[ch] || '#4A3428', 1, 'c' + x + '-' + y)); } });
+    kids.push(h('g', { key:'cat', transform: flip ? `translate(${x0 + 20} ${y0}) scale(-1 1)` : `translate(${x0} ${y0})` }, ...cat));
+    if (c.act === 'sleep') [0, 1.5].forEach(o => { const k = ((t + o) % 3) / 3, op = k < 0.15 ? k / 0.15 : 1 - (k - 0.15) / 0.85, zx = Math.round(c.x + (c.dir > 0 ? 5 : -8) + k * 4), zy = Math.round(H.FEET - 9 - k * 9);
+      kids.push(h('g', { key:'z' + o, opacity: op, transform:`translate(${zx} ${zy})` }, R(0, 0, 3, 1, '#F3E3B0', 1, 'za'), R(1, 1, 1, 1, '#F3E3B0', 1, 'zb'), R(0, 2, 3, 1, '#F3E3B0', 1, 'zc'))); });
+    return h('svg', { width:'100%', viewBox:`0 0 ${H.W} ${H.H}`, shapeRendering:'crispEdges', style:{ display:'block', width:'100%', height:'auto', aspectRatio: H.W + ' / ' + H.H } }, ...kids); }
   sing(pick) { const st = this.state;
     const pool = SONGS.map((x, i) => i).filter(i => !SONGS[i].cat || SONGS[i].cat === st.catId);
     let k = pick ?? pool[Math.floor(Math.random() * pool.length)]; if (pick == null && k === this.songK) k = pool[(pool.indexOf(k) + 1) % pool.length]; this.songK = k; const sg = SONGS[k];
@@ -1465,7 +1533,7 @@ class Component extends DCLogic {
     const cat0 = CATS.find(c => c.id === s.catId);
     const mk = (n) => crop(cat0, n);
     const cat = { ...cat0, roomPos: cat0.room,
-      bigSize: mk(210).size, bigPos: mk(210).pos, homeSize: mk(220).size, homePos: mk(220).pos, midSize2: mk(120).size, midPos2: mk(120).pos,
+      bigSize: mk(210).size, bigPos: mk(210).pos, ringSize: mk(160).size, ringPos: mk(160).pos, homeSize: mk(220).size, homePos: mk(220).pos, midSize2: mk(120).size, midPos2: mk(120).pos,
       bleedSize: Math.round(IMG_W * 300 / 620) + 'px auto', bleedPos: `${Math.round(180 - cat0.c[0] * 300 / 620)}px ${Math.round(170 - cat0.c[1] * 300 / 620)}px`, midSize: mk(110).size, midPos: mk(110).pos,
       doneSize: mk(200).size, donePos: mk(200).pos, failSize: mk(180).size, failPos: mk(180).pos, aboutSize: mk(96).size, aboutPos: mk(96).pos };
     const level = Math.floor(s.xp / 100) + 1, xpPct = s.xp % 100;
@@ -1821,6 +1889,10 @@ class Component extends DCLogic {
               saveName: () => { const v = s.nameDraft.trim(); if (!v) return; this.setState(st => ({ roomNames: { ...st.roomNames, [sel.id]: v }, renaming: false })); this.toast('방 이름을 바꿨어요'); } };
           })() : null,
           houseHint: !!(s.house && s.houseHint),
+          hearthOn: s.screen === 'focus' && !s.hearthBig, hearthBig: s.screen === 'focus' && !!s.hearthBig,
+          hearthEl: s.screen === 'focus' && !s.hearthBig ? this.hearthEl(296) : null, hearthBigEl: s.screen === 'focus' && s.hearthBig ? this.hearthEl(342) : null,
+          hearthText: (() => { const n = cat0.name, c = n.charCodeAt(n.length - 1) - 0xac00; return n + (c >= 0 && c < 11172 && c % 28 ? '이 ' : '가 ') + HEARTH_TEXT[(this.hs || hearthNew()).cat.act]; })(),
+          openHearth: () => this.setState({ hearthBig: true }), closeHearth: () => this.setState({ hearthBig: false }),
           miniView: s.screen === 'focus' ? (() => { const rows = s.extra ? 6 : 5, hd = this.houseData(rows), cc = crop(cat0, 16); return { rooms: hd.rooms, tx: hd.tx, ty: hd.ty, rowsCss: 'repeat(' + rows + ',16px)', catSize: cc.size, catPos: cc.pos, where: hd.here.name, jump: s.jumping ? 'hopj .7s ease-in-out' : 'bob 2.4s ease-in-out infinite' }; })() : null,
           callCat: () => this.callCat(),
           openRoom: () => this.setState({ house: true, hs: s.catRoom }), closeHouse: () => this.setState({ house: false }),
@@ -1956,7 +2028,7 @@ class Component extends DCLogic {
         toggle: () => this.setState(st => ({ blocked: { ...st.blocked, [a.id]: !st.blocked[a.id] } })) })),
       startFocus: () => this.start(s.dur),
       timeText: String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0'),
-      ringOffset: (766.5 * (1 - prog)).toFixed(1),
+      ringOffset: (584.3 * (1 - prog)).toFixed(1),
       focusMsg: s.toggles.strict ? '' : FOCUS_MSGS[prog < .4 ? 0 : prog < .8 ? 1 : 2],
       showBlocked: s.showBlocked,
       tryBlocked: () => this.setState(st => ({ showBlocked: true, tries: { ...st.tries, ig: st.tries.ig + 1 }, blockedNow: st.blockedNow + 1 })), closeBlocked: () => this.setState({ showBlocked: false }),

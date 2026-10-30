@@ -262,3 +262,24 @@ describe('휴식 주기 · 노래 (디자인 라운드 9~13)', () => {
     expect(getS().singUntil).toBe(0);
   });
 });
+
+describe('불멍 도트 고양이', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { nextAct, frameOf } = require('../src/stage/Hearth');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { FRAMES, PALETTES, runsOf } = require('../src/stage/pixelCat');
+
+  test('모든 그림은 20×14이고, 모든 고양이에 털색이 있다', () => {
+    for (const rows of Object.values(FRAMES) as string[][]) { expect(rows).toHaveLength(14); rows.forEach(r => expect(r).toHaveLength(20)); }
+    for (const id of ['cheese', 'blue', 'calico', 'tux', 'ragdoll', 'siam', 'persian', 'angora']) { expect(PALETTES[id]).toBeTruthy(); expect(runsOf('sit', id).length).toBeGreaterThan(20); }
+  });
+
+  test('동작은 이어지고, 오래 머무르면 잠들었다가 기지개를 켜고 걷는다', () => {
+    let c = { x: 64, dir: 1, act: 'sit', until: 0, tx: 64, t0: 0 }, now = 0;
+    const seen = new Set<string>();
+    let r = 0; const rnd = () => ((r = (r * 9301 + 49297) % 233280) / 233280);
+    for (let i = 0; i < 400; i++) { c = nextAct(c.act === 'walk' ? { ...c, x: c.tx } : c, (now += 1000), rnd); seen.add(c.act); expect(c.x).toBeGreaterThanOrEqual(0); expect(c.x).toBeLessThanOrEqual(120); }
+    for (const a of ['walk', 'sit', 'groom', 'loaf', 'sleep', 'stretch']) expect(seen.has(a)).toBe(true);
+    expect(Object.keys(FRAMES)).toContain(frameOf({ ...c, act: 'walk', t0: 0 }, 300));
+  });
+});
