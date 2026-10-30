@@ -83,7 +83,7 @@ function Root() {
     } else if (s.screen !== 'splash') S({ screen: 'splash' });
     if (blocker.available && !s.apps.some(a => a.pkg)) loadInstalledApps().catch(() => {});
     getS().dailyMail();
-    promptUpdate().catch(() => {});
+    promptUpdate(true).catch(() => {});
   }, [hydrated]);
 
   // 리마인더 알림을 설정에 맞춰 다시 예약하고, 앱으로 돌아올 때 새 날의 출석 우편을 확인한다

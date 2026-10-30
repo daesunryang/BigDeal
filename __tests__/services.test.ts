@@ -33,6 +33,14 @@ describe('앱을 열 때 업데이트 묻기', () => {
     expect(getS().dlg).toEqual({ kind: 'update' });
     expect(getS().update?.tag).toBe('v99.0.0');
   });
+
+  test('최신 버전이면 앱을 열 때 "최신 버전입니다"를 띄운다', async () => {
+    useApp.setState({ dlg: null, screen: 'splash', update: null, toastMsg: '' });
+    (globalThis as any).fetch = jest.fn(async () => ({ ok: true, json: async () => ({ tag_name: 'v0.0.1', html_url: 'page', assets: [] }) }));
+    await promptUpdate(true);
+    expect(getS().toastMsg).toBe('최신 버전입니다');
+    expect(getS().dlg).toBeNull();
+  });
 });
 
 describe('리마인더', () => {

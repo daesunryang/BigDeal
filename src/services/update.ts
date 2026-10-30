@@ -18,13 +18,14 @@ export function pickApk(assets: Asset[], demo: boolean) {
   return apks.find(a => a.name.toLowerCase().includes('demo') === demo) ?? null;
 }
 
+// 새 버전 정보, 최신이면 'latest', 확인하지 못하면 null
 export async function checkUpdate(manual = false) {
   if (Platform.OS === 'web' && !manual) return null;
   try {
     const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, { headers: { Accept: 'application/vnd.github+json' } });
     if (!r.ok) throw new Error(String(r.status));
     const rel = (await r.json()) as Release;
-    if (!isNewer(rel.tag_name, APP_VERSION)) { S({ update: null }); if (manual) getS().toast('최신 버전을 사용 중이에요'); return null; }
+    if (!isNewer(rel.tag_name, APP_VERSION)) { S({ update: null }); if (manual) getS().toast('최신 버전을 사용 중이에요'); return 'latest' as const; }
     // iOS는 APK를 쓸 수 없으니 릴리스 페이지로 보낸다 (거기서 IPA를 받는다)
     const apk = Platform.OS === 'android' ? pickApk(rel.assets, IS_DEMO) : null;
     const info = { tag: rel.tag_name, url: apk?.browser_download_url ?? rel.html_url, page: rel.html_url, notes: (rel.body ?? '').slice(0, 400) };
@@ -36,14 +37,16 @@ export async function checkUpdate(manual = false) {
   }
 }
 
-// 앱을 열 때와 앱으로 돌아올 때(6시간에 한 번) 새 버전을 확인하고, 있으면 바로 업데이트할지 묻는다
+// 앱을 열 때와 앱으로 돌아올 때(6시간에 한 번) 새 버전을 확인하고, 있으면 바로 업데이트할지 묻는다.
+// 앱을 열 때(launch) 최신 버전이면 "최신 버전입니다"를 잠깐 띄운다.
 let lastAsk = 0;
-export async function promptUpdate() {
-  if (Date.now() - lastAsk < 6 * 3600e3) return;
+export async function promptUpdate(launch = false) {
+  if (!launch && Date.now() - lastAsk < 6 * 3600e3) return;
   lastAsk = Date.now();
-  const info = await checkUpdate();
+  const r = await checkUpdate();
   const s = getS();
-  if (info && !s.dlg && s.screen !== 'focus') S({ dlg: { kind: 'update' } });
+  if (r === 'latest') { if (launch) s.toast('최신 버전입니다'); return; }
+  if (r && !s.dlg && s.screen !== 'focus') S({ dlg: { kind: 'update' } });
 }
 
 export function openUpdate() {

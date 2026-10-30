@@ -1189,7 +1189,7 @@ class Component extends DCLogic {
     const dur = Math.max(5, ((h * 60 + m) - now + 1440) % 1440);
     this.setState({ endH: h, endM: m, dur });
   }
-  armSplash() { clearTimeout(this.sp); this.sp = setTimeout(() => { if (this.state.screen === 'splash') this.setState({ screen:'login' }); }, 3600); }
+  armSplash() { clearTimeout(this.sp); this.sp = setTimeout(() => { if (this.state.screen === 'splash') { this.setState({ screen:'login' }); if (this.state.upd) this.setState({ dlg: { kind: 'update' } }); else this.toast('최신 버전입니다'); } }, 3600); }
   componentDidMount() {
     this.armSplash(); this.loadDays(); this.langI = setInterval(() => this.applyLang(), 600);
     this.kd = e => { if (e.key === 'Escape') this.back(); }; window.addEventListener('keydown', this.kd);
@@ -1880,7 +1880,7 @@ class Component extends DCLogic {
             ['로그인 만료', '다시 로그인 화면으로 이동해요', () => this.setState({ dlg: { kind: 'expired' } })],
             ['계정 연결 충돌', '이미 다른 계정에 연결된 경우', () => this.setState({ dlg: { kind: 'conflict' } })],
             ['오프라인 전환', '배너와 결제 제한을 확인해요', () => this.setState(st => ({ offline: !st.offline }))],
-            ['새 버전 안내', '앱을 열 때 업데이트할지 묻고, 메뉴 맨 위에 배너가 떠요 (다시 누르면 꺼짐)', () => this.setState(st => ({ upd: !st.upd, dlg: st.upd ? st.dlg : { kind: 'update' } }))],
+            ['새 버전 안내', '앱을 열 때 업데이트할지 묻고(최신이면 "최신 버전입니다"), 메뉴 맨 위에 배너가 떠요 (다시 누르면 꺼짐)', () => this.setState(st => ({ upd: !st.upd, dlg: st.upd ? st.dlg : { kind: 'update' } }))],
             ['화면 오류 복구', '오류가 나도 앱이 꺼지지 않고 복구 화면을 보여줘요', () => this.setState({ dlg: { kind: 'crash' } })],
           ].map(([label, sub, go]) => ({ label, sub, go })),
           dlgView,
