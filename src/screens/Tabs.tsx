@@ -1,16 +1,47 @@
 import React, { useEffect } from 'react';
 import { Image, Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
-import { ANIMALS, BEH, CATS, DECOR, SONGS, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
+import { ALL_CATS, ANIMALS, BEH, CATS, DECOR, GACHA_CATS, GACHA_COST, GACHA_PITY, SONGS, TIER, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
 import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
 import { S, getS, listOf, useApp } from '../store';
 import { sfx } from '../sfx';
 import { useC } from '../theme';
 import { useScrollMemory } from '../ui/scrollMemory';
+import { PixelCat } from '../ui/PixelCat';
 import { Bar, Btn, CUTOUT, CatFace, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
 
 const pad = { paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18 };
 const back = () => { getS().back(); };
+
+// 고양이 뽑기 상자: 1회 · 5회, 확률과 보장 안내
+function GachaBox() {
+  const C = useC();
+  const s = useApp(st => st);
+  const left = GACHA_PITY - s.gachaPity;
+  const btn = (n: 1 | 5) => {
+    const cost = n === 5 ? GACHA_COST.five : GACHA_COST.one, ok = s.churu >= cost;
+    return (
+      <Btn key={n} onPress={() => getS().gachaPull(n)} accessibilityLabel={'고양이 뽑기 ' + n + '회, 츄르 ' + cost + '개'} style={{ flex: 1, height: 52, borderRadius: 26, backgroundColor: ok ? C.ink : C.disabled, gap: 0 }}>
+        <Txt jua style={{ fontSize: 16, color: C.bg }}>{n + '회 뽑기'}</Txt>
+        <Txt style={{ fontSize: 11, color: C.bg }}>{cost + ' 츄르' + (n === 5 ? ' (10% 할인)' : '')}</Txt>
+      </Btn>
+    );
+  };
+  return (
+    <View style={{ gap: 10, padding: 16, borderRadius: 20, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.chip1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ flexDirection: 'row', marginRight: 2 }}>{GACHA_CATS.filter(c => c.tier === 3).map((c, i) => <View key={c.id} style={{ marginLeft: i ? -10 : 0 }}><PixelCat id={c.id} width={30} height={30} /></View>)}</View>
+        <View style={{ flex: 1 }}>
+          <Txt jua style={{ fontSize: 18 }}>고양이 뽑기</Txt>
+          <Txt style={{ fontSize: 12, color: C.sub }}>{'집중해서 모은 츄르로 뽑기 전용 고양이 ' + GACHA_CATS.length + '종을 만나요'}</Txt>
+        </View>
+        <ChuruBadge n={s.churu} />
+      </View>
+      <View style={{ flexDirection: 'row', gap: 8 }}>{btn(1)}{btn(5)}</View>
+      <Txt style={{ fontSize: 11, lineHeight: 16, color: C.sub }}>{`확률 · 일반 ${TIER[1].rate}% · 희귀 ${TIER[2].rate}% · 전설 ${TIER[3].rate}%\n${left <= 1 ? '다음 뽑기는 희귀 이상 보장!' : `희귀 이상 보장까지 ${left}번`} · 이미 만난 고양이는 츄르로 돌려받아요 (일반 ${TIER[1].refund} · 희귀 ${TIER[2].refund} · 전설 ${TIER[3].refund})`}</Txt>
+    </View>
+  );
+}
 
 // ── 도감 ──
 export function Dex() {
@@ -25,7 +56,7 @@ export function Dex() {
     const items = listOf(k, s.dRoom).map(([id, name]) => { const o = isOwned(k, id); tot++; if (o) own++; return { id, nm: o ? name : '???', sw: k === 'wall' ? WALL[id] : k === 'floor' ? FLOOR[id] : SWATCH[id], op: o ? 1 : 0.25 }; });
     return { k, title: DECOR[k].label, count: items.filter(x => x.op === 1).length + '/' + items.length, items };
   });
-  const count = s.dexTab === 'cat' ? s.owned.length + '/4 만남' : s.dexTab === 'beh' ? s.seenBeh.length + '/7 수집' : s.dexTab === 'song' ? s.seenSongs.length + '/' + SONGS.length + ' 수집' : own + '/' + tot + ' 보유';
+  const count = s.dexTab === 'cat' ? (s.owned.length + (s.plus ? CATS.filter(c => c.plus).length : 0)) + '/' + ALL_CATS.length + ' 만남' : s.dexTab === 'beh' ? s.seenBeh.length + '/7 수집' : s.dexTab === 'song' ? s.seenSongs.length + '/' + SONGS.length + ' 수집' : own + '/' + tot + ' 보유';
   return (
     <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="도감" right={<Txt style={{ fontSize: 14, color: C.sub }}>{count}</Txt>} />
@@ -56,6 +87,26 @@ export function Dex() {
           <Txt jua style={{ fontSize: 17 }}>새로운 고양이 만나기</Txt>
           <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>츄르 30개로 창밖의 고양이를 불러요. 아직 못 만난 고양이만 나와요.</Txt>
           <Primary h={50} label={s.owned.length >= 4 ? '모든 고양이를 만났어요' : s.churu >= 30 ? '츄르 30개로 부르기' : `츄르가 ${30 - s.churu}개 더 필요해요`} bg={s.churu >= 30 && s.owned.length < 4 ? C.ink : C.disabled} onPress={() => getS().pull()} />
+        </View>
+        <GachaBox />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <Txt jua style={{ fontSize: 17 }}>뽑기 고양이</Txt>
+          <Txt style={{ fontSize: 12, color: C.sub }}>{GACHA_CATS.filter(c => s.owned.includes(c.id)).length + '/' + GACHA_CATS.length + ' 만남'}</Txt>
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          {GACHA_CATS.map(c => {
+            const o = s.owned.includes(c.id), t = TIER[c.tier!];
+            return (
+              <Btn key={c.id} onPress={() => (o ? S({ catId: c.id }) : getS().toast('뽑기에서 만날 수 있어요 · ' + t.name + ' 등급'))} accessibilityLabel={(o ? c.name : '아직 못 만난 고양이') + ', ' + t.name}
+                style={{ width: '31%', flexGrow: 1, alignItems: 'stretch', gap: 6, padding: 8, borderRadius: 16, borderWidth: c.id === s.catId ? 2.5 : 1.5, borderColor: c.id === s.catId ? C.ink : C.line, backgroundColor: C.bg }}>
+                <View style={{ aspectRatio: 1, borderRadius: 12, backgroundColor: o ? C.card : C.card2, alignItems: 'center', justifyContent: 'center' }}>
+                  <PixelCat id={c.id} width={64} height={64} dark={!o} opacity={o ? 1 : 0.28} />
+                </View>
+                <Txt jua numberOfLines={1} style={{ fontSize: 12 }}>{o ? c.name : '???'}</Txt>
+                <View style={{ alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 7, backgroundColor: t.color }}><Txt style={{ fontSize: 10, color: '#2B221D' }}>{t.name}</Txt></View>
+              </Btn>
+            );
+          })}
         </View>
       </>}
       {s.dexTab === 'beh' && <>

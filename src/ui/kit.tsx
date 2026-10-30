@@ -5,6 +5,7 @@ import { Cat, Fill, IMG_H, IMG_W, WIN } from '../data';
 import { tr } from '../i18n';
 import { useApp } from '../store';
 import { FONT, useC } from '../theme';
+import { PixelCat } from './PixelCat';
 
 export const CATS_IMG = require('../../assets/img/cats-all.jpg');
 export const CUTOUT: Record<string, number> = {
@@ -113,7 +114,9 @@ export function CatFace({ cat, size, border = 2, round = true, style, dim, bg, s
   const s = size / WIN;
   return (
     <View style={[{ width: size, height: size, borderRadius: round ? size / 2 : 14, overflow: 'hidden', borderWidth: border, borderColor: C.ink, backgroundColor: bg ?? C.bg }, style]}>
-      <Image source={CATS_IMG} style={{ position: 'absolute', width: IMG_W * s, height: IMG_H * s, left: size / 2 - cat.c[0] * s - border, top: size / 2 - cat.c[1] * s - border, opacity: dim ?? 1 }} />
+      {cat.pix
+        ? <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3EADB' }}><PixelCat id={cat.id} width={size * 0.66} height={size * 0.66} opacity={dim ?? 1} /></View>
+        : <Image source={CATS_IMG} style={{ position: 'absolute', width: IMG_W * s, height: IMG_H * s, left: size / 2 - cat.c[0] * s - border, top: size / 2 - cat.c[1] * s - border, opacity: dim ?? 1 }} />}
       {!!shade && <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: `rgba(0,0,0,${shade})` }} />}
     </View>
   );
@@ -125,7 +128,9 @@ export function CatScene({ cat, width, style }: { cat: Cat; width: number; style
   const h = width * 768 / 1376;
   return (
     <View style={[{ width, height: h, overflow: 'hidden', borderWidth: 2, borderColor: C.ink }, style]}>
-      <Image source={CATS_IMG} style={{ position: 'absolute', width: width * 2, height: h * 4, left: -cat.room[0] * width - 2, top: -cat.room[1] * h - 2 }} />
+      {cat.pix
+        ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: h * 0.08, backgroundColor: '#F3EADB' }}><View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: h * 0.3, backgroundColor: '#E2D4BD' }} /><PixelCat id={cat.id} width={h * 0.7} height={h * 0.7} /></View>
+        : <Image source={CATS_IMG} style={{ position: 'absolute', width: width * 2, height: h * 4, left: -cat.room[0] * width - 2, top: -cat.room[1] * h - 2 }} />}
     </View>
   );
 }

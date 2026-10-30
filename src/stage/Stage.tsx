@@ -5,6 +5,7 @@ import { growth } from '../derive';
 import { getS, useApp } from '../store';
 import { Anim, AnimName, EZ } from '../ui/anim';
 import { CUTOUT, FillView, Txt } from '../ui/kit';
+import { PixelCat } from '../ui/PixelCat';
 import { Dims, INK, Sh } from './Shape';
 
 const ROPE: Fill = { t: 'stripesH', a: '#D9B98C', b: '#C29D6E', wa: 4, wb: 2 };
@@ -147,7 +148,9 @@ function CatSprite({ cat, w, H, drag, beh, outfit, onCat }: { cat: Cat; w: numbe
     <Anim name="behin" dur={0.5} loop={false} easing={EZ.out} style={{ position: 'absolute', left: L, top: H - Bt - chh, width: cw, height: chh }}>
       {beh === 'hop' && <View style={{ position: 'absolute', left: '28%', right: '28%', bottom: -4, height: 8, borderRadius: 999, backgroundColor: 'rgba(74,52,40,0.18)' }} />}
       <Anim name={an} dur={du} easing={ez} style={{ position: 'absolute', left: 0, top: 0, width: cw, height: chh, transformOrigin: '50% 100%' } as any}>
-        <Image source={CUTOUT[cat.id]} style={{ position: 'absolute', left: (cw - dw) / 2, top: chh - dh, width: dw, height: dh, opacity: beh === 'nap' || beh === 'sulky' ? 0.94 : 1 }} />
+        {CUTOUT[cat.id]
+          ? <Image source={CUTOUT[cat.id]} style={{ position: 'absolute', left: (cw - dw) / 2, top: chh - dh, width: dw, height: dh, opacity: beh === 'nap' || beh === 'sulky' ? 0.94 : 1 }} />
+          : <View style={{ position: 'absolute', left: (cw - dw) / 2, top: chh - dh * 0.8, width: dw, height: dh * 0.8 }}><PixelCat id={cat.id} frame={beh === 'nap' || beh === 'sulky' ? 'loaf' : 'sit'} width={dw} height={dh * 0.8} /></View>}
         <Outfit o={outfit} cid={cat.id} d={[cw, chh]} />
       </Anim>
       {beh === 'nap' && [0, 1, 2].map(i => <Fx key={'z' + i} ch="z" size={fs + i * 3} anim="zfloat" dur={2.4} delay={i * 0.8} style={{ right: '8%', top: '4%' }} />)}

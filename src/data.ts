@@ -8,7 +8,8 @@ export type Fill =
   | { t: 'grid'; c: string; bg: string; size: number; w: number }
   | { t: 'diag'; a: string; b: string; wa: number; wb: number; angle: number };
 
-export type Cat = { id: string; name: string; room: [number, number]; c: [number, number]; desc: string; plus?: boolean };
+// tier: 뽑기 전용 고양이의 등급 (1 일반 · 2 희귀 · 3 전설). 뽑기 고양이는 아직 일러스트가 없어 도트 그림(pixelCat.ts)으로 보여준다(pix).
+export type Cat = { id: string; name: string; room: [number, number]; c: [number, number]; desc: string; plus?: boolean; tier?: 1 | 2 | 3; pix?: boolean };
 
 export const CATS: Cat[] = [
   { id: 'cheese', name: '치즈태비', room: [0, 0], c: [727, 440], desc: '햇살을 좋아하는 첫 번째 친구.' },
@@ -20,7 +21,29 @@ export const CATS: Cat[] = [
   { id: 'persian', name: '페르시안', room: [0, 3], c: [745, 2720], plus: true, desc: '느긋하게 털을 고르는 고양이.' },
   { id: 'angora', name: '터키시 앙고라', room: [1, 3], c: [2173, 2693], plus: true, desc: '서로 다른 눈빛이 매력인 고양이.' },
 ];
-export const catById = (id: string) => CATS.find(c => c.id === id) ?? CATS[0];
+// 뽑기 전용 고양이 (츄르로 뽑기). 사진 속 품종 중 기존 고양이·서로와 생김새가 겹치지 않는 14종.
+const g = (id: string, name: string, tier: 1 | 2 | 3, desc: string): Cat => ({ id, name, tier, desc, pix: true, room: [0, 0], c: [0, 0] });
+export const GACHA_CATS: Cat[] = [
+  g('bombay', '봄베이', 1, '흑표범처럼 반짝이는 까만 고양이.'),
+  g('singapura', '싱가푸라', 1, '작은 몸에 큰 눈, 세상에서 가장 작은 고양이 중 하나.'),
+  g('bsh', '브리티시 쇼트헤어', 1, '동글동글 볼살의 느긋한 신사.'),
+  g('abyssinian', '아비시니안', 1, '날렵한 몸매의 호기심 많은 탐험가.'),
+  g('ash', '아메리칸 숏헤어', 1, '은빛 소용돌이 무늬의 명랑한 친구.'),
+  g('devon', '데본 렉스', 2, '커다란 귀와 곱슬 털의 장난꾸러기.'),
+  g('mau', '이집션 마우', 2, '은빛 점박이 무늬의 날쌘 고양이.'),
+  g('curl', '아메리칸 컬', 2, '뒤로 말린 귀가 귀여운 고양이.'),
+  g('mainecoon', '메인쿤', 2, '커다란 몸집의 다정한 숲속 거인.'),
+  g('fold', '스코티시 폴드', 2, '접힌 귀로 동그랗게 바라보는 고양이.'),
+  g('norwegian', '노르웨이 숲', 2, '풍성한 털옷을 입은 북쪽 숲의 고양이.'),
+  g('toyger', '토이거', 3, '호랑이 줄무늬를 두른 작은 맹수.'),
+  g('sphynx', '스핑크스', 3, '털 없이 따뜻한 피부의 신비한 고양이.'),
+  g('bengal', '벵갈', 3, '표범 무늬를 입은 활발한 고양이.'),
+];
+export const ALL_CATS = [...CATS, ...GACHA_CATS];
+export const catById = (id: string) => ALL_CATS.find(c => c.id === id) ?? CATS[0];
+export const TIER = { 1: { name: '일반', color: '#8DBF93', rate: 65, refund: 10 }, 2: { name: '희귀', color: '#7E9CC8', rate: 28, refund: 20 }, 3: { name: '전설', color: '#E59A4C', rate: 7, refund: 40 } } as const;
+export const GACHA_COST = { one: 40, five: 180 };
+export const GACHA_PITY = 10; // 10번째 뽑기는 희귀 이상
 export const IMG_W = 2752, IMG_H = 3072, WIN = 560;
 
 export type AppInfo = { id: string; name: string; letter: string; color: string; usage: string; pkg?: string; icon?: string };

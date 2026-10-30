@@ -20,6 +20,21 @@ export const PALETTES: Record<string, Palette> = {
   siam: pal('#F1DEC8', { Q: '#4A3B3A', E: '#5B8FC9', N: '#8A6A66' }),
   persian: pal('#DCD0C7', { S: '#C7B8AD', W: '#F4E9DF' }),
   angora: pal('#F6ECE0', { W: '#FFFAF3', E: '#C9A24A' }),
+  // 뽑기 고양이 (보내준 일러스트를 보고 고른 색)
+  bombay: pal('#2E2729', { E: '#E0A23A', N: '#6A5050' }),
+  singapura: pal('#A38C72', { S: '#7A6650', W: '#E8DCC8', E: '#9DB84E' }),
+  bsh: pal('#7C8A9C', { S: '#6E7C8E', W: '#8A97A8', E: '#E0882A', N: '#B48E92' }),
+  abyssinian: pal('#B86A30', { S: '#8A4A22', W: '#DDA574', E: '#D9B03A' }),
+  ash: pal('#C9C9C7', { S: '#3E3A3A', W: '#EEEEEC', E: '#6A5A44' }),
+  devon: pal('#C98A55', { S: '#7A4A2A', W: '#F3E3CF', E: '#B8B04A' }),
+  mau: pal('#CBC8C2', { S: '#4A4446', P: '#4A4446', W: '#E8E5DF', E: '#9ACB5A' }),
+  curl: pal('#E2D3BC', { S: '#9C8268', W: '#F7EFE3', E: '#6A5A44' }),
+  mainecoon: pal('#7A6450', { S: '#3E3026', W: '#D9CBB5', E: '#D9B84A' }),
+  fold: pal('#F2E4CE', { S: '#E2CBA8', W: '#FBF4EA', E: '#4A3428' }),
+  norwegian: pal('#8A7460', { S: '#4A3A2E', W: '#F3EDE3', E: '#9AAE6A' }),
+  toyger: pal('#E08A3A', { S: '#3A2418', W: '#F5D9B5', E: '#9AAE4A' }),
+  sphynx: pal('#E9C4C0', { S: '#DDB2AE', W: '#F2D6D2', E: '#9FB0BC', N: '#C98A8A' }),
+  bengal: pal('#D9A04A', { S: '#5A3418', P: '#6A3E1E', W: '#F2DDB0', E: '#9AB04A' }),
 };
 export const paletteOf = (id: string) => PALETTES[id] || PALETTES.cheese;
 
@@ -204,13 +219,29 @@ export const FRAMES: Record<string, string[]> = {
 };
 export const SPRITE_W = 20, SPRITE_H = 14;
 
+// 귀 모양이 특별한 품종: 스코티시 폴드는 귀 끝이 접혀 있고, 아메리칸 컬은 귀 끝이 바깥으로 말려 있다
+const EAR: Record<string, 'fold' | 'curl'> = { fold: 'fold', curl: 'curl' };
+function earMod(rows: string[], kind?: 'fold' | 'curl') {
+  if (!kind) return rows;
+  const top = rows.findIndex(r => r.trim().replace(/\./g, '') !== '');
+  if (top < 0) return rows;
+  const out = [...rows];
+  if (kind === 'fold') out[top] = '.'.repeat(out[top].length); // 귀 끝을 지워 납작하게
+  else {
+    // 귀 끝 두 점을 한 칸씩 바깥으로
+    const xs = [...out[top]].map((c, i) => (c !== '.' ? i : -1)).filter(i => i >= 0);
+    if (xs.length === 2) { const r = [...'.'.repeat(out[top].length)]; r[Math.max(0, xs[0] - 1)] = 'O'; r[Math.min(r.length - 1, xs[1] + 1)] = 'O'; out[top] = r.join(''); }
+  }
+  return out;
+}
+
 // 같은 색이 이어지는 칸을 한 줄로 묶어 그리기 비용을 줄인다: [x, y, 길이, 색]
 export type Run = [number, number, number, string];
 const cache: Record<string, Run[]> = {};
 export function runsOf(frame: string, id: string): Run[] {
   const key = frame + '|' + id;
   if (cache[key]) return cache[key];
-  const p = paletteOf(id), rows = FRAMES[frame] || FRAMES.sit, out: Run[] = [];
+  const p = paletteOf(id), rows = earMod(FRAMES[frame] || FRAMES.sit, EAR[id]), out: Run[] = [];
   rows.forEach((row, y) => {
     let x = 0;
     while (x < row.length) {

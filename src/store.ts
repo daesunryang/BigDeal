@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { IS_DEMO } from './config';
 import {
   APPS, CATS, DECOR, DecorKind, FRIENDS, MAILS, Mail, ROOMS, ROOM_DEF, SHN, ANIMALS, BEH, BehId,
-  catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs,
+  catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
 } from './data';
 import type { Lang } from './i18n';
 import { markBack, scrollKey } from './ui/scrollMemory';
@@ -39,6 +39,8 @@ export type State = {
   // 노래: singUntil까지 부르는 중, seenSongs = 수집한 노래(SONGS 번호)
   singUntil: number; songText: string; seenSongs: number[]; songBonus: { basic: boolean; cat: boolean };
   playingSong: number | null; // 도감에서 ▶ 듣기로 재생 중인 노래
+  // 고양이 뽑기: gachaPity = 희귀 이상이 안 나온 연속 횟수, gachaRes = 방금 뽑은 결과(결과 창)
+  gachaPity: number; gachaTotal: number; gachaRes: null | { id: string; tier: 1 | 2 | 3; dup: boolean }[];
   // 방 · 집
   decor: Decor; ownedDecor: string[]; items: string[]; equipped: string[]; pos: Record<string, [number, number]>;
   decorCat: DecorKind; preview: null | { kind: DecorKind; id: string }; dragSel: string | null;
@@ -82,8 +84,8 @@ function initial(): State {
     remain: 0, total: 0, endAt: 0, pauseAt: 0, fast: demo,
     blocked: { ig: true, yt: true, tt: true, wt: true, kk: false, gm: false }, apps: APPS,
     sessions: [], last: null, showBlocked: false, holding: false, failPen: 3, rest: 0, blockedNow: 0, blockedApp: '인스타그램',
-    churu: demo ? 24 : 0, earnedTotal: demo ? 44 : 0, catId: 'cheese', owned: ['cheese'], aff: { cheese: demo ? 34 : 0 }, sulky: false,
-    msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false }, playingSong: null,
+    churu: demo ? 124 : 0, earnedTotal: demo ? 144 : 0, catId: 'cheese', owned: ['cheese'], aff: { cheese: demo ? 34 : 0 }, sulky: false,
+    msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false }, playingSong: null, gachaPity: 0, gachaTotal: 0, gachaRes: null,
     decor: { wall: 'cream', floor: 'wood', struct: 'basic', outfit: 'none' }, ownedDecor: ['cream', 'wood', 'basic', 'none'], items: ['rug'], equipped: ['rug'], pos: {},
     decorCat: 'wall', preview: null, dragSel: null,
     house: false, hs: 'liv', rooms: ['liv', 'nap'], catRoom: 'liv', jumping: false, pinUntil: 0, rstore: {}, dRoom: 'liv', roomNames: {}, extra: false, houseHint: true, renaming: false, nameDraft: '',
@@ -104,13 +106,13 @@ function initial(): State {
 }
 
 // 저장하지 않는 화면 상태
-const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midRest', 'singUntil', 'songText', 'playingSong', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
+const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midRest', 'singUntil', 'songText', 'playingSong', 'gachaRes', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
   'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gacha', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
 
 // 동기화(백업)에 올릴 게임 데이터
 export const SYNC_KEYS: (keyof State)[] = ['user', 'linked', 'churu', 'earnedTotal', 'catId', 'owned', 'aff', 'sulky', 'seenBeh', 'decor', 'ownedDecor', 'items', 'equipped', 'pos', 'rooms', 'catRoom', 'rstore', 'dRoom', 'roomNames', 'extra',
   'donated', 'pick', 'sponsorships', 'mails', 'mailRead', 'claimed', 'plus', 'plusKind', 'toggles', 'themeMode', 'lang', 'big', 'cb', 'haptic', 'goal', 'goalNotify', 'remind', 'avatarCat', 'ledger', 'friends', 'myCode', 'tries', 'att', 'fdays',
-  'sessions', 'blocked', 'tag', 'restOn', 'restEvery', 'restLen', 'seenSongs', 'songBonus', 'coachSeen', 'houseHint', 'mailDay'];
+  'sessions', 'blocked', 'tag', 'restOn', 'restEvery', 'restLen', 'seenSongs', 'songBonus', 'gachaPity', 'gachaTotal', 'coachSeen', 'houseHint', 'mailDay'];
 
 type Actions = {
   set: (p: Partial<State> | ((s: State) => Partial<State> | null)) => void;
@@ -141,6 +143,7 @@ type Actions = {
   claimMail: (id: number) => void;
   claimAll: () => void;
   pull: () => void;
+  gachaPull: (n: 1 | 5, rnd?: () => number) => void;
   back: () => boolean;
   reset: () => void;
   afterLogin: (u: User, linked: Record<string, boolean>) => void;
@@ -350,12 +353,35 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     set({ churu: s.churu - 30, owned: [...s.owned, g.id], gacha: g.id });
   },
 
+  // 고양이 뽑기: 1회 40 츄르, 5회 180 츄르. 일반 65% · 희귀 28% · 전설 7%, 10번째마다 희귀 이상 보장.
+  // 이미 만난 고양이가 나오면 등급에 따라 츄르를 돌려준다(일반 10 · 희귀 20 · 전설 40).
+  gachaPull: (n, rnd = Math.random) => {
+    const st = get(), cost = n === 5 ? GACHA_COST.five : GACHA_COST.one;
+    if (st.churu < cost) { get().toast('츄르가 ' + (cost - st.churu) + '개 더 필요해요 · 집중하면 모을 수 있어요'); return; }
+    let pity = st.gachaPity, refund = 0;
+    const owned = [...st.owned], res: { id: string; tier: 1 | 2 | 3; dup: boolean }[] = [];
+    for (let i = 0; i < n; i++) {
+      pity++;
+      const r = rnd() * 100;
+      let tier: 1 | 2 | 3 = r < TIER[3].rate ? 3 : r < TIER[3].rate + TIER[2].rate ? 2 : 1;
+      if (pity >= GACHA_PITY && tier < 2) tier = 2;
+      if (tier >= 2) pity = 0;
+      const pool = GACHA_CATS.filter(c => c.tier === tier), c = pool[Math.floor(rnd() * pool.length) % pool.length];
+      const dup = owned.includes(c.id);
+      if (dup) refund += TIER[tier].refund; else owned.push(c.id);
+      res.push({ id: c.id, tier, dup });
+    }
+    get().log('고양이 뽑기 ' + n + '회', -cost); if (refund) get().log('이미 만난 고양이 · 츄르 돌려받기', refund);
+    sfx('coin');
+    set({ churu: st.churu - cost + refund, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
+  },
+
   // Android 뒤로가기 · 순서: 팝업 → 시트 → 하위 화면 → 탭 → 홈 → "한 번 더 누르면 종료". false를 돌려주면 앱을 닫는다.
   back: () => {
     const s = get(), S = (p: Partial<State>) => { set(p); return true; };
     if (s.dlg) { if (['bye', 'expired'].includes(s.dlg.kind)) return true; return S({ dlg: null }); }
     if (s.pay) return S({ pay: null }); if (s.rcpt) return S({ rcpt: null }); if (s.cert) return S({ cert: null });
-    if (s.ad != null) return S({ ad: null }); if (s.share) return S({ share: false }); if (s.gacha) return S({ gacha: null });
+    if (s.ad != null) return S({ ad: null }); if (s.share) return S({ share: false }); if (s.gacha) return S({ gacha: null }); if (s.gachaRes) return S({ gachaRes: null });
     if (s.wheel) return S({ wheel: false });
     if (s.sheet) return S({ sheet: false }); if (s.acct) return S({ acct: false }); if (s.house) return S({ house: false });
     if (s.showBlocked) return S({ showBlocked: false });

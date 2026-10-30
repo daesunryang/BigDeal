@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, TextInput, View } from 'react-native';
 import { scrollKey, useScrollMemory } from '../ui/scrollMemory';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
-import { CATS, DOCS, FAQS, MOODS, NOTICES, OSS, PARTNER_ROWS, PG, PLAT, PLUS_PLANS, catById, isoDay, streakOf } from '../data';
+import { ALL_CATS, CATS, DOCS, FAQS, MOODS, NOTICES, OSS, PARTNER_ROWS, PG, PLAT, PLUS_PLANS, catById, isoDay, streakOf } from '../data';
 import { affOf, badges, dkg, goalDays, recentDone, gotBadges, growth, monthHeat, todayMin, weekLabels, weekVals } from '../derive';
 import { AuthError, authEnabled, linkEmail, linkGoogle, logOut } from '../services/auth';
 import { blocker } from '../services/blocker';
@@ -42,7 +42,7 @@ function MenuRoot() {
     ['내 활동', [
       { label: '냥집중 Plus', value: s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', onPress: page(PG.plus), color: '#C9772F' },
       { label: '집중 기록', onPress: go('stats') }, { label: '상점 · 꾸미기', value: s.churu + ' 츄르', onPress: go('shop') },
-      { label: '고양이 도감', value: (s.owned.length + (s.plus ? 4 : 0)) + '/8', onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/' + badges(s).length * 4, onPress: page('업적 · 배지') },
+      { label: '고양이 도감', value: (s.owned.length + (s.plus ? CATS.filter(c => c.plus).length : 0)) + '/' + ALL_CATS.length, onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/' + badges(s).length * 4, onPress: page('업적 · 배지') },
       { label: '출석 체크', value: streakOf(s.att) + '일', onPress: page(PG.attend) }, { label: '주간 리포트 · 월간 회고', onPress: page(PG.report) }, { label: '친구와 비교', onPress: page(PG.friends) },
       { label: '고양이 성장', value: growth(s).name, onPress: page(PG.growth) }, { label: '츄르 내역', onPress: page(PG.ledger) }]],
     ['후원', [{ label: '후원 현황', value: dkg(s) + 'kg 전달', onPress: go('donate') }, { label: '기부 영수증 · 증명서', onPress: () => S({ tab: 'donate', donTab: 'mine' }) }, { label: '파트너 단체 소개', onPress: page(PG.partner) }]],

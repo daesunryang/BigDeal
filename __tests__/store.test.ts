@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { reward, isoDay, streakOf, growthOf } from '../src/data';
+import { GACHA_CATS, GACHA_COST, reward, isoDay, streakOf, growthOf } from '../src/data';
 import { clearNav, getS, switchTab, useApp } from '../src/store';
 
 jest.useFakeTimers();
@@ -297,5 +297,47 @@ describe('노래 듣기 · 중지', () => {
     getS().sing(1);
     jest.advanceTimersByTime(10000);
     expect(getS().playingSong).toBeNull(); // 곡이 끝나면 버튼이 ▶ 듣기로 돌아온다
+  });
+});
+
+describe('고양이 뽑기', () => {
+  beforeEach(fresh);
+  // 0~1 값을 차례로 돌려주는 가짜 난수
+  const seq = (...v: number[]) => { let i = 0; return () => v[i++ % v.length]; };
+  test('츄르가 모자라면 뽑지 않는다', () => {
+    useApp.setState({ churu: GACHA_COST.one - 1 });
+    getS().gachaPull(1);
+    expect(getS().churu).toBe(GACHA_COST.one - 1);
+    expect(getS().gachaRes).toBeNull();
+  });
+  test('1회 뽑기는 츄르를 쓰고 뽑기 전용 고양이를 데려온다', () => {
+    useApp.setState({ churu: 100 });
+    getS().gachaPull(1, seq(0.9, 0)); // 일반 등급, 첫 고양이
+    const r = getS().gachaRes!;
+    expect(r).toHaveLength(1);
+    expect(r[0]).toEqual({ id: GACHA_CATS.filter(c => c.tier === 1)[0].id, tier: 1, dup: false });
+    expect(getS().owned).toContain(r[0].id);
+    expect(getS().churu).toBe(100 - GACHA_COST.one);
+  });
+  test('이미 만난 고양이는 등급만큼 츄르를 돌려준다', () => {
+    const id = GACHA_CATS.filter(c => c.tier === 1)[0].id;
+    useApp.setState({ churu: 100, owned: [...getS().owned, id] });
+    getS().gachaPull(1, seq(0.9, 0));
+    expect(getS().gachaRes![0].dup).toBe(true);
+    expect(getS().churu).toBe(100 - GACHA_COST.one + 10);
+  });
+  test('10번째 뽑기는 희귀 이상이 나온다', () => {
+    useApp.setState({ churu: 1000, gachaPity: 9 });
+    getS().gachaPull(1, seq(0.99, 0));
+    expect(getS().gachaRes![0].tier).toBe(2);
+    expect(getS().gachaPity).toBe(0);
+  });
+  test('5회 뽑기는 180 츄르에 다섯 마리', () => {
+    useApp.setState({ churu: 200 });
+    getS().gachaPull(5, seq(0.9, 0.1, 0.9, 0.3, 0.9, 0.5, 0.9, 0.7, 0.9, 0.9));
+    expect(getS().gachaRes).toHaveLength(5);
+    expect(getS().gachaTotal).toBe(5);
+    expect(getS().back()).toBe(true);
+    expect(getS().gachaRes).toBeNull();
   });
 });

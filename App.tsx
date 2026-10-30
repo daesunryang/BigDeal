@@ -14,7 +14,7 @@ import { Decor } from './src/screens/Decor';
 import { FocusSettings, Home } from './src/screens/Home';
 import { Menu } from './src/screens/Menu';
 import { Nav } from './src/screens/Nav';
-import { AdView, AppSheet, Cert, Coach, Dialog, Gacha, HouseModal, PaySheet, Receipt, ShareCard, Toast, loadInstalledApps } from './src/screens/Overlays';
+import { AdView, AppSheet, Cert, Coach, Dialog, Gacha, GachaResult, HouseModal, PaySheet, Receipt, ShareCard, Toast, loadInstalledApps } from './src/screens/Overlays';
 import { Done, Fail, Focus, Rest } from './src/screens/Session';
 import { Dex, Donate, Mailbox, Shelter, Shop, Stats } from './src/screens/Tabs';
 import { coachRefs } from './src/screens/coach';
@@ -56,7 +56,7 @@ function Root() {
   const C = useC(), dark = useDark(), ins = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const screen = useApp(s => s.screen), tab = useApp(s => s.tab), offline = useApp(s => s.offline), coachN = useApp(s => s.coach);
-  const ov = useApp(useShallow(s => ({ sheet: s.sheet, house: s.house, pay: !!s.pay, rcpt: !!s.rcpt, ad: s.ad != null, dlg: !!s.dlg, coach: s.coach >= 0, share: s.share && !!s.last, cert: s.cert != null, gacha: !!s.gacha, acct: s.acct, wheel: s.wheel })));
+  const ov = useApp(useShallow(s => ({ sheet: s.sheet, house: s.house, pay: !!s.pay, rcpt: !!s.rcpt, ad: s.ad != null, dlg: !!s.dlg, coach: s.coach >= 0, share: s.share && !!s.last, cert: s.cert != null, gacha: !!s.gacha, gachaRes: !!s.gachaRes, acct: s.acct, wheel: s.wheel })));
   const [hydrated, setHydrated] = useState(useApp.persist.hasHydrated());
   usePermSync();
 
@@ -146,6 +146,7 @@ function Root() {
         {ov.acct && <AccountPicker />}
         {ov.sheet && <AppSheet />}
         {ov.gacha && <Gacha width={width} />}
+        {ov.gachaRes && <GachaResult />}
         {ov.cert && <Cert />}
         {ov.pay && <PaySheet />}
         {ov.rcpt && <Receipt />}
