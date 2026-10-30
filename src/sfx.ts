@@ -21,9 +21,16 @@ export function initSfx() {
   hooks.sfx = n => sfx(n);
 }
 
+// 노래는 한 번에 한 곡만: 새 곡을 틀거나 'songstop'이면 재생 중인 노래를 멈춘다
+function stopSongs(except?: string) {
+  for (const k of Object.keys(players)) if (k.startsWith('song') && k !== except) { try { players[k].pause(); players[k].seekTo(0); } catch {} }
+}
+
 export function sfx(n: string, force = false) {
   const st = getS();
+  if (n === 'songstop') { stopSongs(); return; }
   if (!force && !st.toggles.sound) return;
+  if (n.startsWith('song')) stopSongs(n);
   try { const p = players[n]; if (p) { p.seekTo(0); p.play(); } } catch {}
   if (st.haptic && Platform.OS !== 'web' && !n.startsWith('song')) Vibration.vibrate(VIB[n] || [0, 10]);
 }

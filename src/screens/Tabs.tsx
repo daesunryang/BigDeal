@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Image, Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
 import { ANIMALS, BEH, CATS, DECOR, SONGS, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
@@ -15,6 +15,8 @@ const back = () => { getS().back(); };
 // ── 도감 ──
 export function Dex() {
   const sm = useScrollMemory('dex');
+  // 도감을 떠나면 듣던 노래를 멈춘다
+  useEffect(() => () => { if (getS().playingSong != null) getS().stopSong(); }, []);
   const C = useC();
   const s = useApp(st => st);
   const isOwned = (k: string, id: string) => (DECOR as any)[k].single ? s.ownedDecor.includes(id) : s.items.includes(id);
@@ -77,7 +79,7 @@ export function Dex() {
               <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, borderWidth: 1.5, borderColor: on ? C.ink : C.line, backgroundColor: C.bg }}>
                 <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: on ? (cc ? C.chip1 : C.mint) : C.card2, alignItems: 'center', justifyContent: 'center' }}><Txt jua style={{ fontSize: 20 }}>{on ? (cc ? '♬' : '♪') : '?'}</Txt></View>
                 <View style={{ flex: 1, minWidth: 0 }}><Txt jua style={{ fontSize: 15 }}>{(on ? x.name : '???') + ' · ' + tag}</Txt><Txt style={{ fontSize: 12, color: C.sub }}>{lyric}</Txt></View>
-                {on && <Btn onPress={() => getS().sing(i)} accessibilityLabel={x.name + ' 듣기'} style={{ height: 34, paddingHorizontal: 12, borderRadius: 17, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.chip1 }}><Txt jua style={{ fontSize: 13 }}>▶ 듣기</Txt></Btn>}
+                {on && <Btn onPress={() => getS().sing(i)} accessibilityLabel={x.name + (s.playingSong === i ? ' 중지' : ' 듣기')} style={{ height: 34, minWidth: 74, paddingHorizontal: 12, borderRadius: 17, borderWidth: 1.5, borderColor: C.ink, backgroundColor: s.playingSong === i ? C.ink : C.chip1 }}><Txt jua style={{ fontSize: 13, color: s.playingSong === i ? C.bg : C.ink }}>{s.playingSong === i ? '■ 중지' : '▶ 듣기'}</Txt></Btn>}
               </View>
             );
           })}

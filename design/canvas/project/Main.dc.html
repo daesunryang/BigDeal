@@ -76,7 +76,7 @@ button{font-family:inherit;color:inherit}
     <div style="font:400 15px 'Jua',sans-serif">Android 우선 · iOS 확장</div>
     <div>Android: UsageStats + 다른 앱 위에 표시(오버레이)로 차단. Material 3 하단 내비, 시스템 뒤로가기 대응.</div>
     <div>iOS: Screen Time(FamilyControls) 권한, 차단 화면은 Shield 확장으로 대체. 레이아웃은 동일, 상태바·홈 인디케이터만 교체.</div>
-    <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.3.0 반영</div>
+    <div style="font:400 15px 'Jua',sans-serif">실제 앱 v1.3.1 반영</div>
     <div>뒤로가기는 바로 전 화면으로 (탭·메뉴 하위 화면·방 꾸미기 기록). 앱 정보의 업데이트 확인, 새 버전 안내 배너, 화면 오류 복구 화면. 메뉴 → 데모 상황에서 확인해요.</div>
     <div style="color:var(--sub)">Tweaks: 플랫폼 전환, 홈 레이아웃 3종(방 카드 / 풀블리드 / 원형), 타이머 레이아웃 3종(링 / 방 / 나이트), 빠른 타이머.</div>
   </div>
@@ -302,7 +302,7 @@ button{font-family:inherit;color:inherit}
         <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;border:1.5px solid {{ sg.border }};background:var(--bg)">
           <div style="width:40px;height:40px;border-radius:12px;background:{{ sg.bg }};display:flex;align-items:center;justify-content:center;font:400 20px 'Jua',sans-serif;flex:none" data-keep="1">{{ sg.g }}</div>
           <div style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="font:400 15px 'Jua',sans-serif">{{ sg.name }}</span><span style="font-size:12px;color:var(--sub)">{{ sg.lyric }}</span></div>
-          <sc-if value="{{ sg.on }}"><button onClick="{{ sg.play }}" style="height:34px;padding:0 12px;border-radius:17px;border:1.5px solid var(--ink);background:var(--chip1);color:var(--ink);font:400 13px 'Jua',sans-serif;cursor:pointer;flex:none">▶ 듣기</button></sc-if>
+          <sc-if value="{{ sg.on }}"><button onClick="{{ sg.play }}" style="height:34px;min-width:74px;padding:0 12px;border-radius:17px;border:1.5px solid var(--ink);background:{{ sg.btnBg }};color:{{ sg.btnFg }};font:400 13px 'Jua',sans-serif;cursor:pointer;flex:none">{{ sg.btn }}</button></sc-if>
         </div>
       </sc-for>
     </div>
@@ -618,7 +618,7 @@ button{font-family:inherit;color:inherit}
       <sc-for list="{{ docSections }}" as="ds" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:6px"><div style="font:400 15px 'Jua',sans-serif">{{ ds.t }}</div><div style="font-size:13px;line-height:1.65;color:var(--body);text-wrap:pretty">{{ ds.b }}</div></div></sc-for>
       <div style="font-size:11px;color:var(--mute)">시행일 2026년 10월 20일</div></div></sc-if>
     <sc-if value="{{ pgAbout }}"><div style="display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.aboutSize }};background-position:{{ cat.aboutPos }}"></div><div style="font:400 26px 'Jua',sans-serif">냥집중</div><div style="font-size:13px;color:var(--sub)">버전 1.3.0 (빌드 6)</div><sc-if value="{{ updOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;padding:3px 10px;border-radius:10px;background:var(--mint)">최신 버전을 사용 중이에요</span></sc-if><sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="font-size:12px;padding:5px 12px;border-radius:12px;border:0;background:#F6D58E;color:#4A3428;cursor:pointer">새 버전 v1.2.0 받기 ›</button></sc-if><button onClick="{{ checkUpd }}" style="min-height:44px;padding:0 12px;border:0;background:none;font-size:13px;color:var(--sub);text-decoration:underline;cursor:pointer">업데이트 확인</button></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0"><div style="width:96px;height:96px;border-radius:50%;border:2px solid var(--ink);background-image:var(--ca);background-size:{{ cat.aboutSize }};background-position:{{ cat.aboutPos }}"></div><div style="font:400 26px 'Jua',sans-serif">냥집중</div><div style="font-size:13px;color:var(--sub)">버전 1.3.1 (빌드 7)</div><sc-if value="{{ updOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;padding:3px 10px;border-radius:10px;background:var(--mint)">최신 버전을 사용 중이에요</span></sc-if><sc-if value="{{ upd }}"><button onClick="{{ getUpd }}" style="font-size:12px;padding:5px 12px;border-radius:12px;border:0;background:#F6D58E;color:#4A3428;cursor:pointer">새 버전 v1.2.0 받기 ›</button></sc-if><button onClick="{{ checkUpd }}" style="min-height:44px;padding:0 12px;border:0;background:none;font-size:13px;color:var(--sub);text-decoration:underline;cursor:pointer">업데이트 확인</button></div>
       <div style="border-radius:18px;background:var(--card);overflow:hidden;display:flex;flex-direction:column"><sc-for list="{{ aboutRows }}" as="ar"><button onClick="{{ ar.go }}" style="display:flex;align-items:center;min-height:50px;padding:0 14px;border:none;border-top:{{ ar.divider }};background:none;cursor:pointer;text-align:left"><span style="flex:1;font-size:15px">{{ ar.label }}</span><span style="font-size:16px;color:var(--mute)">›</span></button></sc-for></div>
       <div style="font-size:11px;line-height:1.6;color:var(--mute);text-align:center">© 2026 냥집중 · 고양이 일러스트 © 냥집중</div></div></sc-if>
     <sc-if value="{{ pgLang }}"><div style="display:flex;flex-direction:column;gap:12px">
@@ -1215,7 +1215,7 @@ class Component extends DCLogic {
     aff:{cheese:34}, sulky:false, pick:0, items:['rug'], equipped:['rug'],
     seenBeh:['idle','nap'], dexTab:'cat', donTab:'give', sAnimal:'a0', sMode:'churu', sAmt:1, sponsorships:[], cert:null, tag:'공부', rest:0, holding:false, failPen:3, earnedTotal:44,
     openNotice:0, openFaq:null, inq:{ cat:'기능 제안', text:'', sent:false }, lang:'한국어', menuSec:0, sysDark:false,
-    goal:60, restOn:true, restEvery:25, restLen:5, singUntil:0, seenSongs:[0], songBonus:{ basic:false, cat:false }, goalHit:false, goalNotify:true, attendDone:[1,1,1,0,0,0,0], attendToday:3, remind:{ on:true, time:'21:00', days:[1,1,1,1,1,0,0] }, reportTab:'week', nick:null, avatarCat:null,
+    goal:60, restOn:true, restEvery:25, restLen:5, singUntil:0, seenSongs:[0], playingSong:null, songBonus:{ basic:false, cat:false }, goalHit:false, goalNotify:true, attendDone:[1,1,1,0,0,0,0], attendToday:3, remind:{ on:true, time:'21:00', days:[1,1,1,1,1,0,0] }, reportTab:'week', nick:null, avatarCat:null,
     wd:{ reason:'', agree:false }, bk:{ auto:true, wifi:true, last:'방금 전', busy:false }, offline:false, upd:false, big:false, cb:false, haptic:true, openOss:null,
     ledger:[{ l:'집중 50분 완료', a:20, d:'10.27' }, { l:'출석 보상', a:8, d:'10.26' }, { l:'털실 장난감 구매', a:-12, d:'10.25' }, { l:'집중 25분 완료', a:10, d:'10.24' }, { l:'웰컴 선물', a:20, d:'10.20' }],
     house:false, hs:'liv', rooms:['liv','nap'], catRoom:'liv', jumping:false, pinUntil:0, rstore:{}, dRoom:'liv', roomNames:{}, extra:false, houseHint:true, renaming:false, nameDraft:'', themeMode:null, friends:FRIENDS, friendCode:'', friendErr:'', tries:{ ig:7, yt:4, tt:3, kk:2 }, share:false, att:[], fdays:[], blockedNow:0, coach:-1, coachRect:null, coachSeen:false, adLeft:3, ad:null, pay:null, rcpt:null, shIdx:0, dlg:null, fedUntil:0, toastMsg:'' };
@@ -1299,7 +1299,12 @@ class Component extends DCLogic {
     if (c.act === 'sleep') [0, 1.5].forEach(o => { const k = ((t + o) % 3) / 3, op = k < 0.15 ? k / 0.15 : 1 - (k - 0.15) / 0.85, zx = Math.round(c.x + (c.dir > 0 ? 5 : -8) + k * 4), zy = Math.round(H.FEET - 9 - k * 9);
       kids.push(h('g', { key:'z' + o, opacity: op, transform:`translate(${zx} ${zy})` }, R(0, 0, 3, 1, '#F3E3B0', 1, 'za'), R(1, 1, 1, 1, '#F3E3B0', 1, 'zb'), R(0, 2, 3, 1, '#F3E3B0', 1, 'zc'))); });
     return h('svg', { width:'100%', viewBox:`0 0 ${H.W} ${H.H}`, shapeRendering:'crispEdges', style:{ display:'block', width:'100%', height:'auto', aspectRatio: H.W + ' / ' + H.H } }, ...kids); }
+  // 노래는 한 번에 한 곡만 (앱의 sfx stopSongs와 같은 규칙)
+  stopSong() { (this.osc || []).forEach(o => { try { o.stop(); } catch (e) {} }); this.osc = []; clearTimeout(this.playT); if (this.state.playingSong != null) this.setState({ playingSong: null }); }
   sing(pick) { const st = this.state;
+    if (pick != null && st.playingSong === pick) { this.stopSong(); return; }
+    this.stopSong();
+    if (pick != null) { if (!st.toggles.sound) { this.toast('효과음이 꺼져 있어요 · 메뉴 → 소리 · 진동'); return; } const sp = SONGS[pick]; this.setState({ playingSong: pick }); this.playT = setTimeout(() => this.setState({ playingSong: null }), sp.n.reduce((a, x) => a + x[1], 0) * 1000 + 200); }
     const pool = SONGS.map((x, i) => i).filter(i => !SONGS[i].cat || SONGS[i].cat === st.catId);
     let k = pick ?? pool[Math.floor(Math.random() * pool.length)]; if (pick == null && k === this.songK) k = pool[(pool.indexOf(k) + 1) % pool.length]; this.songK = k; const sg = SONGS[k];
     const dur = Math.max(2600, sg.n.reduce((a, x) => a + x[1], 0) * 1000 + 900);
@@ -1312,7 +1317,7 @@ class Component extends DCLogic {
     if (!st.toggles.sound) return; try { const C = window.AudioContext || window.webkitAudioContext; this.ac = this.ac || new C(); let tm = this.ac.currentTime;
       sg.n.forEach(([fq, d]) => { const o = this.ac.createOscillator(), g = this.ac.createGain(); o.type = 'triangle';
         o.frequency.setValueAtTime(fq * 1.15, tm); o.frequency.exponentialRampToValueAtTime(fq * .8, tm + d); g.gain.setValueAtTime(.0001, tm); g.gain.exponentialRampToValueAtTime(.09, tm + .03); g.gain.exponentialRampToValueAtTime(.0001, tm + d);
-        o.connect(g); g.connect(this.ac.destination); o.start(tm); o.stop(tm + d); tm += d; }); } catch (e) {} }
+        o.connect(g); g.connect(this.ac.destination); o.start(tm); o.stop(tm + d); (this.osc = this.osc || []).push(o); tm += d; }); } catch (e) {} }
   markBeh() { const b = this.behavior(); if (b.id !== 'sulky' && b.id !== 'sing' && !this.state.seenBeh.includes(b.id)) this.setState(st => ({ seenBeh: [...st.seenBeh, b.id] }));
     const st = this.state; if (Date.now() < st.pinUntil) return;
     let tgt = st.sulky ? 'nap' : st.fedUntil > Date.now() ? 'kit' : ({ nap:'nap', look:'gar', hop:'play' }[b.id] || 'liv'); if (!st.rooms.includes(tgt)) tgt = 'liv';
@@ -1783,7 +1788,7 @@ class Component extends DCLogic {
           dexSong: s.dexTab === 'song',
           songCards: SONGS.map((x, i) => { const on = s.seenSongs.includes(i), cc = x.cat && CATS.find(c => c.id === x.cat), cOwn = cc && (s.owned.includes(cc.id) || (cc.plus && s.plus));
             const tagTxt = cc ? (cOwn ? cc.name + ' 전용' : '??? 전용') : '기본';
-            return { on, name: (on ? x.name : '???') + ' · ' + tagTxt, lyric: on ? x.t : cc ? (cOwn ? cc.name + '와(과) 함께일 때 눌러 보세요' : '아직 못 만난 고양이의 노래예요') : '고양이를 눌러 들어 보세요', g: on ? (cc ? '♬' : '♪') : '?', bg: on ? (cc ? 'var(--chip1)' : 'var(--mint)') : 'var(--card2)', border: on ? 'var(--ink)' : 'var(--line)', play: () => this.sing(i) }; }),
+            return { on, name: (on ? x.name : '???') + ' · ' + tagTxt, lyric: on ? x.t : cc ? (cOwn ? cc.name + '와(과) 함께일 때 눌러 보세요' : '아직 못 만난 고양이의 노래예요') : '고양이를 눌러 들어 보세요', g: on ? (cc ? '♬' : '♪') : '?', bg: on ? (cc ? 'var(--chip1)' : 'var(--mint)') : 'var(--card2)', border: on ? 'var(--ink)' : 'var(--line)', play: () => this.sing(i), btn: s.playingSong === i ? '■ 중지' : '▶ 듣기', btnBg: s.playingSong === i ? 'var(--ink)' : 'var(--chip1)', btnFg: s.playingSong === i ? 'var(--bg)' : 'var(--ink)' }; }),
           songGoal: '기본 5곡 모으면 츄르 20 · 전용 8곡 모으면 츄르 50' + (s.songBonus.basic ? ' · 기본 보상 받음' : '') + (s.songBonus.cat ? ' · 전용 보상 받음' : ''),
           dexCats: s.dexTab === 'cat', dexBeh: s.dexTab === 'beh', dexItems: s.dexTab === 'item',
           dexCount: s.dexTab === 'cat' ? s.owned.length + '/4 만남' : s.dexTab === 'beh' ? seen.length + '/7 수집' : s.dexTab === 'song' ? s.seenSongs.length + '/' + SONGS.length + ' 수집' : ownItems + '/' + totItems + ' 보유',

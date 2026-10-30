@@ -38,6 +38,7 @@ export type State = {
   msg: number; behOff: number; seenBeh: string[]; fedUntil: number;
   // 노래: singUntil까지 부르는 중, seenSongs = 수집한 노래(SONGS 번호)
   singUntil: number; songText: string; seenSongs: number[]; songBonus: { basic: boolean; cat: boolean };
+  playingSong: number | null; // 도감에서 ▶ 듣기로 재생 중인 노래
   // 방 · 집
   decor: Decor; ownedDecor: string[]; items: string[]; equipped: string[]; pos: Record<string, [number, number]>;
   decorCat: DecorKind; preview: null | { kind: DecorKind; id: string }; dragSel: string | null;
@@ -82,7 +83,7 @@ function initial(): State {
     blocked: { ig: true, yt: true, tt: true, wt: true, kk: false, gm: false }, apps: APPS,
     sessions: [], last: null, showBlocked: false, holding: false, failPen: 3, rest: 0, blockedNow: 0, blockedApp: '인스타그램',
     churu: demo ? 24 : 0, earnedTotal: demo ? 44 : 0, catId: 'cheese', owned: ['cheese'], aff: { cheese: demo ? 34 : 0 }, sulky: false,
-    msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false },
+    msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false }, playingSong: null,
     decor: { wall: 'cream', floor: 'wood', struct: 'basic', outfit: 'none' }, ownedDecor: ['cream', 'wood', 'basic', 'none'], items: ['rug'], equipped: ['rug'], pos: {},
     decorCat: 'wall', preview: null, dragSel: null,
     house: false, hs: 'liv', rooms: ['liv', 'nap'], catRoom: 'liv', jumping: false, pinUntil: 0, rstore: {}, dRoom: 'liv', roomNames: {}, extra: false, houseHint: true, renaming: false, nameDraft: '',
@@ -103,7 +104,7 @@ function initial(): State {
 }
 
 // 저장하지 않는 화면 상태
-const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midRest', 'singUntil', 'songText', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
+const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midRest', 'singUntil', 'songText', 'playingSong', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
   'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gacha', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
 
 // 동기화(백업)에 올릴 게임 데이터
@@ -127,6 +128,7 @@ type Actions = {
   markBeh: () => void;
   nextBehavior: () => void;
   sing: (pick?: number) => void;
+  stopSong: () => void;
   moveCat: (id: string) => void;
   callCat: () => void;
   feed: (id: string, price: number) => void;
@@ -146,7 +148,7 @@ type Actions = {
 };
 
 let toastT: ReturnType<typeof setTimeout> | undefined;
-let restK = 0, songK = -1; // 마지막으로 휴식한 주기 번호 · 마지막으로 부른 노래
+let restK = 0, songK = -1, playT: ReturnType<typeof setTimeout> | undefined; // 마지막으로 휴식한 주기 번호 · 마지막으로 부른 노래
 export const hooks: { onStart?: (s: State) => void; onStop?: () => void; sfx?: (n: string) => void; onGoal?: (goal: number, catName: string) => void } = {};
 const sfx = (n: string) => hooks.sfx?.(n);
 
@@ -239,11 +241,20 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     }
   },
   nextBehavior: () => { sfx('meow'); set(st => ({ behOff: st.behOff + 1 })); get().markBeh(); },
+  stopSong: () => { clearTimeout(playT); sfx('songstop'); set({ playingSong: null }); },
   // 홈에서 고양이를 누르면 노래한다. 기본 5곡 + 지금 고양이의 전용 곡 중 무작위(같은 곡 연속 금지).
   // pick을 주면 도감의 ▶ 듣기: 소리만 내고 수집 상태는 그대로.
   sing: pick => {
     const st = get();
-    if (pick != null) { sfx('song' + pick); return; }
+    // 도감 ▶ 듣기: 같은 곡을 다시 누르면 멈추고, 다른 곡을 누르면 앞 곡을 멈추고 새로 튼다
+    if (pick != null) {
+      if (st.playingSong === pick) { get().stopSong(); return; }
+      if (!st.toggles.sound) { get().toast('효과음이 꺼져 있어요 · 메뉴 → 소리 · 진동'); return; }
+      clearTimeout(playT); sfx('song' + pick); set({ playingSong: pick });
+      playT = setTimeout(() => set({ playingSong: null }), songMs(SONGS[pick]) - 700);
+      return;
+    }
+    clearTimeout(playT); if (st.playingSong != null) set({ playingSong: null });
     const pool = SONGS.map((_, i) => i).filter(i => !SONGS[i].cat || SONGS[i].cat === st.catId);
     let k = pool[Math.floor(Math.random() * pool.length)];
     if (k === songK) k = pool[(pool.indexOf(k) + 1) % pool.length];

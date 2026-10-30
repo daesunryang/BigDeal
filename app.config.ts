@@ -10,7 +10,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: full ? '냥집중' : '냥집중 데모',
   slug: 'nyangjibjung',
-  version: '1.3.0',
+  version: '1.3.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
@@ -19,7 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: { supportsTablet: false, bundleIdentifier: full ? 'com.nyangjibjung.app' : 'com.nyangjibjung.demo' },
   android: {
     package: full ? 'com.nyangjibjung.app' : 'com.nyangjibjung.demo',
-    versionCode: 6,
+    versionCode: 7,
     adaptiveIcon: {
       backgroundColor: '#E59A4C',
       foregroundImage: './assets/android-icon-foreground.png',

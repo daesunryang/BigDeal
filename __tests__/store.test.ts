@@ -283,3 +283,19 @@ describe('불멍 도트 고양이', () => {
     expect(Object.keys(FRAMES)).toContain(frameOf({ ...c, act: 'walk', t0: 0 }, 300));
   });
 });
+
+describe('노래 듣기 · 중지', () => {
+  beforeEach(fresh);
+  test('같은 곡을 다시 누르면 멈추고, 다른 곡은 앞 곡을 멈추고 재생한다', () => {
+    useApp.setState({ toggles: { ...getS().toggles, sound: true } });
+    getS().sing(0);
+    expect(getS().playingSong).toBe(0);
+    getS().sing(2);
+    expect(getS().playingSong).toBe(2);
+    getS().sing(2);
+    expect(getS().playingSong).toBeNull();
+    getS().sing(1);
+    jest.advanceTimersByTime(10000);
+    expect(getS().playingSong).toBeNull(); // 곡이 끝나면 버튼이 ▶ 듣기로 돌아온다
+  });
+});
