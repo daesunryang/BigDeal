@@ -4,7 +4,7 @@ import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, V
 import { captureRef } from 'react-native-view-shot';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
 import { openUpdate } from '../services/update';
-import { ANIMALS, APPS, CATS, DEFAULT_BLOCK_PKGS, GACHA_CATS, GACHA_COST, GACHA_PITY, MOODS, PG, ROOM_DESC, TIER, catById, won } from '../data';
+import { ANIMALS, APPS, CATS, DEFAULT_BLOCK_PKGS, GACHA_CATS, GACHA_COST, GACHA_PITY, MOODS, PG, ROOM_DESC, TIER, catById, plusMul, won } from '../data';
 import { affOf, dkg, focusStreak } from '../derive';
 import { authEnabled, deleteAccount, unlinkProvider } from '../services/auth';
 import { blocker } from '../services/blocker';
@@ -207,7 +207,7 @@ export function AdView() {
   const C = useC();
   const ad = useApp(s => s.ad)!;
   useEffect(() => { const t = setInterval(() => { const a = getS().ad; if (a == null || a <= 0) { clearInterval(t); return; } S({ ad: a - 1 }); }, 1000); return () => clearInterval(t); }, []);
-  const claim = () => { getS().log('광고 시청 보상', 5); sfx('coin'); S(st => ({ ad: null, adLeft: st.adLeft - 1, churu: st.churu + 5, earnedTotal: st.earnedTotal + 5 })); getS().toast('츄르 5개를 받았어요'); };
+  const claim = () => { const g = 5 * plusMul(getS().plus); getS().log('광고 시청 보상', g); sfx('coin'); S(st => ({ ad: null, adLeft: st.adLeft - 1, churu: st.churu + g, earnedTotal: st.earnedTotal + g })); getS().toast('츄르 ' + g + '개를 받았어요'); };
   return (
     <View style={[FULL, { zIndex: 10, backgroundColor: '#2B221D', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }]}>
       <Txt style={{ fontSize: 12, color: C.line }}>광고 (데모)</Txt>

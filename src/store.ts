@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { IS_DEMO } from './config';
 import {
   APPS, CATS, DECOR, DecorKind, FRIENDS, MAILS, Mail, ROOMS, ROOM_DEF, SHN, ANIMALS, BEH, BehId,
-  Cat, GachaKind, catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
+  Cat, GachaKind, catById, isoDay, streakOf, plusMul, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
 } from './data';
 import type { Lang } from './i18n';
 import { markBack, scrollKey } from './ui/scrollMemory';
@@ -32,7 +32,7 @@ export type State = {
   restOn: boolean; restEvery: number; restLen: number; midRest: boolean;
   remain: number; total: number; endAt: number; pauseAt: number; fast: boolean;
   blocked: Record<string, boolean>; apps: BlockApp[];
-  sessions: Session[]; last: null | { grow: boolean; goal: boolean; tag: string; min: number; churu: number; aff: number; up: boolean };
+  sessions: Session[]; last: null | { grow: boolean; goal: boolean; tag: string; min: number; churu: number; aff: number; up: boolean; parts: string[] };
   showBlocked: boolean; holding: boolean; failPen: number; rest: number; blockedNow: number; blockedApp: string;
   // 고양이
   churu: number; earnedTotal: number; catId: string; owned: string[]; aff: Record<string, number>; sulky: boolean;
@@ -205,16 +205,25 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     const td = today();
     const todayMin = [{ min, ok: true, at: Date.now() }, ...s.sessions].filter(x => x.ok && isoDay(0) === dayOf(x.at)).reduce((a, x) => a + x.min, 0);
     const goalNow = todayMin >= s.goal && s.goalHit !== td;
-    get().log('집중 ' + min + '분 완료', rw.churu); sfx('done');
+    // 집중 보상 + 보너스(오늘 첫 집중 · 목표 달성 · 60분 이상 · 3일 연속). Plus는 합계의 2배.
+    const fd = s.fdays.includes(td) ? s.fdays : [...s.fdays, td];
+    const bonus: [string, number][] = [];
+    if (!s.sessions.some(x => x.ok && dayOf(x.at) === td)) bonus.push(['오늘 첫 집중', 5]);
+    if (goalNow) bonus.push(['목표 달성', 10]);
+    if (min >= 60) bonus.push(['60분 이상 집중', 5]);
+    if (streakOf(fd) >= 3) bonus.push(['3일 연속 집중', 3]);
+    const mul = plusMul(s.plus), gained = (rw.churu + bonus.reduce((a, b) => a + b[1], 0)) * mul;
+    const parts = [...bonus.map(b => b[0] + ' +' + b[1] * mul), ...(s.plus ? ['Plus 2배'] : [])];
+    get().log('집중 ' + min + '분 완료', rw.churu * mul); bonus.forEach(b => get().log(b[0], b[1] * mul)); sfx('done');
     const up = Math.floor(a1 / 20) > Math.floor(a0 / 20);
     hooks.onStop?.();
     set({
       screen: 'done', fdays: s.fdays.includes(td) ? s.fdays : [...s.fdays, td], remain: 0, goalHit: goalNow ? td : s.goalHit,
-      churu: s.churu + rw.churu, earnedTotal: s.earnedTotal + rw.churu, aff: { ...s.aff, [s.catId]: a1 }, sulky: false, showBlocked: false,
+      churu: s.churu + gained, earnedTotal: s.earnedTotal + gained, aff: { ...s.aff, [s.catId]: a1 }, sulky: false, showBlocked: false,
       mails: [...(up ? [{ id: Date.now() + 7, type: 'reward' as const, title: catById(s.catId).name + '와 친밀도 ♥' + Math.floor(a1 / 20) + ' 달성!', body: '표정이 한 단계 부드러워졌어요. 축하 선물을 보내요.', churu: 5, date: mmdd(), exp: '7일 후 만료' }] : []),
         { id: Date.now(), type: 'report' as const, title: '기부 완료 · 사료 100g', body: `${SHN[s.pick]}에 파트너가 사료 100g을 기부했어요. ${min}분 집중해 줘서 고마워요!`, date: mmdd() }, ...s.mails],
       donated: s.donated + 1, shelters: s.shelters.map((x, j) => (j === s.pick ? { kg: x.kg + 0.1 } : x)),
-      last: { grow: growthOf(a1).idx > growthOf(a0).idx, goal: goalNow && s.goalNotify, tag: s.tag, min, churu: rw.churu, aff: rw.aff, up },
+      last: { grow: growthOf(a1).idx > growthOf(a0).idx, goal: goalNow && s.goalNotify, tag: s.tag, min, churu: gained, aff: rw.aff, up, parts },
       sessions: [{ min, ok: true, tag: s.tag, at: Date.now() }, ...s.sessions].slice(0, 500),
     });
     if (goalNow && s.goalNotify) hooks.onGoal?.(s.goal, catById(s.catId).name);
@@ -265,7 +274,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     const sg = SONGS[k], dur = songMs(sg);
     const isNew = !st.seenSongs.includes(k), ns = isNew ? [...st.seenSongs, k] : st.seenSongs;
     const basicAll = SONGS.every((x, i) => x.cat || ns.includes(i)), catAll = SONGS.every((x, i) => !x.cat || ns.includes(i));
-    const bonus = (isNew && basicAll && !st.songBonus.basic ? 20 : 0) + (isNew && catAll && !st.songBonus.cat ? 50 : 0);
+    const bonus = plusMul(st.plus) * ((isNew && basicAll && !st.songBonus.basic ? 20 : 0) + (isNew && catAll && !st.songBonus.cat ? 50 : 0));
     set({ singUntil: Date.now() + dur, songText: sg.t, seenSongs: ns, songBonus: { basic: st.songBonus.basic || basicAll, cat: st.songBonus.cat || catAll }, churu: st.churu + bonus, earnedTotal: st.earnedTotal + bonus });
     if (isNew) get().toast('새 노래 · ' + sg.name + ' 수집!');
     if (bonus) {
@@ -337,13 +346,13 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   },
   claimMail: id => {
     const st = get(), m = st.mails.find(x => x.id === id); if (!m || !m.churu || st.claimed.includes(id)) return;
-    get().log(m.title, m.churu); sfx('coin');
-    set({ churu: st.churu + m.churu, earnedTotal: st.earnedTotal + m.churu, claimed: [...st.claimed, id], mailRead: st.mailRead.includes(id) ? st.mailRead : [...st.mailRead, id] });
+    const g = m.churu * plusMul(st.plus); get().log(m.title, g); sfx('coin');
+    set({ churu: st.churu + g, earnedTotal: st.earnedTotal + g, claimed: [...st.claimed, id], mailRead: st.mailRead.includes(id) ? st.mailRead : [...st.mailRead, id] });
   },
   claimAll: () => {
     const st = get(), cl = st.mails.filter(m => m.churu && !st.claimed.includes(m.id)); if (!cl.length) return;
-    cl.forEach(m => get().log(m.title, m.churu!)); sfx('coin');
-    const sum = cl.reduce((a, m) => a + (m.churu || 0), 0);
+    const mul = plusMul(st.plus); cl.forEach(m => get().log(m.title, m.churu! * mul)); sfx('coin');
+    const sum = cl.reduce((a, m) => a + (m.churu || 0), 0) * mul;
     set({ churu: st.churu + sum, earnedTotal: st.earnedTotal + sum, claimed: [...st.claimed, ...cl.map(m => m.id)], mailRead: [...st.mailRead, ...cl.map(m => m.id)] });
   },
 

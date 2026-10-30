@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, TextInput, View } from 'react-native';
 import { scrollKey, useScrollMemory } from '../ui/scrollMemory';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
-import { ALL_CATS, CATS, DOCS, FAQS, MOODS, NOTICES, OSS, PARTNER_ROWS, PG, PLAT, PLUS_PLANS, catById, isoDay, streakOf } from '../data';
+import { ALL_CATS, CATS, DOCS, FAQS, MOODS, NOTICES, OSS, PARTNER_ROWS, PG, PLAT, PLUS_PLANS, catById, isoDay, plusMul, streakOf } from '../data';
 import { affOf, badges, dkg, goalDays, recentDone, gotBadges, growth, monthHeat, todayMin, weekLabels, weekVals } from '../derive';
 import { AuthError, authEnabled, linkEmail, linkGoogle, logOut } from '../services/auth';
 import { blocker } from '../services/blocker';
@@ -276,10 +276,10 @@ function SubPage({ p, width }: { p: string; width: number }) {
     </View>
   </View>; }
   if (p === PG.attend) {
-    const REW = [3, 3, 5, 3, 3, 5, 15], td = isoDay(0), claimed = s.att.includes(td), st = streakOf(s.att);
+    const REW = [3, 3, 5, 3, 3, 5, 15].map(r => r * plusMul(s.plus)), td = isoDay(0), claimed = s.att.includes(td), st = streakOf(s.att);
     const dcount = claimed ? ((st - 1) % 7) + 1 : st % 7, tIdx = claimed ? dcount - 1 : dcount;
     return <View style={{ gap: 14 }}>
-      <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.chip1, gap: 4 }}><Txt jua style={{ fontSize: 20 }}>{st + '일째 출석 중'}</Txt><Txt style={{ fontSize: 13, color: C.sub }}>7일을 채우면 큰 보너스 츄르를 받아요</Txt></View>
+      <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.chip1, gap: 4 }}><Txt jua style={{ fontSize: 20 }}>{st + '일째 출석 중'}</Txt><Txt style={{ fontSize: 13, color: C.sub }}>{'7일을 채우면 큰 보너스 츄르를 받아요' + (s.plus ? ' · Plus 2배' : '')}</Txt></View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{REW.map((r, i) => { const dn = i < dcount, today = i === tIdx; return (
         <View key={i} style={{ width: (width - 36 - 24) / 4, paddingVertical: 10, paddingHorizontal: 2, borderRadius: 14, borderWidth: 2, borderColor: today && !dn ? '#E59A4C' : dn ? C.ink : C.line, backgroundColor: dn ? C.mint : today ? C.chip1 : C.bg, alignItems: 'center', gap: 3 }}>
           <Txt style={{ fontSize: 11, color: C.sub }}>{(i + 1) + '일차'}</Txt><Txt jua style={{ fontSize: 15, minHeight: 20 }}>{dn ? '✓' : today ? '오늘' : ''}</Txt><Txt style={{ fontSize: 11 }}>{'+' + r}</Txt>
@@ -506,6 +506,7 @@ function PlusPage() {
     <ListCard>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>Plus 전용 고양이 4종을 바로 만나요. 츄르를 쓰지 않아도 돼요.</Txt>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>뽑기 탭의 Plus 전용 뽑기로 Plus 구독 전용 고양이 14종을 더 만날 수 있어요.</Txt>
+      <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>집중 · 보너스 · 출석 · 광고 · 노래 · 우편으로 받는 츄르가 모두 2배예요.</Txt>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>기본 고양이 4종, 츄르 보상, 후원은 구독하지 않아도 그대로 쓸 수 있어요.</Txt>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20, color: C.sub }}>새 Plus 고양이와 아이템은 순서대로 추가할 예정이에요.</Txt>
     </ListCard>

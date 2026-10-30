@@ -226,5 +226,7 @@ export const PLUS_PLANS: [string, string, string, string][] = [['life', '평생'
 export const isoDay = (o: number) => { const d = new Date(Date.now() - o * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 export const streakOf = (list: string[]) => { const set = new Set(list); let n = 0, o = set.has(isoDay(0)) ? 0 : 1; while (set.has(isoDay(o))) { n++; o++; } return n; };
 export const reward = (min: number) => ({ churu: Math.round(min * 0.4), aff: Math.max(3, Math.round(min / 2.5)) });
+// Plus는 츄르를 2배로 받는다 (집중 · 보너스 · 출석 · 광고 · 노래 · 우편 보상)
+export const plusMul = (plus: boolean) => (plus ? 2 : 1);
 export const growthOf = (a: number) => { const i = a < 40 ? 0 : a < 80 ? 1 : 2; return { idx: i, f: [0.74, 0.88, 1][i], name: ['아기 고양이', '어린 고양이', '어른 고양이'][i] }; };
 export const won = (n: number) => '₩' + n.toLocaleString('ko-KR');
