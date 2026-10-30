@@ -15,8 +15,7 @@ import { sfx } from '../sfx';
 import { BlockApp, S, getS, hooks, useApp } from '../store';
 import { FONT, useC } from '../theme';
 import { Anim, EZ } from '../ui/anim';
-import { Btn, CatFace, CatScene, Primary, Toggle, Txt } from '../ui/kit';
-import { PixelCat } from '../ui/PixelCat';
+import { Btn, CatFace, CatScene, FACE, Primary, Toggle, Txt } from '../ui/kit';
 import { coachRefs } from './coach';
 
 const FULL = { position: 'absolute' as const, left: 0, top: 0, right: 0, bottom: 0 };
@@ -386,12 +385,12 @@ export function GachaResult() {
   const newOnes = res.filter(r => !r.dup);
   const close = () => S({ gachaRes: null });
   const card = (r: (typeof res)[number], i: number, big: boolean) => {
-    const c = catById(r.id), t = TIER[r.tier], sz = big ? 150 : 66;
+    const c = catById(r.id), t = TIER[r.tier];
     return (
       <Anim key={i} name="pop" dur={0.45} delay={big ? 0 : i * 0.18} loop={false} easing={EZ.out} style={{ width: big ? '100%' : '30%', flexGrow: big ? 0 : 1, alignItems: 'center', gap: big ? 8 : 4, opacity: 0 }}>
-        <View style={{ width: big ? 200 : '100%', aspectRatio: 1, borderRadius: big ? 28 : 16, borderWidth: 2, borderColor: C.ink, backgroundColor: t.color + '55', alignItems: 'center', justifyContent: 'center' }}>
-          {r.tier === 3 && <View style={{ position: 'absolute', left: 6, right: 6, top: 6, bottom: 6, borderRadius: big ? 22 : 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#E59A4C' }} />}
-          <PixelCat id={c.id} width={sz} height={sz} />
+        <View style={{ width: big ? 220 : '100%', aspectRatio: 1, borderRadius: big ? 28 : 16, borderWidth: big ? 4 : 3, borderColor: t.color, overflow: 'hidden', backgroundColor: C.card }}>
+          <Image source={FACE[c.id]} resizeMode="cover" accessibilityLabel={c.name} style={{ width: '100%', height: '100%' }} />
+          {r.tier === 3 && <View style={{ position: 'absolute', left: 5, right: 5, top: 5, bottom: 5, borderRadius: big ? 22 : 11, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFF3E0' }} />}
           {!r.dup && <View style={{ position: 'absolute', top: big ? 10 : 4, right: big ? 10 : 4, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, backgroundColor: '#E07F7F' }}><Txt jua style={{ fontSize: big ? 13 : 10, color: '#FFFFFF' }}>NEW</Txt></View>}
         </View>
         <Txt jua numberOfLines={1} style={{ fontSize: big ? 24 : 12 }}>{c.name}</Txt>

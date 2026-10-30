@@ -341,3 +341,15 @@ describe('고양이 뽑기', () => {
     expect(getS().gachaRes).toBeNull();
   });
 });
+
+describe('뽑기 고양이 그림', () => {
+  test('모든 뽑기 고양이에 일러스트(초상·배경 지운 그림)와 집중 화면용 도트 색이 있다', () => {
+    const fs = require('fs'), path = require('path');
+    const { PALETTES } = require('../src/stage/pixelCat');
+    for (const c of GACHA_CATS) {
+      expect(fs.existsSync(path.join(__dirname, '../assets/img/gacha/face-' + c.id + '.jpg'))).toBe(true);
+      expect(fs.existsSync(path.join(__dirname, '../assets/img/gacha/cut-' + c.id + '.png'))).toBe(true);
+      expect(PALETTES[c.id]).toBeDefined();
+    }
+  });
+});

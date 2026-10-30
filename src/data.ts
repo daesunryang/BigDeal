@@ -8,8 +8,8 @@ export type Fill =
   | { t: 'grid'; c: string; bg: string; size: number; w: number }
   | { t: 'diag'; a: string; b: string; wa: number; wb: number; angle: number };
 
-// tier: 뽑기 전용 고양이의 등급 (1 일반 · 2 희귀 · 3 전설). 뽑기 고양이는 아직 일러스트가 없어 도트 그림(pixelCat.ts)으로 보여준다(pix).
-export type Cat = { id: string; name: string; room: [number, number]; c: [number, number]; desc: string; plus?: boolean; tier?: 1 | 2 | 3; pix?: boolean };
+// tier: 뽑기 전용 고양이의 등급 (1 일반 · 2 희귀 · 3 전설). 뽑기 고양이 그림은 cats-all.jpg가 아니라 assets/img/gacha/의 고양이별 파일(kit.tsx FACE · CUTOUT).
+export type Cat = { id: string; name: string; room: [number, number]; c: [number, number]; desc: string; plus?: boolean; tier?: 1 | 2 | 3 };
 
 export const CATS: Cat[] = [
   { id: 'cheese', name: '치즈태비', room: [0, 0], c: [727, 440], desc: '햇살을 좋아하는 첫 번째 친구.' },
@@ -22,7 +22,7 @@ export const CATS: Cat[] = [
   { id: 'angora', name: '터키시 앙고라', room: [1, 3], c: [2173, 2693], plus: true, desc: '서로 다른 눈빛이 매력인 고양이.' },
 ];
 // 뽑기 전용 고양이 (츄르로 뽑기). 사진 속 품종 중 기존 고양이·서로와 생김새가 겹치지 않는 14종.
-const g = (id: string, name: string, tier: 1 | 2 | 3, desc: string): Cat => ({ id, name, tier, desc, pix: true, room: [0, 0], c: [0, 0] });
+const g = (id: string, name: string, tier: 1 | 2 | 3, desc: string): Cat => ({ id, name, tier, desc, room: [0, 0], c: [0, 0] });
 export const GACHA_CATS: Cat[] = [
   g('bombay', '봄베이', 1, '흑표범처럼 반짝이는 까만 고양이.'),
   g('singapura', '싱가푸라', 1, '작은 몸에 큰 눈, 세상에서 가장 작은 고양이 중 하나.'),

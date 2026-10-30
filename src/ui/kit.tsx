@@ -5,12 +5,42 @@ import { Cat, Fill, IMG_H, IMG_W, WIN } from '../data';
 import { tr } from '../i18n';
 import { useApp } from '../store';
 import { FONT, useC } from '../theme';
-import { PixelCat } from './PixelCat';
 
 export const CATS_IMG = require('../../assets/img/cats-all.jpg');
 export const CUTOUT: Record<string, number> = {
   cheese: require('../../assets/img/cat-cheese.png'), blue: require('../../assets/img/cat-blue.png'), calico: require('../../assets/img/cat-calico.png'), tux: require('../../assets/img/cat-tux.png'),
   ragdoll: require('../../assets/img/cat-ragdoll.png'), siam: require('../../assets/img/cat-siam.png'), persian: require('../../assets/img/cat-persian.png'), angora: require('../../assets/img/cat-angora.png'),
+  bombay: require('../../assets/img/gacha/cut-bombay.png'),
+  singapura: require('../../assets/img/gacha/cut-singapura.png'),
+  bsh: require('../../assets/img/gacha/cut-bsh.png'),
+  abyssinian: require('../../assets/img/gacha/cut-abyssinian.png'),
+  ash: require('../../assets/img/gacha/cut-ash.png'),
+  devon: require('../../assets/img/gacha/cut-devon.png'),
+  mau: require('../../assets/img/gacha/cut-mau.png'),
+  curl: require('../../assets/img/gacha/cut-curl.png'),
+  mainecoon: require('../../assets/img/gacha/cut-mainecoon.png'),
+  fold: require('../../assets/img/gacha/cut-fold.png'),
+  norwegian: require('../../assets/img/gacha/cut-norwegian.png'),
+  toyger: require('../../assets/img/gacha/cut-toyger.png'),
+  sphynx: require('../../assets/img/gacha/cut-sphynx.png'),
+  bengal: require('../../assets/img/gacha/cut-bengal.png'),
+};
+// 뽑기 고양이 초상 (보내준 일러스트에서 자른 정사각형 장면). 기본 고양이는 cats-all.jpg를 잘라 쓴다.
+export const FACE: Record<string, number> = {
+  bombay: require('../../assets/img/gacha/face-bombay.jpg'),
+  singapura: require('../../assets/img/gacha/face-singapura.jpg'),
+  bsh: require('../../assets/img/gacha/face-bsh.jpg'),
+  abyssinian: require('../../assets/img/gacha/face-abyssinian.jpg'),
+  ash: require('../../assets/img/gacha/face-ash.jpg'),
+  devon: require('../../assets/img/gacha/face-devon.jpg'),
+  mau: require('../../assets/img/gacha/face-mau.jpg'),
+  curl: require('../../assets/img/gacha/face-curl.jpg'),
+  mainecoon: require('../../assets/img/gacha/face-mainecoon.jpg'),
+  fold: require('../../assets/img/gacha/face-fold.jpg'),
+  norwegian: require('../../assets/img/gacha/face-norwegian.jpg'),
+  toyger: require('../../assets/img/gacha/face-toyger.jpg'),
+  sphynx: require('../../assets/img/gacha/face-sphynx.jpg'),
+  bengal: require('../../assets/img/gacha/face-bengal.jpg'),
 };
 
 // 글자. 문자열 자식은 선택한 언어로 바꾸고, 큰 글씨 설정이면 10% 키운다.
@@ -114,8 +144,8 @@ export function CatFace({ cat, size, border = 2, round = true, style, dim, bg, s
   const s = size / WIN;
   return (
     <View style={[{ width: size, height: size, borderRadius: round ? size / 2 : 14, overflow: 'hidden', borderWidth: border, borderColor: C.ink, backgroundColor: bg ?? C.bg }, style]}>
-      {cat.pix
-        ? <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3EADB' }}><PixelCat id={cat.id} width={size * 0.66} height={size * 0.66} opacity={dim ?? 1} /></View>
+      {FACE[cat.id]
+        ? <Image source={FACE[cat.id]} resizeMode="cover" style={{ position: 'absolute', left: -border, top: -border, width: size, height: size, opacity: dim ?? 1 }} />
         : <Image source={CATS_IMG} style={{ position: 'absolute', width: IMG_W * s, height: IMG_H * s, left: size / 2 - cat.c[0] * s - border, top: size / 2 - cat.c[1] * s - border, opacity: dim ?? 1 }} />}
       {!!shade && <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: `rgba(0,0,0,${shade})` }} />}
     </View>
@@ -128,8 +158,8 @@ export function CatScene({ cat, width, style }: { cat: Cat; width: number; style
   const h = width * 768 / 1376;
   return (
     <View style={[{ width, height: h, overflow: 'hidden', borderWidth: 2, borderColor: C.ink }, style]}>
-      {cat.pix
-        ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: h * 0.08, backgroundColor: '#F3EADB' }}><View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: h * 0.3, backgroundColor: '#E2D4BD' }} /><PixelCat id={cat.id} width={h * 0.7} height={h * 0.7} /></View>
+      {FACE[cat.id]
+        ? <Image source={FACE[cat.id]} resizeMode="cover" style={{ position: 'absolute', left: -2, top: -2, width, height: h }} />
         : <Image source={CATS_IMG} style={{ position: 'absolute', width: width * 2, height: h * 4, left: -cat.room[0] * width - 2, top: -cat.room[1] * h - 2 }} />}
     </View>
   );

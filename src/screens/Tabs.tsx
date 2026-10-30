@@ -7,8 +7,7 @@ import { S, getS, listOf, useApp } from '../store';
 import { sfx } from '../sfx';
 import { useC } from '../theme';
 import { useScrollMemory } from '../ui/scrollMemory';
-import { PixelCat } from '../ui/PixelCat';
-import { Bar, Btn, CUTOUT, CatFace, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
+import { Bar, Btn, CUTOUT, CatFace, FACE, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
 
 const pad = { paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18 };
 const back = () => { getS().back(); };
@@ -30,7 +29,7 @@ function GachaBox() {
   return (
     <View style={{ gap: 10, padding: 16, borderRadius: 20, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.chip1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View style={{ flexDirection: 'row', marginRight: 2 }}>{GACHA_CATS.filter(c => c.tier === 3).map((c, i) => <View key={c.id} style={{ marginLeft: i ? -10 : 0 }}><PixelCat id={c.id} width={30} height={30} /></View>)}</View>
+        <View style={{ flexDirection: 'row', marginRight: 2 }}>{GACHA_CATS.filter(c => c.tier === 3).map((c, i) => <CatFace key={c.id} cat={c} size={32} border={1.5} style={{ marginLeft: i ? -10 : 0 }} />)}</View>
         <View style={{ flex: 1 }}>
           <Txt jua style={{ fontSize: 18 }}>고양이 뽑기</Txt>
           <Txt style={{ fontSize: 12, color: C.sub }}>{'집중해서 모은 츄르로 뽑기 전용 고양이 ' + GACHA_CATS.length + '종을 만나요'}</Txt>
@@ -99,8 +98,9 @@ export function Dex() {
             return (
               <Btn key={c.id} onPress={() => (o ? S({ catId: c.id }) : getS().toast('뽑기에서 만날 수 있어요 · ' + t.name + ' 등급'))} accessibilityLabel={(o ? c.name : '아직 못 만난 고양이') + ', ' + t.name}
                 style={{ width: '31%', flexGrow: 1, alignItems: 'stretch', gap: 6, padding: 8, borderRadius: 16, borderWidth: c.id === s.catId ? 2.5 : 1.5, borderColor: c.id === s.catId ? C.ink : C.line, backgroundColor: C.bg }}>
-                <View style={{ aspectRatio: 1, borderRadius: 12, backgroundColor: o ? C.card : C.card2, alignItems: 'center', justifyContent: 'center' }}>
-                  <PixelCat id={c.id} width={64} height={64} dark={!o} opacity={o ? 1 : 0.28} />
+                <View style={{ aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' }}>
+                  {o ? <Image source={FACE[c.id]} resizeMode="cover" accessibilityIgnoresInvertColors style={{ width: '100%', height: '100%' }} />
+                    : <Image source={CUTOUT[c.id]} resizeMode="contain" accessibilityLabel="아직 못 만난 고양이 실루엣" style={{ width: '82%', height: '82%', tintColor: C.ink, opacity: 0.3 }} />}
                 </View>
                 <Txt jua numberOfLines={1} style={{ fontSize: 12 }}>{o ? c.name : '???'}</Txt>
                 <View style={{ alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 7, backgroundColor: t.color }}><Txt style={{ fontSize: 10, color: '#2B221D' }}>{t.name}</Txt></View>
