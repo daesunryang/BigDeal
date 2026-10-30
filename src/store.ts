@@ -4,14 +4,14 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { IS_DEMO, IS_FULL } from './config';
 import {
   APPS, CATS, DECOR, DecorKind, FRIENDS, MAILS, Mail, ROOMS, ROOM_DEF, SHN, ANIMALS, BEH, BehId,
-  Cat, GachaKind, CHURU_PACKS, catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
+  Cat, GachaKind, CHURU_PACKS, catById, isoDay, streakOf, plusMul, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
 } from './data';
 import type { Lang } from './i18n';
 import { SPOT_COST, hashSeed } from './spots';
 import { markBack, scrollKey } from './ui/scrollMemory';
 
 export type Screen = 'splash' | 'login' | 'onboard' | 'tabs' | 'decor' | 'focus' | 'done' | 'fail' | 'rest';
-export type GachaHit = { id: string; tier: 1 | 2 | 3; dup: boolean };
+export type GachaHit = { id: string; tier: 1 | 2 | 3 };
 export type Tab = 'home' | 'gacha' | 'dex' | 'donate' | 'mail' | 'menu' | 'shop' | 'stats' | 'shelter';
 export type Decor = { wall: string; floor: string; struct: string; outfit: string };
 export type RoomData = { decor: Omit<Decor, 'outfit'> & { outfit?: string }; equipped: string[]; pos: Record<string, [number, number]> };
@@ -33,7 +33,7 @@ export type State = {
   restOn: boolean; restEvery: number; restLen: number; midRest: boolean;
   remain: number; total: number; endAt: number; pauseAt: number; fast: boolean;
   blocked: Record<string, boolean>; apps: BlockApp[];
-  sessions: Session[]; last: null | { grow: boolean; goal: boolean; tag: string; min: number; churu: number; aff: number; up: boolean };
+  sessions: Session[]; last: null | { grow: boolean; goal: boolean; tag: string; min: number; churu: number; aff: number; up: boolean; parts: string[] };
   showBlocked: boolean; holding: boolean; failPen: number; rest: number; blockedNow: number; blockedApp: string;
   // 고양이
   churu: number; earnedTotal: number; catId: string; owned: string[]; aff: Record<string, number>; sulky: boolean;
@@ -213,16 +213,25 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     const td = today();
     const todayMin = [{ min, ok: true, at: Date.now() }, ...s.sessions].filter(x => x.ok && isoDay(0) === dayOf(x.at)).reduce((a, x) => a + x.min, 0);
     const goalNow = todayMin >= s.goal && s.goalHit !== td;
-    get().log('집중 ' + min + '분 완료', rw.churu); sfx('done');
+    // 집중 보상 + 보너스(오늘 첫 집중 · 목표 달성 · 60분 이상 · 3일 연속). Plus는 합계의 2배.
+    const fd = s.fdays.includes(td) ? s.fdays : [...s.fdays, td];
+    const bonus: [string, number][] = [];
+    if (!s.sessions.some(x => x.ok && dayOf(x.at) === td)) bonus.push(['오늘 첫 집중', 5]);
+    if (goalNow) bonus.push(['목표 달성', 10]);
+    if (min >= 60) bonus.push(['60분 이상 집중', 5]);
+    if (streakOf(fd) >= 3) bonus.push(['3일 연속 집중', 3]);
+    const mul = plusMul(s.plus), gained = (rw.churu + bonus.reduce((a, b) => a + b[1], 0)) * mul;
+    const parts = [...bonus.map(b => b[0] + ' +' + b[1] * mul), ...(s.plus ? ['Plus 2배'] : [])];
+    get().log('집중 ' + min + '분 완료', rw.churu * mul); bonus.forEach(b => get().log(b[0], b[1] * mul)); sfx('done');
     const up = Math.floor(a1 / 20) > Math.floor(a0 / 20);
     hooks.onStop?.();
     set({
       screen: 'done', fdays: s.fdays.includes(td) ? s.fdays : [...s.fdays, td], remain: 0, goalHit: goalNow ? td : s.goalHit,
-      churu: s.churu + rw.churu, earnedTotal: s.earnedTotal + rw.churu, aff: { ...s.aff, [s.catId]: a1 }, sulky: false, showBlocked: false,
+      churu: s.churu + gained, earnedTotal: s.earnedTotal + gained, aff: { ...s.aff, [s.catId]: a1 }, sulky: false, showBlocked: false,
       mails: [...(up ? [{ id: Date.now() + 7, type: 'reward' as const, title: catById(s.catId).name + '와 친밀도 ♥' + Math.floor(a1 / 20) + ' 달성!', body: '표정이 한 단계 부드러워졌어요. 축하 선물을 보내요.', churu: 5, date: mmdd(), exp: '7일 후 만료' }] : []),
         { id: Date.now(), type: 'report' as const, title: '기부 완료 · 사료 100g', body: `${SHN[s.pick]}에 파트너가 사료 100g을 기부했어요. ${min}분 집중해 줘서 고마워요!`, date: mmdd() }, ...s.mails],
       donated: s.donated + 1, shelters: s.shelters.map((x, j) => (j === s.pick ? { kg: x.kg + 0.1 } : x)),
-      last: { grow: growthOf(a1).idx > growthOf(a0).idx, goal: goalNow && s.goalNotify, tag: s.tag, min, churu: rw.churu, aff: rw.aff, up },
+      last: { grow: growthOf(a1).idx > growthOf(a0).idx, goal: goalNow && s.goalNotify, tag: s.tag, min, churu: gained, aff: rw.aff, up, parts },
       sessions: [{ min, ok: true, tag: s.tag, at: Date.now() }, ...s.sessions].slice(0, 500),
     });
     if (goalNow && s.goalNotify) hooks.onGoal?.(s.goal, catById(s.catId).name);
@@ -273,7 +282,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     const sg = SONGS[k], dur = songMs(sg);
     const isNew = !st.seenSongs.includes(k), ns = isNew ? [...st.seenSongs, k] : st.seenSongs;
     const basicAll = SONGS.every((x, i) => x.cat || ns.includes(i)), catAll = SONGS.every((x, i) => !x.cat || ns.includes(i));
-    const bonus = (isNew && basicAll && !st.songBonus.basic ? 20 : 0) + (isNew && catAll && !st.songBonus.cat ? 50 : 0);
+    const bonus = plusMul(st.plus) * ((isNew && basicAll && !st.songBonus.basic ? 20 : 0) + (isNew && catAll && !st.songBonus.cat ? 50 : 0));
     set({ singUntil: Date.now() + dur, songText: sg.t, seenSongs: ns, songBonus: { basic: st.songBonus.basic || basicAll, cat: st.songBonus.cat || catAll }, churu: st.churu + bonus, earnedTotal: st.earnedTotal + bonus });
     if (isNew) get().toast('새 노래 · ' + sg.name + ' 수집!');
     if (bonus) {
@@ -345,45 +354,50 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   },
   claimMail: id => {
     const st = get(), m = st.mails.find(x => x.id === id); if (!m || !m.churu || st.claimed.includes(id)) return;
-    get().log(m.title, m.churu); sfx('coin');
-    set({ churu: st.churu + m.churu, earnedTotal: st.earnedTotal + m.churu, claimed: [...st.claimed, id], mailRead: st.mailRead.includes(id) ? st.mailRead : [...st.mailRead, id] });
+    const g = m.churu * plusMul(st.plus); get().log(m.title, g); sfx('coin');
+    set({ churu: st.churu + g, earnedTotal: st.earnedTotal + g, claimed: [...st.claimed, id], mailRead: st.mailRead.includes(id) ? st.mailRead : [...st.mailRead, id] });
   },
   claimAll: () => {
     const st = get(), cl = st.mails.filter(m => m.churu && !st.claimed.includes(m.id)); if (!cl.length) return;
-    cl.forEach(m => get().log(m.title, m.churu!)); sfx('coin');
-    const sum = cl.reduce((a, m) => a + (m.churu || 0), 0);
+    const mul = plusMul(st.plus); cl.forEach(m => get().log(m.title, m.churu! * mul)); sfx('coin');
+    const sum = cl.reduce((a, m) => a + (m.churu || 0), 0) * mul;
     set({ churu: st.churu + sum, earnedTotal: st.earnedTotal + sum, claimed: [...st.claimed, ...cl.map(m => m.id)], mailRead: [...st.mailRead, ...cl.map(m => m.id)] });
   },
 
 
-  // 고양이 뽑기: 1회 40 츄르, 5회 180 츄르. 일반 65% · 희귀 28% · 전설 7%, 10번째마다 희귀 이상 보장.
-  // 이미 만난 고양이가 나오면 등급에 따라 츄르를 돌려준다(일반 10 · 희귀 20 · 전설 40).
+  // 고양이 뽑기: 일반 뽑기(기본 고양이) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종), 1회 · 10회.
+  // Plus 전용은 일반 65% · 희귀 28% · 전설 7%, 10번째마다 희귀 이상 보장.
+  // 이미 만난 고양이는 나오지 않는다. 고른 등급이 다 모였으면 남은 고양이 중에서 나온다.
   gachaPull: (kind, n, rnd = Math.random) => {
     const st = get(), cost = n === 10 ? GACHA_COST[kind].ten : GACHA_COST[kind].one;
     if (kind === 'plus' && !st.plus) { get().toast('Plus 전용 뽑기는 Plus 구독 중에 할 수 있어요'); return; }
+    const all: Cat[] = kind === 'plus' ? GACHA_CATS : CATS.filter(c => !c.plus), left = all.filter(c => !st.owned.includes(c.id)).length;
+    if (left === 0) { get().toast('이 뽑기의 고양이를 모두 만났어요'); return; }
+    if (left < n) { get().toast('아직 못 만난 고양이가 ' + left + '마리라 ' + n + '회는 뽑을 수 없어요'); return; }
     if (st.churu < cost) { get().needChuru(cost - st.churu); return; }
-    let pity = st.gachaPity, refund = 0;
+    let pity = st.gachaPity;
     const owned = [...st.owned], res: GachaHit[] = [];
-    const basic = CATS.filter(c => !c.plus);
     for (let i = 0; i < n; i++) {
+      const fresh = all.filter(c => !owned.includes(c.id));
       let tier: 1 | 2 | 3 = 1, c: Cat;
-      if (kind === 'basic') c = basic[Math.floor(rnd() * basic.length) % basic.length];
+      if (kind === 'basic') c = fresh[Math.floor(rnd() * fresh.length) % fresh.length];
       else {
         pity++;
         const r = rnd() * 100;
         tier = r < TIER[3].rate ? 3 : r < TIER[3].rate + TIER[2].rate ? 2 : 1;
         if (pity >= GACHA_PITY && tier < 2) tier = 2;
-        if (tier >= 2) pity = 0;
-        const pool = GACHA_CATS.filter(g => g.tier === tier);
+        let pool = fresh.filter(g => g.tier === tier);
+        if (!pool.length) pool = fresh.filter(g => (g.tier || 1) > tier);
+        if (!pool.length) pool = fresh;
         c = pool[Math.floor(rnd() * pool.length) % pool.length];
+        tier = (c.tier || 1) as 1 | 2 | 3;
+        if (tier >= 2) pity = 0;
       }
-      const dup = owned.includes(c.id);
-      if (dup) refund += TIER[tier].refund; else owned.push(c.id);
-      res.push({ id: c.id, tier, dup });
+      owned.push(c.id); res.push({ id: c.id, tier });
     }
-    get().log((kind === 'plus' ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회', -cost); if (refund) get().log('이미 만난 고양이 · 츄르 돌려받기', refund);
+    get().log((kind === 'plus' ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회', -cost);
     sfx('coin');
-    set({ churu: st.churu - cost + refund, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
+    set({ churu: st.churu - cost, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
   },
   // 얼룩 다시 뽑기: 200 츄르로 고양이의 얼룩을 새로 정한다 (만난 고양이만)
   rerollSpots: (id, rnd = Math.random) => {

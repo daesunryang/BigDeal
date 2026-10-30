@@ -41,7 +41,7 @@ export const GACHA_CATS: Cat[] = [
 ];
 export const ALL_CATS = [...CATS, ...GACHA_CATS];
 export const catById = (id: string) => ALL_CATS.find(c => c.id === id) ?? CATS[0];
-export const TIER = { 1: { name: '일반', color: '#8DBF93', rate: 65, refund: 10 }, 2: { name: '희귀', color: '#7E9CC8', rate: 28, refund: 20 }, 3: { name: '전설', color: '#E59A4C', rate: 7, refund: 40 } } as const;
+export const TIER = { 1: { name: '일반', color: '#8DBF93', rate: 65 }, 2: { name: '희귀', color: '#7E9CC8', rate: 28 }, 3: { name: '전설', color: '#E59A4C', rate: 7 } } as const;
 // 뽑기 두 가지: 일반 뽑기(기본 고양이 4종, 누구나) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종, 등급 · 보장 있음). 10회는 10% 할인.
 export type GachaKind = 'basic' | 'plus';
 export const GACHA_COST: Record<GachaKind, { one: number; ten: number }> = { basic: { one: 30, ten: 270 }, plus: { one: 40, ten: 360 } };
@@ -228,5 +228,7 @@ export const PLUS_PLANS: [string, string, string, string][] = [['life', '평생'
 export const isoDay = (o: number) => { const d = new Date(Date.now() - o * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 export const streakOf = (list: string[]) => { const set = new Set(list); let n = 0, o = set.has(isoDay(0)) ? 0 : 1; while (set.has(isoDay(o))) { n++; o++; } return n; };
 export const reward = (min: number) => ({ churu: Math.round(min * 0.4), aff: Math.max(3, Math.round(min / 2.5)) });
+// Plus는 츄르를 2배로 받는다 (집중 · 보너스 · 출석 · 광고 · 노래 · 우편 보상)
+export const plusMul = (plus: boolean) => (plus ? 2 : 1);
 export const growthOf = (a: number) => { const i = a < 40 ? 0 : a < 80 ? 1 : 2; return { idx: i, f: [0.74, 0.88, 1][i], name: ['아기 고양이', '어린 고양이', '어른 고양이'][i] }; };
 export const won = (n: number) => '₩' + n.toLocaleString('ko-KR');
