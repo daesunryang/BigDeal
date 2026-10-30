@@ -91,7 +91,8 @@ jobs:
   release:
     # 직접 실행했을 때만: 이미 있는 릴리스에 iOS 파일을 붙인다 (Android에서 불렀을 때는 Android 쪽 release가 함께 싣는다)
     needs: build
-    if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+    # 불려 갔을 때는 github.event_name이 부른 쪽 것(workflow_dispatch)이라, 워크플로 이름으로 구분한다
+    if: github.workflow == 'iOS' && inputs.release_tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
