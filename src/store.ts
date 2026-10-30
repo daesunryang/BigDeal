@@ -7,6 +7,7 @@ import {
   Cat, GachaKind, catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
 } from './data';
 import type { Lang } from './i18n';
+import { SPOT_COST, hashSeed } from './spots';
 import { markBack, scrollKey } from './ui/scrollMemory';
 
 export type Screen = 'splash' | 'login' | 'onboard' | 'tabs' | 'decor' | 'focus' | 'done' | 'fail' | 'rest';
@@ -42,6 +43,8 @@ export type State = {
   playingSong: number | null; // 도감에서 ▶ 듣기로 재생 중인 노래
   // 고양이 뽑기: gachaPity = 희귀 이상이 안 나온 연속 횟수, gachaRes = 방금 뽑은 결과(결과 창)
   gachaPity: number; gachaTotal: number; gachaRes: null | GachaHit[]; gachaPop: GachaKind | null; // 뽑기 결과 · 열린 뽑기 창
+  // 얼룩: spots = 츄르로 다시 뽑은 고양이의 얼룩 씨앗, spotSalt = 이 기기(계정)만의 처음 얼룩 씨앗 (spotSeed)
+  spots: Record<string, number>; spotSalt: number;
   // 방 · 집
   decor: Decor; ownedDecor: string[]; items: string[]; equipped: string[]; pos: Record<string, [number, number]>;
   decorCat: DecorKind; preview: null | { kind: DecorKind; id: string }; dragSel: string | null;
@@ -87,6 +90,7 @@ function initial(): State {
     sessions: [], last: null, showBlocked: false, holding: false, failPen: 3, rest: 0, blockedNow: 0, blockedApp: '인스타그램',
     churu: demo ? 124 : 0, earnedTotal: demo ? 144 : 0, catId: 'cheese', owned: ['cheese'], aff: { cheese: demo ? 34 : 0 }, sulky: false,
     msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false }, playingSong: null, gachaPity: 0, gachaTotal: 0, gachaRes: null, gachaPop: null,
+    spots: {}, spotSalt: Math.floor(Math.random() * 2 ** 31),
     decor: { wall: 'cream', floor: 'wood', struct: 'basic', outfit: 'none' }, ownedDecor: ['cream', 'wood', 'basic', 'none'], items: ['rug'], equipped: ['rug'], pos: {},
     decorCat: 'wall', preview: null, dragSel: null,
     house: false, hs: 'liv', rooms: ['liv', 'nap'], catRoom: 'liv', jumping: false, pinUntil: 0, rstore: {}, dRoom: 'liv', roomNames: {}, extra: false, houseHint: true, renaming: false, nameDraft: '',
@@ -113,7 +117,7 @@ const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midR
 // 동기화(백업)에 올릴 게임 데이터
 export const SYNC_KEYS: (keyof State)[] = ['user', 'linked', 'churu', 'earnedTotal', 'catId', 'owned', 'aff', 'sulky', 'seenBeh', 'decor', 'ownedDecor', 'items', 'equipped', 'pos', 'rooms', 'catRoom', 'rstore', 'dRoom', 'roomNames', 'extra',
   'donated', 'pick', 'sponsorships', 'mails', 'mailRead', 'claimed', 'plus', 'plusKind', 'toggles', 'themeMode', 'lang', 'big', 'cb', 'haptic', 'goal', 'goalNotify', 'remind', 'avatarCat', 'ledger', 'friends', 'myCode', 'tries', 'att', 'fdays',
-  'sessions', 'blocked', 'tag', 'restOn', 'restEvery', 'restLen', 'seenSongs', 'songBonus', 'gachaPity', 'gachaTotal', 'coachSeen', 'houseHint', 'mailDay'];
+  'sessions', 'blocked', 'tag', 'restOn', 'restEvery', 'restLen', 'seenSongs', 'songBonus', 'gachaPity', 'gachaTotal', 'spots', 'spotSalt', 'coachSeen', 'houseHint', 'mailDay'];
 
 type Actions = {
   set: (p: Partial<State> | ((s: State) => Partial<State> | null)) => void;
@@ -144,6 +148,7 @@ type Actions = {
   claimMail: (id: number) => void;
   claimAll: () => void;
   gachaPull: (kind: GachaKind, n: 1 | 10, rnd?: () => number) => void;
+  rerollSpots: (id: string, rnd?: () => number) => void;
   back: () => boolean;
   reset: () => void;
   afterLogin: (u: User, linked: Record<string, boolean>) => void;
@@ -377,6 +382,17 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     sfx('coin');
     set({ churu: st.churu - cost + refund, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
   },
+  // 얼룩 다시 뽑기: 200 츄르로 고양이의 얼룩을 새로 정한다 (만난 고양이만)
+  rerollSpots: (id, rnd = Math.random) => {
+    const st = get(), c = catById(id);
+    if (!st.owned.includes(id) && !(c.plus && st.plus)) return;
+    if (st.churu < SPOT_COST) { get().toast('츄르가 ' + (SPOT_COST - st.churu) + '개 더 필요해요 · 집중하면 모을 수 있어요'); return; }
+    const old = spotSeed(st, id);
+    let seed = Math.floor(rnd() * 2 ** 31); if (seed === old) seed = (seed + 1) % 2 ** 31;
+    get().log(c.name + ' 얼룩 다시 뽑기', -SPOT_COST); sfx('coin');
+    set({ churu: st.churu - SPOT_COST, spots: { ...st.spots, [id]: seed } });
+    get().toast(c.name + '에게 새 얼룩이 생겼어요');
+  },
 
 
   // Android 뒤로가기 · 순서: 팝업 → 시트 → 하위 화면 → 탭 → 홈 → "한 번 더 누르면 종료". false를 돌려주면 앱을 닫는다.
@@ -469,6 +485,9 @@ useApp.subscribe((s, prev) => {
   navStack.push(a);
   if (navStack.length > 40) navStack.shift();
 });
+
+// 고양이의 지금 얼룩 씨앗: 다시 뽑았으면 그 값, 아니면 이 기기만의 처음 얼룩
+export const spotSeed = (s: Pick<State, 'spots' | 'spotSalt'>, id: string) => s.spots[id] ?? hashSeed(id + ':' + s.spotSalt);
 
 export const getS = () => useApp.getState();
 export const S = (p: Partial<State> | ((s: State) => Partial<State> | null)) => useApp.getState().set(p);

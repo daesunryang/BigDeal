@@ -5,6 +5,7 @@ import { captureRef } from 'react-native-view-shot';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
 import { openUpdate } from '../services/update';
 import { ANIMALS, APPS, CATS, DEFAULT_BLOCK_PKGS, GACHA_CATS, GACHA_COST, GACHA_PITY, MOODS, PG, ROOM_DESC, TIER, catById, won } from '../data';
+import { SPOT_COST } from '../spots';
 import { affOf, dkg, focusStreak } from '../derive';
 import { authEnabled, deleteAccount, unlinkProvider } from '../services/auth';
 import { blocker } from '../services/blocker';
@@ -241,6 +242,7 @@ export function Dialog() {
     expired: () => ({ title: '로그인이 만료됐어요', lines: ['보안을 위해 다시 로그인해 주세요.', '진행 중이던 기록은 안전하게 저장돼 있어요.'], btns: [['다시 로그인', 'primary', toLogin]] }),
     conflict: () => ({ title: '이미 연결된 계정이에요', lines: ['이 Apple 계정은 다른 냥집중 계정에 연결돼 있어요.', '그 계정으로 전환하면 지금 기록은 이 기기에서 보이지 않아요.'], btns: [['취소', 'ghost', close], ['그 계정으로 전환', 'primary', () => { close(); getS().toast('계정을 전환했어요 (데모)'); }]] }),
     refund: () => { const r = s.sponsorships.find(x => x.id === D.id); return { title: (r ? r.animal : '') + ' 후원 환불을 요청할까요?', lines: ['전달 전이라면 영업일 3일 안에 환불돼요.', '환불을 요청하면 인증서가 취소돼요.'], btns: [['닫기', 'ghost', close], ['환불 요청', 'danger', () => { S(st => ({ dlg: null, sponsorships: st.sponsorships.map(x => (x.id === D.id ? { ...x, refunded: true } : x)) })); getS().toast('환불을 요청했어요'); }]] }; },
+    spots: () => ({ cat: true, title: cat.name + '의 얼룩을 다시 뽑을까요?', lines: ['츄르 ' + SPOT_COST + '개로 새 얼룩이 랜덤으로 생겨요.', '지금 얼룩으로는 되돌릴 수 없어요.'], btns: [['취소', 'ghost', close], ['다시 뽑기', 'primary', () => { close(); getS().rerollSpots(cat.id); }]] }),
     refundinfo: () => ({ title: '취소·환불 안내', lines: ['결제 후원은 보호소로 전달되기 전(7일 이내)에 환불할 수 있어요.', '전달이 끝난 후원은 환불할 수 없어요.', '츄르 후원은 환불되지 않아요.', '그 밖의 문의는 문의하기에서 남겨 주세요.'], btns: [['확인', 'primary', close]] }),
     call: () => ({ cat: true, title: '전화가 왔어요', lines: ['집중 시간이 잠시 멈췄어요.', '통화 중에는 벌점이 없어요.'], btns: [['받기', 'primary', () => S({ dlg: { kind: 'incall' } })], ['거절', 'ghost', () => { close(); getS().resumeTimer(); }]] }),
     incall: () => ({ title: '통화 중', lines: ['타이머가 멈춰 있어요.'], btns: [['통화 종료', 'primary', () => { close(); getS().resumeTimer(); getS().toast('집중을 이어가요'); }]] }),

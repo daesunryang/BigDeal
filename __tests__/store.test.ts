@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { GACHA_CATS, GACHA_COST, reward, isoDay, streakOf, growthOf } from '../src/data';
-import { clearNav, getS, switchTab, useApp } from '../src/store';
+import { clearNav, getS, spotSeed, switchTab, useApp } from '../src/store';
+import { SPOT_COST, spotsOf } from '../src/spots';
+import { runsOf as pixelRuns } from '../src/stage/pixelCat';
 
 jest.useFakeTimers();
 
@@ -381,5 +383,51 @@ describe('뽑기 고양이 그림', () => {
       expect(fs.existsSync(path.join(__dirname, '../assets/img/gacha/cut-' + c.id + '.png'))).toBe(true);
       expect(PALETTES[c.id]).toBeDefined();
     }
+  });
+});
+
+describe('고양이 얼룩', () => {
+  beforeEach(fresh);
+
+  test('같은 씨앗이면 같은 얼룩, 고양이마다 처음 얼룩이 다르다', () => {
+    const s = getS();
+    expect(spotsOf(123, '#E9AC7C')).toEqual(spotsOf(123, '#E9AC7C'));
+    expect(spotSeed(s, 'cheese')).toBe(spotSeed(getS(), 'cheese'));
+    expect(spotSeed(s, 'cheese')).not.toBe(spotSeed(s, 'blue'));
+    const sp = spotsOf(spotSeed(s, 'cheese'), '#E9AC7C');
+    expect(sp.blobs.length).toBeGreaterThan(1);
+    for (const [cx, cy] of sp.blobs) { expect(cx).toBeGreaterThan(0); expect(cx).toBeLessThan(1); expect(cy).toBeGreaterThan(0); expect(cy).toBeLessThan(1); }
+  });
+
+  test('어두운 고양이에게는 밝은 얼룩이 생긴다', () => {
+    for (let i = 0; i < 20; i++) { const n = parseInt(spotsOf(i, '#2E2729').color.slice(1), 16); expect((n >> 16) + ((n >> 8) & 255) + (n & 255)).toBeGreaterThan(3 * 130); }
+  });
+
+  test('200 츄르로 얼룩을 다시 뽑는다', () => {
+    useApp.setState({ churu: SPOT_COST + 5 });
+    const before = spotSeed(getS(), 'cheese');
+    getS().rerollSpots('cheese', () => 0.5);
+    const s = getS();
+    expect(s.churu).toBe(5);
+    expect(spotSeed(s, 'cheese')).not.toBe(before);
+    expect(s.ledger[0].a).toBe(-SPOT_COST);
+  });
+
+  test('츄르가 모자라거나 못 만난 고양이면 다시 뽑지 않는다', () => {
+    useApp.setState({ churu: SPOT_COST - 1 });
+    const before = spotSeed(getS(), 'cheese');
+    getS().rerollSpots('cheese');
+    expect(getS().churu).toBe(SPOT_COST - 1);
+    expect(spotSeed(getS(), 'cheese')).toBe(before);
+    useApp.setState({ churu: 999 });
+    getS().rerollSpots('bengal');
+    expect(getS().churu).toBe(999);
+    expect(getS().spots.bengal).toBeUndefined();
+  });
+
+  test('도트 고양이도 얼룩 색으로 칠한다', () => {
+    const sp = { seed: 7, sp: { kind: 'patch' as const, name: '얼룩무늬', color: '#123456', blobs: [[0.5, 0.6, 0.4, 0.4, 0]] as [number, number, number, number, number][] } };
+    expect(pixelRuns('sit', 'cheese', sp).some(r => r[3] === '#123456')).toBe(true);
+    expect(pixelRuns('sit', 'cheese').some(r => r[3] === '#123456')).toBe(false);
   });
 });

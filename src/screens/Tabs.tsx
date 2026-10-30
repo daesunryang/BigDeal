@@ -3,11 +3,15 @@ import { Image, Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
 import { ALL_CATS, ANIMALS, BEH, CATS, DECOR, GACHA_CATS, GACHA_COST, SONGS, TIER, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
 import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
-import { S, getS, listOf, useApp } from '../store';
+import { S, getS, listOf, spotSeed, useApp } from '../store';
 import { sfx } from '../sfx';
 import { useC } from '../theme';
 import { useScrollMemory } from '../ui/scrollMemory';
 import { Bar, Btn, CUTOUT, CatFace, FACE, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
+import { CatSpots } from '../ui/CatSpots';
+import { CUT_DIM } from '../stage/Stage';
+import { paletteOf } from '../stage/pixelCat';
+import { SPOT_COST, spotsOf } from '../spots';
 
 const pad = { paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18 };
 const back = () => { getS().back(); };
@@ -42,6 +46,35 @@ function PlusCats() {
         })}
       </View>
     </>
+  );
+}
+
+// 지금 함께하는 고양이의 얼룩 (도감 › 고양이 맨 위). 츄르로 얼룩을 다시 뽑는다
+function SpotCard() {
+  const C = useC();
+  const id = useApp(st => st.catId), seed = useApp(st => spotSeed(st, id)), churu = useApp(st => st.churu);
+  const cat = catById(id), sp = spotsOf(seed, paletteOf(id).B);
+  const [iw, ih] = CUT_DIM[id] || [580, 560], k = Math.min(96 / iw, 96 / ih), w = Math.round(iw * k), h = Math.round(ih * k);
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.card }}>
+      <View style={{ width: 104, height: 104, borderRadius: 16, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 4 }}>
+        <View style={{ width: w, height: h }}>
+          <Image source={CUTOUT[id]} accessibilityLabel={cat.name + ' · ' + sp.name} style={{ width: w, height: h }} />
+          <CatSpots id={id} w={w} h={h} />
+        </View>
+      </View>
+      <View style={{ flex: 1, gap: 6 }}>
+        <Txt jua style={{ fontSize: 16 }}>{cat.name + '의 얼룩'}</Txt>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: sp.color, borderWidth: 1.5, borderColor: C.ink }} />
+          <Txt style={{ fontSize: 12, color: C.sub }}>{sp.name + ' · 고양이마다 랜덤으로 생겨요'}</Txt>
+        </View>
+        <Btn onPress={() => (churu < SPOT_COST ? getS().toast('츄르가 ' + (SPOT_COST - churu) + '개 더 필요해요 · 집중하면 모을 수 있어요') : S({ dlg: { kind: 'spots' } }))} accessibilityLabel={'얼룩 다시 뽑기, 츄르 ' + SPOT_COST + '개'}
+          style={{ alignSelf: 'flex-start', height: 34, paddingHorizontal: 14, borderRadius: 17, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.chip1 }}>
+          <Txt jua style={{ fontSize: 13 }}>{'얼룩 다시 뽑기 · ' + SPOT_COST + ' 츄르'}</Txt>
+        </Btn>
+      </View>
+    </View>
   );
 }
 
@@ -92,6 +125,7 @@ export function Dex() {
       <Header title="도감" onBack={back} right={<Txt style={{ fontSize: 14, color: C.sub }}>{count}</Txt>} />
       <Seg items={[['cat', '고양이'], ['beh', '행동'], ['song', '노래'], ['item', '아이템']]} value={s.dexTab} onPick={k => S({ dexTab: k })} />
       {s.dexTab === 'cat' && <>
+        <SpotCard />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
           {CATS.map(c => {
             const o = s.owned.includes(c.id) || (!!c.plus && s.plus);
