@@ -1,4 +1,4 @@
-// 프로토타입(집중냥 App.dc.html)의 상수를 옮긴 파일. 문구·가격·수치는 프로토타입 그대로다.
+// 프로토타입(집중냥 App.dc.html — 앱 이름은 냥집중으로 바뀜)의 상수를 옮긴 파일. 문구·가격·수치는 프로토타입 그대로다.
 
 export type Fill =
   | { t: 'solid'; c: string }
@@ -8,7 +8,8 @@ export type Fill =
   | { t: 'grid'; c: string; bg: string; size: number; w: number }
   | { t: 'diag'; a: string; b: string; wa: number; wb: number; angle: number };
 
-export type Cat = { id: string; name: string; room: [number, number]; c: [number, number]; desc: string; plus?: boolean };
+// tier: Plus 전용 뽑기 고양이의 등급 (1 일반 · 2 희귀 · 3 전설). 뽑기 고양이 그림은 cats-all.jpg가 아니라 assets/img/gacha/의 고양이별 파일(kit.tsx FACE · CUTOUT).
+export type Cat = { id: string; name: string; room: [number, number]; c: [number, number]; desc: string; plus?: boolean; tier?: 1 | 2 | 3 };
 
 export const CATS: Cat[] = [
   { id: 'cheese', name: '치즈태비', room: [0, 0], c: [727, 440], desc: '햇살을 좋아하는 첫 번째 친구.' },
@@ -20,7 +21,31 @@ export const CATS: Cat[] = [
   { id: 'persian', name: '페르시안', room: [0, 3], c: [745, 2720], plus: true, desc: '느긋하게 털을 고르는 고양이.' },
   { id: 'angora', name: '터키시 앙고라', room: [1, 3], c: [2173, 2693], plus: true, desc: '서로 다른 눈빛이 매력인 고양이.' },
 ];
-export const catById = (id: string) => CATS.find(c => c.id === id) ?? CATS[0];
+// 뽑기 전용 고양이 (츄르로 뽑기). 사진 속 품종 중 기존 고양이·서로와 생김새가 겹치지 않는 14종.
+const g = (id: string, name: string, tier: 1 | 2 | 3, desc: string): Cat => ({ id, name, tier, desc, room: [0, 0], c: [0, 0] });
+export const GACHA_CATS: Cat[] = [
+  g('bombay', '봄베이', 1, '흑표범처럼 반짝이는 까만 고양이.'),
+  g('singapura', '싱가푸라', 1, '작은 몸에 큰 눈, 세상에서 가장 작은 고양이 중 하나.'),
+  g('bsh', '브리티시 쇼트헤어', 1, '동글동글 볼살의 느긋한 신사.'),
+  g('abyssinian', '아비시니안', 1, '날렵한 몸매의 호기심 많은 탐험가.'),
+  g('ash', '아메리칸 숏헤어', 1, '은빛 소용돌이 무늬의 명랑한 친구.'),
+  g('devon', '데본 렉스', 2, '커다란 귀와 곱슬 털의 장난꾸러기.'),
+  g('mau', '이집션 마우', 2, '은빛 점박이 무늬의 날쌘 고양이.'),
+  g('curl', '아메리칸 컬', 2, '뒤로 말린 귀가 귀여운 고양이.'),
+  g('mainecoon', '메인쿤', 2, '커다란 몸집의 다정한 숲속 거인.'),
+  g('fold', '스코티시 폴드', 2, '접힌 귀로 동그랗게 바라보는 고양이.'),
+  g('norwegian', '노르웨이 숲', 2, '풍성한 털옷을 입은 북쪽 숲의 고양이.'),
+  g('toyger', '토이거', 3, '호랑이 줄무늬를 두른 작은 맹수.'),
+  g('sphynx', '스핑크스', 3, '털 없이 따뜻한 피부의 신비한 고양이.'),
+  g('bengal', '벵갈', 3, '표범 무늬를 입은 활발한 고양이.'),
+];
+export const ALL_CATS = [...CATS, ...GACHA_CATS];
+export const catById = (id: string) => ALL_CATS.find(c => c.id === id) ?? CATS[0];
+export const TIER = { 1: { name: '일반', color: '#8DBF93', rate: 65, refund: 10 }, 2: { name: '희귀', color: '#7E9CC8', rate: 28, refund: 20 }, 3: { name: '전설', color: '#E59A4C', rate: 7, refund: 40 } } as const;
+// 뽑기 두 가지: 일반 뽑기(기본 고양이 4종, 누구나) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종, 등급 · 보장 있음). 10회는 10% 할인.
+export type GachaKind = 'basic' | 'plus';
+export const GACHA_COST: Record<GachaKind, { one: number; ten: number }> = { basic: { one: 30, ten: 270 }, plus: { one: 40, ten: 360 } };
+export const GACHA_PITY = 10; // Plus 전용 뽑기: 10번째 뽑기는 희귀 이상
 export const IMG_W = 2752, IMG_H = 3072, WIN = 560;
 
 export type AppInfo = { id: string; name: string; letter: string; color: string; usage: string; pkg?: string; icon?: string };
@@ -74,18 +99,18 @@ export const SWATCH: Record<string, string> = { basic: '#CFE6F3', big: '#BBDCEF'
 
 export type Mail = { id: number; type: 'reward' | 'report' | 'news' | 'event'; title: string; body: string; churu?: number; date: string; exp?: string; photo?: boolean };
 export const MAILS: Mail[] = [
-  { id: 1, type: 'reward', title: '웰컴 선물이 도착했어요', body: '집중냥에 온 걸 환영해요! 첫 집중을 응원하는 츄르를 보내요.', churu: 20, date: '오늘', exp: '7일 후 만료' },
-  { id: 7, type: 'reward', title: '출석 보상 · 오늘 출석 체크', body: '오늘도 집중냥에 와 줘서 고마워요. 출석 보상 츄르를 받으세요.', churu: 3, date: '오늘', exp: '7일 후 만료' },
+  { id: 1, type: 'reward', title: '웰컴 선물이 도착했어요', body: '냥집중에 온 걸 환영해요! 첫 집중을 응원하는 츄르를 보내요.', churu: 20, date: '오늘', exp: '7일 후 만료' },
+  { id: 7, type: 'reward', title: '출석 보상 · 오늘 출석 체크', body: '오늘도 냥집중에 와 줘서 고마워요. 출석 보상 츄르를 받으세요.', churu: 3, date: '오늘', exp: '7일 후 만료' },
   { id: 9, type: 'report', title: '보리의 근황이 도착했어요', body: '후원해 주신 보리가 새 담요에서 곤히 자고 있어요. 사료도 잘 먹고 몸무게가 200g 늘었어요.', photo: true, date: '10.27' },
   { id: 2, type: 'reward', title: '출석 보상 · 4일 연속 달성', body: '4일 연속 집중 목표를 달성했어요. 보너스 츄르를 받으세요.', churu: 8, date: '어제', exp: '6일 후 만료' },
   { id: 8, type: 'reward', title: '치즈태비와 친밀도 ♥1 달성!', body: '치즈태비가 마음을 열었어요. 표정이 한 단계 부드러워졌어요. 축하 선물을 보내요.', churu: 5, date: '10.25', exp: '6일 후 만료' },
   { id: 6, type: 'event', title: '가을 츄르 이벤트 · 선물이 도착했어요', body: '10월 한 달 동안 매일 집중하면 보너스 츄르를 드려요. 오늘의 선물을 받아가세요.', churu: 15, date: '10.26', exp: '5일 후 만료' },
-  { id: 3, type: 'report', title: '9월 기부 리포트', body: '햇살 고양이 쉼터에 집중냥 사용자들의 집중으로 사료 312kg이 전달됐어요. 새 가족을 만난 고양이 4마리의 근황도 함께 보내요.', photo: true, date: '10.01' },
-  { id: 4, type: 'news', title: '창밖에 낯선 고양이가 나타났어요', body: '도감에서 츄르 30개로 새 고양이를 불러보세요. 어떤 고양이가 올지는 비밀이에요.', date: '10.24' },
-  { id: 5, type: 'news', title: '[공지] 집중냥 1.0 출시 안내', body: '방해 앱 차단, 고양이 도감, 파트너 기부 기능이 정식 오픈했어요.', date: '10.20' },
+  { id: 3, type: 'report', title: '9월 기부 리포트', body: '햇살 고양이 쉼터에 냥집중 사용자들의 집중으로 사료 312kg이 전달됐어요. 새 가족을 만난 고양이 4마리의 근황도 함께 보내요.', photo: true, date: '10.01' },
+  { id: 4, type: 'news', title: '창밖에 낯선 고양이가 나타났어요', body: '뽑기 탭의 일반 뽑기로 새 고양이를 만나 보세요. 어떤 고양이가 올지는 비밀이에요.', date: '10.24' },
+  { id: 5, type: 'news', title: '[공지] 냥집중 1.0 출시 안내', body: '방해 앱 차단, 고양이 도감, 파트너 기부 기능이 정식 오픈했어요.', date: '10.20' },
 ];
 
-export type BehId = 'idle' | 'nap' | 'meow' | 'stretch' | 'look' | 'hop' | 'purr' | 'sulky';
+export type BehId = 'idle' | 'nap' | 'meow' | 'stretch' | 'look' | 'hop' | 'purr' | 'sulky' | 'sing';
 export const BEH: { id: BehId; name: string; g: string; bg: string; text: string }[] = [
   { id: 'idle', name: '쉬는 중', g: '♪', bg: '#F3EADB', text: '오늘도 같이 집중해요!' },
   { id: 'nap', name: '낮잠', g: 'z', bg: '#DCE8F3', text: '쿨쿨… 햇살 아래 낮잠 중이에요' },
@@ -95,6 +120,25 @@ export const BEH: { id: BehId; name: string; g: string; bg: string; text: string
   { id: 'hop', name: '콩콩', g: '↑', bg: '#F8DEDC', text: '신나서 콩콩 뛰어요' },
   { id: 'purr', name: '골골송', g: '♥', bg: '#F8DEDC', text: '골골골… 기분 최고예요' },
 ];
+// 고양이 노래 (디자인 라운드 9~12). 기본 5곡 + 품종마다 전용 1곡. n = [음 높이(Hz), 길이(초)] — assets/sfx/song<i>.wav는 scripts/gen-songs.py로 이 표에서 만든다
+export type Song = { name: string; t: string; n: [number, number][]; cat?: string };
+export const SONGS: Song[] = [
+  { name: '냐옹냐옹 왈츠', t: '야옹야옹~ 냐옹냐옹♪', n: [[660, .22], [880, .3], [660, .22], [784, .3], [988, .22], [880, .22], [784, .45]] },
+  { name: '츄르 송', t: '냥냥냥~ 츄르 송♫', n: [[523, .18], [523, .18], [784, .18], [784, .18], [880, .18], [880, .18], [784, .4]] },
+  { name: '낮잠 자장가', t: '골골~ 자장자장 야옹♪', n: [[784, .35], [659, .35], [698, .35], [587, .5], [523, .6]] },
+  { name: '신나는 냥', t: '미야우! 신나는 냥♬', n: [[880, .12], [988, .12], [1047, .12], [988, .12], [880, .12], [784, .24], [880, .12], [1047, .36]] },
+  { name: '아침 인사', t: '야~옹 야~옹 아침 냥♪', n: [[587, .3], [740, .3], [880, .45], [740, .2], [880, .2], [1175, .5]] },
+  { cat: 'cheese', name: '햇살 항아리', t: '햇살이 따끈냥~♪', n: [[523, .2], [659, .2], [784, .3], [659, .2], [880, .4], [784, .5]] },
+  { cat: 'blue', name: '조용한 밤', t: '쉬잇… 조용히 냐옹♫', n: [[440, .4], [523, .4], [494, .4], [392, .6], [440, .7]] },
+  { cat: 'calico', name: '수다 폭발', t: '냐냐냐냐! 있잖아♬', n: [[784, .1], [880, .1], [784, .1], [988, .1], [880, .1], [1047, .1], [988, .1], [1175, .3]] },
+  { cat: 'tux', name: '턱시도 행진', t: '둥둥 야옹 행진♪', n: [[392, .25], [392, .25], [523, .25], [392, .25], [659, .25], [523, .5]] },
+  { cat: 'ragdoll', name: '포근한 안기', t: '안아줘옹~ 포근♫', n: [[587, .35], [523, .35], [587, .35], [659, .35], [587, .7]] },
+  { cat: 'siam', name: '수다쟁이 아리아', t: '마아아옹~ 마아옹!♬', n: [[880, .3], [1047, .2], [1175, .2], [1319, .4], [1175, .2], [1047, .5]] },
+  { cat: 'persian', name: '느긋한 오후', t: '느엇… 냐아옹♪', n: [[349, .5], [392, .5], [440, .5], [392, .8]] },
+  { cat: 'angora', name: '두 빛깔 왕국', t: '반짝반짝 야옹♫', n: [[1047, .15], [1319, .15], [1568, .3], [1319, .15], [1175, .15], [1047, .45]] },
+];
+export const songMs = (sg: Song) => Math.max(2600, sg.n.reduce((a, x) => a + x[1], 0) * 1000 + 900);
+export const REST_PRESETS: [number, number][] = [[25, 5], [50, 10], [90, 15], [0, 0]];
 export const TAGS = ['공부', '업무', '독서', '운동', '창작', '기타'];
 export const ANIMALS = [
   { id: 'a0', sh: 0, name: '보리', age: '3살 · 수컷', story: '비 오는 날 쉼터 앞에서 구조된 치즈냥이에요. 사람 손길을 좋아하는 순둥이예요.' },
@@ -111,10 +155,10 @@ export const FEED = [
   { shelter: '햇살 고양이 쉼터', animal: '보리', date: '10.27', title: '보리가 처음으로 배를 보여줬어요', body: '한 달 만에 마음을 열었어요. 새 담요 위에서 곤히 자고, 사료도 잘 먹어요.' },
   { shelter: '골목냥 돌봄 협회', animal: '달이', date: '10.25', title: '달이의 중성화 수술이 잘 끝났어요', body: '회복 중이라 며칠은 조용히 쉬어요. 응원해 주신 마음 덕분이에요.' },
   { shelter: '햇살 고양이 쉼터', animal: '콩이', date: '10.22', title: '콩이의 입양 상담이 시작됐어요', body: '첫 방문 가족과 짧게 만났어요. 낯선 손길에도 꼬리를 살짝 세웠어요.' },
-  { shelter: '골목냥 돌봄 협회', animal: '나비', date: '10.18', title: '이번 달 급식소 사료가 도착했어요', body: '집중냥 사용자들의 집중으로 모인 사료가 급식소 세 곳에 나뉘어 전달됐어요.' },
+  { shelter: '골목냥 돌봄 협회', animal: '나비', date: '10.18', title: '이번 달 급식소 사료가 도착했어요', body: '냥집중 사용자들의 집중으로 모인 사료가 급식소 세 곳에 나뉘어 전달됐어요.' },
 ];
 export const NOTICES = [
-  { pin: true, t: '집중냥 1.0 정식 오픈 안내', d: '10.20', b: '방해 앱 차단, 고양이 도감, 파트너 기부 기능이 정식 오픈했어요. 불편한 점은 문의하기로 알려 주세요.' },
+  { pin: true, t: '냥집중 1.0 정식 오픈 안내', d: '10.20', b: '방해 앱 차단, 고양이 도감, 파트너 기부 기능이 정식 오픈했어요. 불편한 점은 문의하기로 알려 주세요.' },
   { pin: false, t: '엄격 모드가 추가됐어요', d: '10.26', b: '엄격 모드를 켜면 집중 중 포기 버튼이 사라져요. 긴급할 때는 3초간 길게 눌러 종료할 수 있지만 친밀도가 더 크게 줄어요.' },
   { pin: false, t: '가을 츄르 이벤트', d: '10.26', b: '10월 31일까지 매일 집중을 완료하면 우편함으로 보너스 츄르가 도착해요.' },
   { pin: false, t: '11월 정기 점검 안내', d: '10.24', b: '11월 5일 02:00~04:00 서버 점검이 있어요. 점검 중에도 진행 중인 집중은 이어져요.' },
@@ -128,15 +172,15 @@ export const FAQS: [string, string][] = [
   ['엄격 모드는 언제 쓰면 좋나요?', '중간에 흔들리기 쉬운 중요한 집중에 추천해요. 안내와 알림도 최소한으로 줄어요.'],
 ];
 export const DOCS: Record<string, [string, string][]> = {
-  '이용약관': [['제1조 (목적)', '이 약관은 집중냥이 제공하는 집중 타이머, 고양이 육성, 후원 연계 서비스의 이용 조건과 절차를 정합니다.'], ['제2조 (계정)', '이용자는 Google, Apple, 이메일 중 하나로 가입할 수 있으며 계정 정보는 정확하게 유지해야 합니다.'], ['제3조 (츄르와 보상)', '츄르는 서비스 내 재화로 현금으로 환급되지 않습니다. 부정한 방법으로 얻은 츄르는 회수될 수 있습니다.'], ['제4조 (후원)', '파트너 기부는 집중 목표 달성에 따라 이행되며, 결제 후원은 별도 안내에 따라 보호소에 전달됩니다.']],
+  '이용약관': [['제1조 (목적)', '이 약관은 냥집중이 제공하는 집중 타이머, 고양이 육성, 후원 연계 서비스의 이용 조건과 절차를 정합니다.'], ['제2조 (계정)', '이용자는 Google, Apple, 이메일 중 하나로 가입할 수 있으며 계정 정보는 정확하게 유지해야 합니다.'], ['제3조 (츄르와 보상)', '츄르는 서비스 내 재화로 현금으로 환급되지 않습니다. 부정한 방법으로 얻은 츄르는 회수될 수 있습니다.'], ['제4조 (후원)', '파트너 기부는 집중 목표 달성에 따라 이행되며, 결제 후원은 별도 안내에 따라 보호소에 전달됩니다.']],
   '개인정보 처리방침': [['수집 항목', '이메일, 닉네임, 로그인 제공자 정보, 집중 기록, 차단 앱 설정을 수집합니다.'], ['이용 목적', '계정 식별, 기록 동기화, 후원 내역 관리, 서비스 개선에 이용합니다.'], ['앱 사용 정보', '앱 차단을 위해 실행 중인 앱 정보를 기기 안에서만 확인하며 서버로 전송하지 않습니다.'], ['보관과 삭제', '회원 탈퇴 시 개인정보는 지체 없이 삭제하며, 법령상 보관 의무가 있는 정보는 해당 기간 보관합니다.']],
 };
 export const LIMITED = ['witch', 'pumpkin', 'leaves', 'ghost'];
-export const PG = { plus: '집중냥 Plus', partner: '파트너 단체 소개', widget: '위젯 미리보기', attend: '출석 체크', goal: '집중 목표', report: '주간 리포트 · 월간 회고', friends: '친구와 비교', profile: '내 정보 수정', withdraw: '회원 탈퇴', backup: '데이터 백업 · 동기화', growth: '고양이 성장', ledger: '츄르 내역', a11y: '접근성', sfx: '효과음 · 햅틱', oss: '오픈소스 라이선스', states: '상태 화면 모음', platform: '플랫폼 차이', demo: '데모 상황', remind: '집중 리마인더' };
+export const PG = { plus: '냥집중 Plus', partner: '파트너 단체 소개', widget: '위젯 미리보기', attend: '출석 체크', goal: '집중 목표', report: '주간 리포트 · 월간 회고', friends: '친구와 비교', profile: '내 정보 수정', withdraw: '회원 탈퇴', backup: '데이터 백업 · 동기화', growth: '고양이 성장', ledger: '츄르 내역', a11y: '접근성', sfx: '효과음 · 햅틱', oss: '오픈소스 라이선스', states: '상태 화면 모음', platform: '플랫폼 차이', demo: '데모 상황', remind: '집중 리마인더' };
 export const FRIENDS = [{ name: '하늘', m: 480, c: 'blue', code: '' }, { name: '마루', m: 355, c: 'calico', code: '' }, { name: '연우', m: 120, c: 'tux', code: '' }];
 export const SHD = [
-  { since: '2016', budget: [['사료', 68], ['진료·중성화', 22], ['시설·운영', 10]] as [string, number][], facts: [['법인 형태', '비영리 임의단체'], ['고유번호', '경기-파주-0231'], ['연간 감사 보고', '2025년 공개'], ['방문 확인', '집중냥 팀 연 2회']] },
-  { since: '2019', budget: [['사료', 62], ['진료·중성화', 28], ['시설·운영', 10]] as [string, number][], facts: [['법인 형태', '사단법인'], ['고유번호', '서울-마포-0118'], ['연간 감사 보고', '2025년 공개'], ['방문 확인', '집중냥 팀 연 2회']] },
+  { since: '2016', budget: [['사료', 68], ['진료·중성화', 22], ['시설·운영', 10]] as [string, number][], facts: [['법인 형태', '비영리 임의단체'], ['고유번호', '경기-파주-0231'], ['연간 감사 보고', '2025년 공개'], ['방문 확인', '냥집중 팀 연 2회']] },
+  { since: '2019', budget: [['사료', 62], ['진료·중성화', 28], ['시설·운영', 10]] as [string, number][], facts: [['법인 형태', '사단법인'], ['고유번호', '서울-마포-0118'], ['연간 감사 보고', '2025년 공개'], ['방문 확인', '냥집중 팀 연 2회']] },
 ];
 export const OSS = [
   ['React · React Native', 'MIT', 'Copyright (c) Meta Platforms, Inc. and affiliates. 저작권 고지와 허가 문구를 포함하면 자유롭게 사용·복사·수정·배포할 수 있어요.'],
@@ -175,7 +219,7 @@ export const TOPD: Record<string, [number, number, number, number, string, numbe
   sofa: [10, 12, 40, 24, '#B5714F', 8], tv: [60, 4, 34, 14, '#4A3428', 3], tunnel: [10, 44, 60, 28, '#C29D6E', 40], ballpit: [52, 40, 40, 44, '#F2B8B5', 'round'], bed: [22, 28, 56, 48, '#F2B8B5', 12], nightlight: [78, 14, 12, 16, '#F2C46B', 'round'], bowl: [40, 50, 20, 24, '#9DB6DA', 'round'], table: [20, 24, 52, 46, '#D9B98C', 6], flowers: [8, 70, 84, 20, '#F2B8B5', 'round'], tree: [62, 12, 30, 42, '#6FA56B', 'round'], trunk: [60, 50, 28, 30, '#8A6244', 4], telescope: [64, 10, 10, 46, '#4A3428', 3], desk: [10, 10, 60, 30, '#8A6244', 4], books: [76, 60, 16, 26, '#B8A2D9', 2], bookshelf: [4, -2, 40, 14, '#8A6244', 3], fireplace: [56, -2, 28, 18, '#B5714F', 4], seesaw: [20, 52, 50, 12, '#E59A4C', 6], slide: [64, 20, 20, 50, '#7E9CC8', 8], blanket: [30, 36, 44, 36, '#B8A2D9', 8], curtain: [2, -2, 14, 40, '#F2B8B5', 2], fridge: [4, -2, 20, 26, '#DCE8F3', 4], fishbowl: [70, 60, 16, 22, '#9DB6DA', 'round'], fence: [2, -2, 96, 8, '#D9B98C', 2], pond: [10, 50, 46, 34, '#7E9CC8', 'round'], globe: [70, 12, 16, 22, '#7E9CC8', 'round'], lantern: [8, 60, 12, 18, '#F2C46B', 4], standlamp: [6, 10, 8, 30, '#F2C46B', 'round'], cabinet: [60, 4, 34, 16, '#8A6244', 3],
 };
 export const MOODS = ['새침함', '경계 풀림', '편안함', '기분 좋음', '골골송', '애교 만점'];
-export const PARTNER_ROWS = [['단체명', '냠냠펫푸드 (가칭)'], ['기부 방식', '집중 목표 달성 1회당 사료 100g'], ['전달 주기', '매월 말 보호소 2곳에 일괄 전달'], ['검증', '전달 영수증과 보호소 확인서를 기부 리포트로 공개'], ['문의', 'partner@jibjungnyang.example']];
+export const PARTNER_ROWS = [['단체명', '냠냠펫푸드 (가칭)'], ['기부 방식', '집중 목표 달성 1회당 사료 100g'], ['전달 주기', '매월 말 보호소 2곳에 일괄 전달'], ['검증', '전달 영수증과 보호소 확인서를 기부 리포트로 공개'], ['문의', 'partner@nyangjibjung.example']];
 export const WEEK_DEMO = [40, 75, 25, 90, 50, 60];
 export const PLUS_PLANS: [string, string, string, string][] = [['life', '평생', '₩19,900', '한 번 결제로 계속 · 월간 약 5개월치'], ['month', '월간', '₩3,900', '매달 결제 · 언제든 해지']];
 

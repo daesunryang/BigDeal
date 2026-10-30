@@ -1,15 +1,17 @@
-import React, { useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { IS_DEMO } from '../config';
 import { FOCUS_MSGS, MOODS, SHN, catById } from '../data';
 import { affOf, growth } from '../derive';
-import { FloorPlan, houseData } from '../stage/House';
+import { Hearth } from '../stage/Hearth';
 import { S, getS, useApp } from '../store';
 import { useC, useDark } from '../theme';
 import { Anim, EZ } from '../ui/anim';
 import { Btn, CatFace, Primary, Txt } from '../ui/kit';
 
+// 이름 뒤 조사 이/가 (받침이 있으면 이)
+const iga = (w: string) => { const c = w.charCodeAt(w.length - 1) - 0xac00; return w + (c >= 0 && c < 11172 && c % 28 ? '이' : '가'); };
 const mmss = (sec: number) => { const t = Math.ceil(sec); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
 
 export function Focus() {
@@ -18,30 +20,34 @@ export function Focus() {
   const cat = catById(s.catId), strict = s.toggles.strict;
   const prog = s.total ? 1 - s.remain / s.total : 0;
   const blockedN = s.apps.filter(a => s.blocked[a.id]).length;
-  const rows = s.extra ? 6 : 5, here = houseData(s, rows).here;
   const holdT = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { width, height } = useWindowDimensions();
+  // 불멍: 장면 아래 한 줄 설명, 누르면 화면 가득 크게
+  const [act, setAct] = useState('');
+  const [big, setBig] = useState(false);
+  const onAct = useCallback((t: string) => setAct(t), []);
   return (
     <View style={{ flex: 1, backgroundColor: C.card }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center', paddingTop: 24, paddingHorizontal: 22, paddingBottom: 22, gap: 18 }}>
         <Txt style={{ fontSize: 14, color: C.sub, textAlign: 'center' }}>{strict ? cat.name + '와(과) 집중 중' : s.tag + ' · ' + cat.name + '와(과) 함께 집중 중 · ' + blockedN + '개 앱 차단됨'}</Txt>
-        <View style={{ width: 260, height: 260, marginTop: 10 }}>
-          <Svg width={260} height={260} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
-            <Circle cx={130} cy={130} r={122} fill="none" stroke={C.line} strokeWidth={10} />
-            <Circle cx={130} cy={130} r={122} fill="none" stroke="#8DBF93" strokeWidth={10} strokeLinecap="round" strokeDasharray="766.5" strokeDashoffset={766.5 * (1 - prog)} />
+        <View style={{ width: 200, height: 200, marginTop: 4 }}>
+          <Svg width={200} height={200} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
+            <Circle cx={100} cy={100} r={93} fill="none" stroke={C.line} strokeWidth={9} />
+            <Circle cx={100} cy={100} r={93} fill="none" stroke="#8DBF93" strokeWidth={9} strokeLinecap="round" strokeDasharray="584.3" strokeDashoffset={584.3 * (1 - prog)} />
           </Svg>
-          <Anim name="bob" dur={3} style={{ position: 'absolute', left: 25, top: 25 }}><CatFace cat={cat} size={210} /></Anim>
+          <Anim name="bob" dur={3} style={{ position: 'absolute', left: 20, top: 20 }}><CatFace cat={cat} size={160} /></Anim>
         </View>
         <Txt jua style={{ fontSize: 60, lineHeight: 64, letterSpacing: 1, fontVariant: ['tabular-nums'] }}>{mmss(s.remain)}</Txt>
         {!strict && <Txt style={{ fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21 }}>{FOCUS_MSGS[prog < 0.4 ? 0 : prog < 0.8 ? 1 : 2]}</Txt>}
-        <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.ink }}>
-          <View style={{ borderWidth: 1.5, borderColor: C.ink, borderRadius: 4, overflow: 'hidden' }}>
-            <FloorPlan s={s} width={129} rowH={16} rows={rows} mini tokenSize={16} />
+        <Pressable onPress={() => setBig(true)} accessibilityRole="button" accessibilityLabel="불멍 화면 크게 보기" style={{ width: '100%', gap: 8 }}>
+          <View style={{ borderRadius: 18, borderWidth: 2, borderColor: C.ink, overflow: 'hidden', backgroundColor: '#3B2D25' }}>
+            {!big && <Hearth catId={s.catId} width={Math.min(width - 44, 520) - 4} onAct={onAct} />}
           </View>
-          <View style={{ flex: 1, gap: 6 }}>
-            <Txt style={{ fontSize: 12, lineHeight: 17 }}>{`${cat.name}는 지금 ${here.name}에 있어요`}</Txt>
-            <Btn onPress={() => getS().callCat()} style={{ height: 32, borderRadius: 16, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 13 }}>고양이 부르기</Txt></Btn>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4 }}>
+            <Txt style={{ fontSize: 13, color: C.sub, flexShrink: 1 }}>{iga(cat.name) + ' ' + act}</Txt>
+            <Txt style={{ fontSize: 12, color: C.sub }}>크게 보기 ⤢</Txt>
           </View>
-        </View>
+        </Pressable>
         <View style={{ flex: 1 }} />
         <View style={{ width: '100%', gap: 10 }}>
           {IS_DEMO && <Btn onPress={() => S(st => ({ showBlocked: true, blockedApp: '인스타그램', tries: { ...st.tries, ig: (st.tries.ig || 0) + 1 }, blockedNow: st.blockedNow + 1 }))} style={{ height: 46, borderRadius: 23, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.sub }}>
@@ -54,6 +60,14 @@ export function Focus() {
               </Pressable>}
         </View>
       </ScrollView>
+      {big && (
+        <Pressable onPress={() => setBig(false)} accessibilityLabel="불멍 화면 닫기" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: '#140E0B', alignItems: 'center', justifyContent: 'center', gap: 22 }}>
+          <Txt jua style={{ fontSize: 44, color: '#F3E3B0', fontVariant: ['tabular-nums'], opacity: 0.85 }}>{mmss(s.remain)}</Txt>
+          <Hearth catId={s.catId} width={Math.min(width, height * 1.4)} onAct={onAct} />
+          <Txt style={{ fontSize: 14, color: '#C9B7A3' }}>{iga(cat.name) + ' ' + act}</Txt>
+          <Txt style={{ fontSize: 12, color: '#7A6352' }}>화면을 누르면 돌아가요</Txt>
+        </Pressable>
+      )}
       {s.showBlocked && (
         <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,34,29,0.55)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: C.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 22, paddingHorizontal: 22, paddingBottom: 24, alignItems: 'center', gap: 14 }}>
@@ -94,7 +108,7 @@ export function Done({ width, height }: { width: number; height: number }) {
         </Anim>
         <View style={{ flex: 1 }} />
         <View style={{ flexDirection: 'row', gap: 10, width: '100%' }}>
-          {([['휴식 5분', () => S({ screen: 'rest', rest: 300 }), C.mint], ['후원 현황', () => S({ screen: 'tabs', tab: 'donate' }), C.bg], ['공유 카드', () => S({ share: true }), C.chip1]] as const).map(([l, f, bg]) => (
+          {([['휴식 ' + (s.restOn ? s.restLen : 5) + '분', () => S({ screen: 'rest', midRest: false, rest: (s.restOn ? s.restLen : 5) * 60 }), C.mint], ['후원 현황', () => S({ screen: 'tabs', tab: 'donate' }), C.bg], ['공유 카드', () => S({ share: true }), C.chip1]] as const).map(([l, f, bg]) => (
             <Btn key={l} onPress={f} style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: bg }}><Txt jua style={{ fontSize: 15 }}>{l}</Txt></Btn>
           ))}
         </View>
@@ -148,10 +162,10 @@ export function Rest() {
       <Txt style={{ fontSize: 14, color: C.gink }}>휴식 타이머</Txt>
       <Anim name="nap" dur={3.6}><CatFace cat={cat} size={190} /></Anim>
       <Txt jua style={{ fontSize: 64, lineHeight: 68, fontVariant: ['tabular-nums'] }}>{mmss(s.rest)}</Txt>
-      <Txt style={{ fontSize: 14, color: C.gink, lineHeight: 21, textAlign: 'center' }}>{cat.name + '와(과) 함께 잠깐 쉬어요.\n시간이 끝나면 홈으로 돌아가요.'}</Txt>
+      <Txt style={{ fontSize: 14, color: C.gink, lineHeight: 21, textAlign: 'center' }}>{cat.name + '와(과) 함께 잠깐 쉬어요.\n' + (s.midRest ? '휴식이 끝나면 남은 집중을 이어서 해요.' : '시간이 끝나면 홈으로 돌아가요.')}</Txt>
       <View style={{ flex: 1 }} />
       <Btn onPress={() => S(st => ({ rest: st.rest + 300 }))} style={{ width: '100%', height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 15 }}>5분 더 쉬기</Txt></Btn>
-      <Primary label="휴식 끝내고 홈으로" style={{ width: '100%' }} onPress={() => S({ screen: 'tabs', tab: 'home' })} />
+      <Primary label={s.midRest ? '바로 집중 이어가기' : '휴식 끝내고 홈으로'} style={{ width: '100%' }} onPress={() => (s.midRest ? getS().endRest() : S({ screen: 'tabs', tab: 'home', rest: 0 }))} />
     </ScrollView>
   );
 }

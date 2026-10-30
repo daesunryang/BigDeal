@@ -1,5 +1,5 @@
 rules_version = '2';
-// 집중냥 Firestore 보안 규칙 (정식 빌드)
+// 냥집중 Firestore 보안 규칙 (정식 빌드)
 service cloud.firestore {
   match /databases/{database}/documents {
     // 게임 데이터: 본인만 읽고 쓴다

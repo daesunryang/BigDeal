@@ -17,6 +17,8 @@ type Native = {
 
 let mod: Native | null = null;
 if (IS_FULL && Platform.OS === 'android') {
+  // 정식 빌드에서만 네이티브 모듈을 불러온다 (데모·웹에는 없음)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   try { mod = require('../../modules/app-blocker').default as Native; } catch { mod = null; }
 }
 

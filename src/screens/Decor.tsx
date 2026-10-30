@@ -28,7 +28,7 @@ export function Decor({ width }: { width: number }) {
     <View style={{ flex: 1, backgroundColor: C.card }}>
       <View style={{ height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 6, paddingRight: 14, backgroundColor: C.bg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-          <Btn onPress={() => S({ screen: 'tabs', preview: null })} style={{ width: 40, height: 44 }}><Txt style={{ fontSize: 26 }}>‹</Txt></Btn>
+          <Btn onPress={() => { getS().back(); }} accessibilityLabel="뒤로" style={{ width: 40, height: 44 }}><Txt style={{ fontSize: 26 }}>‹</Txt></Btn>
           <Txt jua style={{ fontSize: 21 }}>방 꾸미기</Txt>
         </View>
         <ChuruBadge n={s.churu} />

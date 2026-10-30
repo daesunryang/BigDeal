@@ -2,13 +2,16 @@ import * as Clipboard from 'expo-clipboard';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, TextInput, View } from 'react-native';
+import { scrollKey, useScrollMemory } from '../ui/scrollMemory';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
-import { CATS, DOCS, FAQS, MOODS, NOTICES, OSS, PARTNER_ROWS, PG, PLAT, PLUS_PLANS, catById, isoDay, streakOf } from '../data';
-import { affOf, badges, dkg, goalDays, gotBadges, growth, monthHeat, todayMin, weekLabels, weekVals } from '../derive';
+import { ALL_CATS, CATS, DOCS, FAQS, MOODS, NOTICES, OSS, PARTNER_ROWS, PG, PLAT, PLUS_PLANS, catById, isoDay, streakOf } from '../data';
+import { affOf, badges, dkg, goalDays, recentDone, gotBadges, growth, monthHeat, todayMin, weekLabels, weekVals } from '../derive';
 import { AuthError, authEnabled, linkEmail, linkGoogle, logOut } from '../services/auth';
 import { blocker } from '../services/blocker';
 import { fb } from '../services/firebase';
 import { pushNow, readFriend, stopSync } from '../services/sync';
+import { notifyEnabled } from '../services/notify';
+import { checkUpdate, openUpdate } from '../services/update';
 import { sfx } from '../sfx';
 import { S, State, getS, useApp } from '../store';
 import { FONT, useC } from '../theme';
@@ -30,21 +33,21 @@ export async function doLogout() {
 
 function MenuRoot() {
   const C = useC();
+  const sm = useScrollMemory(scrollKey('menu', null));
   const s = useApp(st => st);
   const av = catById(s.avatarCat || s.catId);
   const tog = (k: keyof State['toggles']) => () => S(st => ({ toggles: { ...st.toggles, [k]: !st.toggles[k] } }));
   const strictRow: Row = { label: '엄격 모드', value: (s.cb ? (s.toggles.strict ? '켜짐 ' : '꺼짐 ') : '') + '포기 버튼 숨김', onPress: tog('strict'), toggle: true, on: s.toggles.strict };
   const SECS: [string, Row[]][] = [
     ['내 활동', [
-      { label: '집중냥 Plus', value: s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 4종 더', onPress: page(PG.plus), color: '#C9772F' },
+      { label: '냥집중 Plus', value: s.plus ? (s.plusKind === 'life' ? '평생 이용' : '구독 중') : '고양이 18종 더', onPress: page(PG.plus), color: '#C9772F' },
       { label: '집중 기록', onPress: go('stats') }, { label: '상점 · 꾸미기', value: s.churu + ' 츄르', onPress: go('shop') },
-      { label: '고양이 도감', value: (s.owned.length + (s.plus ? 4 : 0)) + '/8', onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/24', onPress: page('업적 · 배지') },
+      { label: '고양이 도감', value: (s.owned.length + (s.plus ? CATS.filter(c => c.plus).length : 0)) + '/' + ALL_CATS.length, onPress: go('dex') }, { label: '업적 · 배지', value: gotBadges(s) + '/' + badges(s).length * 4, onPress: page('업적 · 배지') },
       { label: '출석 체크', value: streakOf(s.att) + '일', onPress: page(PG.attend) }, { label: '주간 리포트 · 월간 회고', onPress: page(PG.report) }, { label: '친구와 비교', onPress: page(PG.friends) },
       { label: '고양이 성장', value: growth(s).name, onPress: page(PG.growth) }, { label: '츄르 내역', onPress: page(PG.ledger) }]],
     ['후원', [{ label: '후원 현황', value: dkg(s) + 'kg 전달', onPress: go('donate') }, { label: '기부 영수증 · 증명서', onPress: () => S({ tab: 'donate', donTab: 'mine' }) }, { label: '파트너 단체 소개', onPress: page(PG.partner) }]],
     ['집중 설정', [
       { label: '기본 차단 앱', value: s.apps.filter(a => s.blocked[a.id]).length + '개', onPress: () => S({ sheet: true }) },
-      { label: '시계 형식', value: s.fmt === '12' ? '12시간 (AM/PM)' : '24시간', onPress: () => S(st => ({ fmt: st.fmt === '12' ? '24' : '12' })) },
       strictRow, { label: '집중 목표', value: s.goal + '분/일', onPress: page(PG.goal) }, { label: '집중 리마인더', value: s.remind.on ? '매일 ' + s.remind.time : '꺼짐', onPress: page(PG.remind) }]],
     ['앱 설정', [
       { label: '알림', onPress: tog('notif'), toggle: true, on: s.toggles.notif }, { label: '소리 · 진동', onPress: tog('sound'), toggle: true, on: s.toggles.sound },
@@ -64,8 +67,12 @@ function MenuRoot() {
       { label: '튜토리얼 다시 보기', onPress: () => S({ menuPage: null, tab: 'home', coach: 0 }) }]] as [string, Row[]]] : []),
   ];
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="메뉴" />
+      {!!s.update && <Btn onPress={openUpdate} style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 18, backgroundColor: '#F6D58E', borderWidth: 1.5, borderColor: '#4A3428', justifyContent: 'flex-start' }}>
+        <View style={{ flex: 1, gap: 2 }}><Txt jua style={{ fontSize: 16, color: '#4A3428' }}>{'새 버전 ' + s.update.tag + '이 나왔어요'}</Txt><Txt style={{ fontSize: 12, color: '#7A6352' }}>{ios ? '눌러서 릴리스 페이지에서 새 버전을 받아요' : '눌러서 APK를 받고 설치하면 기록은 그대로 이어져요'}</Txt></View>
+        <Txt jua style={{ fontSize: 14, color: '#4A3428' }}>받기 ›</Txt>
+      </Btn>}
       <Btn onPress={page(PG.profile)} style={{ flexDirection: 'row', gap: 12, padding: 14, borderRadius: 20, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}>
         <CatFace cat={av} size={52} border={1.5} />
         <View style={{ flex: 1, gap: 3, minWidth: 0 }}>
@@ -98,9 +105,14 @@ const TITLES: Record<string, string> = { login: '로그인 관리' };
 export function Menu({ width }: { width: number }) {
   const mp = useApp(s => s.menuPage);
   if (!mp) return <MenuRoot />;
+  return <MenuSub key={mp} mp={mp} width={width} />;
+}
+
+function MenuSub({ mp, width }: { mp: string; width: number }) {
+  const sm = useScrollMemory(scrollKey('menu', mp));
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]} keyboardShouldPersistTaps="handled">
-      <Header title={TITLES[mp] || mp} onBack={() => S({ menuPage: null })} />
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]} keyboardShouldPersistTaps="handled">
+      <Header title={TITLES[mp] || mp} onBack={() => { getS().back(); }} />
       <SubPage p={mp} width={width} />
     </ScrollView>
   );
@@ -179,7 +191,7 @@ function SubPage({ p, width }: { p: string; width: number }) {
     <View key={i} style={{ borderRadius: 16, backgroundColor: C.card }}><Expand title={n.t} body={n.b} pin={n.pin} right={n.d} open={s.openNotice === i} onPress={() => S({ openNotice: s.openNotice === i ? null : i })} /></View>))}</View>;
   if (p === '자주 묻는 질문') return <View style={{ borderRadius: 18, backgroundColor: C.card, overflow: 'hidden' }}>{FAQS.map(([q, a], i) => <Expand key={i} divider={!!i} title={q} body={a} right={s.openFaq === i ? '−' : '+'} open={s.openFaq === i} onPress={() => S({ openFaq: s.openFaq === i ? null : i })} />)}</View>;
   if (p === '업적 · 배지') return <View style={{ gap: 12 }}>
-    <View style={{ padding: 14, borderRadius: 18, backgroundColor: C.ink, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Txt jua style={{ fontSize: 15, color: C.bg }}>획득한 배지</Txt><Txt jua style={{ fontSize: 24, color: C.bg }}>{gotBadges(s) + ' / 24'}</Txt></View>
+    <View style={{ padding: 14, borderRadius: 18, backgroundColor: C.ink, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Txt jua style={{ fontSize: 15, color: C.bg }}>획득한 배지</Txt><Txt jua style={{ fontSize: 24, color: C.bg }}>{gotBadges(s) + ' / ' + badges(s).length * 4}</Txt></View>
     {badges(s).map(([title, unit, th, cur, color]) => {
       const got = th.filter(x => cur >= x).length, nx = th.find(x => cur < x), lo = got ? th[got - 1] : 0;
       const col = (C as any)[color] ?? color;
@@ -223,13 +235,15 @@ function SubPage({ p, width }: { p: string; width: number }) {
   if (p === '앱 정보') return <View style={{ gap: 16 }}>
     <View style={{ alignItems: 'center', gap: 8, paddingVertical: 10 }}>
       <CatFace cat={cat} size={96} />
-      <Txt jua style={{ fontSize: 26 }}>집중냥</Txt>
+      <Txt jua style={{ fontSize: 26 }}>냥집중</Txt>
       <Txt style={{ fontSize: 13, color: C.sub }}>{`버전 ${APP_VERSION} (${IS_DEMO ? '데모' : '정식'})`}</Txt>
-      <View style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: C.mint }}><Txt style={{ fontSize: 12 }}>최신 버전을 사용 중이에요</Txt></View>
+      {s.update ? <Btn onPress={openUpdate} style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12, backgroundColor: '#F6D58E' }}><Txt style={{ fontSize: 12, color: '#4A3428' }}>{'새 버전 ' + s.update.tag + ' 받기 ›'}</Txt></Btn>
+        : <View style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: C.mint }}><Txt style={{ fontSize: 12 }}>최신 버전을 사용 중이에요</Txt></View>}
+      <Btn onPress={() => { checkUpdate(true); }} style={{ paddingVertical: 4 }}><Txt style={{ fontSize: 12, color: C.sub, textDecorationLine: 'underline' }}>업데이트 확인</Txt></Btn>
     </View>
     <ListCard>{['이용약관', '개인정보 처리방침', '문의하기', PG.oss].map(l => (
       <Btn key={l} onPress={page(l)} style={{ flexDirection: 'row', minHeight: 50, paddingHorizontal: 14, justifyContent: 'flex-start' }}><Txt style={{ flex: 1, fontSize: 15 }}>{l}</Txt><Txt style={{ fontSize: 16, color: C.mute }}>›</Txt></Btn>))}</ListCard>
-    <Txt style={{ fontSize: 11, lineHeight: 18, color: C.mute, textAlign: 'center' }}>© 2026 집중냥 · 고양이 일러스트 © 집중냥</Txt>
+    <Txt style={{ fontSize: 11, lineHeight: 18, color: C.mute, textAlign: 'center' }}>© 2026 냥집중 · 고양이 일러스트 © 냥집중</Txt>
   </View>;
   if (p === '언어 선택') return <View style={{ gap: 12 }}>
     <ListCard>{(['한국어', 'English', '日本語'] as const).map(l => (
@@ -298,13 +312,15 @@ function SubPage({ p, width }: { p: string; width: number }) {
       <View style={{ flexDirection: 'row', gap: 6 }}>{days.map((d, i) => <Chip key={d} h={38} label={d} on={!!s.remind.days[i]} style={{ flex: 1, paddingHorizontal: 0 }} onPress={() => S(x => ({ remind: { ...x.remind, days: x.remind.days.map((v, j) => (j === i ? (v ? 0 : 1) : v)) } }))} />)}</View></View>
     <View style={{ padding: 14, borderRadius: 16, backgroundColor: C.bg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.sub }}>
       <Txt style={{ fontSize: 13, lineHeight: 20 }}>{s.remind.on ? '“같이 집중할까요?” — ' + cat.name + '가 ' + days.filter((_, i) => s.remind.days[i]).join('·') + ' ' + s.remind.time + '에 불러요.' : '리마인더가 꺼져 있어요.'}</Txt>
+      {notifyEnabled && s.remind.on && !s.toggles.notif && <Txt style={{ fontSize: 12, color: C.red, marginTop: 6 }}>메뉴 → 알림이 꺼져 있어서 리마인더가 오지 않아요.</Txt>}
+      {!notifyEnabled && <Txt style={{ fontSize: 11, color: C.mute, marginTop: 6 }}>데모 빌드는 알림을 예약하지 않아요.</Txt>}
     </View>
   </View>; }
   if (p === PG.report) {
     const wk = weekVals(s), lb = weekLabels(), total = wk.reduce((a, b) => a + b, 0), gr = growth(s);
     const best = lb[wk.indexOf(Math.max(...wk))], heatC = [C.sand3, '#DCEBD6', '#C5E0BE', '#9FCB97', '#7FB07F', '#E59A4C'];
-    const tiles = s.reportTab === 'week' ? [['총 집중', total + '분'], ['완료 횟수', (s.sessions.filter(x => x.ok && Date.now() - x.at < 7 * 864e5).length + (IS_DEMO ? 8 : 0)) + '회'], ['최고의 요일', total ? best : '-']]
-      : [['총 집중', (IS_DEMO ? Math.round((total * 4 + 120) / 60) : Math.round(s.sessions.filter(x => x.ok && Date.now() - x.at < 30 * 864e5).reduce((a, x) => a + x.min, 0) / 60)) + '시간'], ['목표 달성', goalDays(s) + '일'], ['후원', dkg(s) + 'kg']];
+    const tiles = s.reportTab === 'week' ? [['총 집중', total + '분'], ['완료 횟수', (recentDone(s, 7).length + (IS_DEMO ? 8 : 0)) + '회'], ['최고의 요일', total ? best : '-']]
+      : [['총 집중', (IS_DEMO ? Math.round((total * 4 + 120) / 60) : Math.round(recentDone(s, 30).reduce((a, x) => a + x.min, 0) / 60)) + '시간'], ['목표 달성', goalDays(s) + '일'], ['후원', dkg(s) + 'kg']];
     return <View style={{ gap: 14 }}>
       <Seg items={[['week', '주간'], ['month', '월간']]} value={s.reportTab} onPick={k => S({ reportTab: k })} />
       <View style={{ flexDirection: 'row', gap: 8 }}>{tiles.map(([k, v]) => <View key={k} style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 14, backgroundColor: C.card, alignItems: 'center' }}><Txt jua style={{ fontSize: 19 }}>{v}</Txt><Txt style={{ fontSize: 11, color: C.sub }}>{k}</Txt></View>)}</View>
@@ -484,11 +500,12 @@ function PlusPage() {
     <View style={{ paddingVertical: 20, paddingHorizontal: 16, borderRadius: 22, backgroundColor: '#F6D58E', borderWidth: 2, borderColor: '#4A3428', alignItems: 'center', gap: 12 }}>
       <View style={{ paddingHorizontal: 12, paddingVertical: 3, borderRadius: 12, backgroundColor: '#4A3428' }}><Txt jua style={{ fontSize: 13, color: '#F6D58E', letterSpacing: 1 }}>PLUS</Txt></View>
       <View style={{ flexDirection: 'row', gap: 8 }}>{plusCats.map(c => <CatFace key={c.id} cat={c} size={62} bg="#FBF6EE" style={{ borderColor: '#4A3428' }} />)}</View>
-      <Txt jua style={{ fontSize: 22, lineHeight: 29, textAlign: 'center', color: '#4A3428' }}>{'새로운 고양이 4종과\n함께 집중해요'}</Txt>
-      <Txt style={{ fontSize: 13, color: '#4A3428' }}>랙돌 · 샴 · 페르시안 · 터키시 앙고라</Txt>
+      <Txt jua style={{ fontSize: 22, lineHeight: 29, textAlign: 'center', color: '#4A3428' }}>{'Plus 고양이 18종과\n함께 집중해요'}</Txt>
+      <Txt style={{ fontSize: 13, color: '#4A3428', textAlign: 'center' }}>{'랙돌 · 샴 · 페르시안 · 터키시 앙고라\n+ Plus 전용 뽑기 고양이 14종'}</Txt>
     </View>
     <ListCard>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>Plus 전용 고양이 4종을 바로 만나요. 츄르를 쓰지 않아도 돼요.</Txt>
+      <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>뽑기 탭의 Plus 전용 뽑기로 Plus 구독 전용 고양이 14종을 더 만날 수 있어요.</Txt>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20 }}>기본 고양이 4종, 츄르 보상, 후원은 구독하지 않아도 그대로 쓸 수 있어요.</Txt>
       <Txt style={{ padding: 13, fontSize: 13, lineHeight: 20, color: C.sub }}>새 Plus 고양이와 아이템은 순서대로 추가할 예정이에요.</Txt>
     </ListCard>

@@ -132,7 +132,7 @@ class BlockerService : Service() {
     val ink = Color.parseColor("#4A3428"); val bg = Color.parseColor("#FBF6EE"); val sub = Color.parseColor("#7A6352")
 
     val root = object : FrameLayout(this) {
-      // 뒤로가기를 눌러도 덮개가 닫히지 않게 막고 집중냥으로 돌려보낸다
+      // 뒤로가기를 눌러도 덮개가 닫히지 않게 막고 냥집중으로 돌려보낸다
       override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) { backToFocus(); return true }
         return super.dispatchKeyEvent(event)

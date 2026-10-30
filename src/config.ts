@@ -9,6 +9,8 @@ const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, any>;
 
 export const FLAVOR: Flavor = extra.flavor === 'full' ? 'full' : 'demo';
 export const IS_DEMO = FLAVOR === 'demo';
+// 데모 빌드의 테스트용 츄르: 이 값 아래로 내려가면 다시 채운다 (App.tsx)
+export const DEMO_CHURU = 99999;
 export const IS_FULL = FLAVOR === 'full';
 
 export const FIREBASE = {
@@ -23,3 +25,6 @@ export const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
 export const FIREBASE_READY = !!(FIREBASE.apiKey && FIREBASE.projectId && FIREBASE.appId);
 
 export const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
+
+// 업데이트 확인에 쓰는 GitHub 저장소 (릴리스에 APK를 올린다)
+export const GITHUB_REPO = 'elpong2-ai/BigDeal';

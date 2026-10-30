@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, Pressable, View } from 'react-native';
 import { FLOOR_FLAT, ROOMS, TOPD, catById } from '../data';
 import { State, getS } from '../store';
@@ -66,7 +66,7 @@ function Lbl({ t }: { t: string }) { return <Txt jua style={{ fontSize: 11, colo
 
 // 고양이 토큰: 방이 바뀌면 0.7초 동안 미끄러지듯 옮겨 간다
 function Token({ x, y, children }: { x: number; y: number; children: React.ReactNode }) {
-  const v = useRef(new Animated.ValueXY({ x, y })).current;
-  useEffect(() => { Animated.timing(v, { toValue: { x, y }, duration: 700, useNativeDriver: false }).start(); }, [x, y]);
+  const [v] = useState(() => new Animated.ValueXY({ x, y }));
+  useEffect(() => { Animated.timing(v, { toValue: { x, y }, duration: 700, useNativeDriver: false }).start(); }, [v, x, y]);
   return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: v.x, top: v.y, width: 0, height: 0, zIndex: 4 }}>{children}</Animated.View>;
 }

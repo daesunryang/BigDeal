@@ -56,7 +56,7 @@ export function Splash() {
         </Anim>
       </View>
       <View style={{ alignItems: 'center', gap: 6 }}>
-        <Txt jua style={{ fontSize: 42, lineHeight: 46 }}>집중냥</Txt>
+        <Txt jua style={{ fontSize: 42, lineHeight: 46 }}>냥집중</Txt>
         <Txt style={{ fontSize: 14, color: C.sub }}>방해꾼 앱은 고양이가 처리할게요</Txt>
       </View>
       <View style={{ width: 160, height: 6, borderRadius: 3, backgroundColor: C.line, overflow: 'hidden' }}>
@@ -92,7 +92,7 @@ export function Login() {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, paddingTop: 24, paddingHorizontal: 22, paddingBottom: 22, gap: 14 }} keyboardShouldPersistTaps="handled">
       <View style={{ alignItems: 'center', gap: 12, paddingTop: 16 }}>
         <CatFace cat={CATS[0]} size={120} />
-        <Txt jua style={{ fontSize: 30 }}>집중냥 시작하기</Txt>
+        <Txt jua style={{ fontSize: 30 }}>냥집중 시작하기</Txt>
         <Txt style={{ fontSize: 14, lineHeight: 21, color: C.sub, textAlign: 'center' }}>로그인하면 고양이, 집중 기록, 후원 내역이 안전하게 저장돼요.</Txt>
       </View>
       <View style={{ flex: 1 }} />
@@ -132,7 +132,7 @@ export function AccountPicker() {
       <Pressable onPress={() => {}} style={{ width: '100%', backgroundColor: C.white, borderRadius: 24, padding: 20, gap: 6 }}>
         <Txt style={{ fontSize: 13, fontWeight: '700', textAlign: 'center', fontFamily: undefined }}>G</Txt>
         <Txt style={{ fontSize: 18, textAlign: 'center' }}>계정 선택</Txt>
-        <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center', marginBottom: 10 }}>집중냥(으)로 이동</Txt>
+        <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center', marginBottom: 10 }}>냥집중(으)로 이동</Txt>
         {rows.map(a => (
           <Btn key={a.email} onPress={pick} style={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 12, height: 56, borderTopWidth: 1, borderTopColor: C.sand3, paddingHorizontal: 4 }}>
             <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: a.color, alignItems: 'center', justifyContent: 'center' }}><Txt style={{ fontSize: 14, color: '#FFFFFF' }}>{a.initial}</Txt></View>
@@ -194,7 +194,7 @@ export function Onboard({ width }: { width: number }) {
             </Btn>
           );
         })}
-        {blocker.available && <Txt style={{ fontSize: 12, lineHeight: 18, color: C.sub }}>누르면 설정 화면이 열려요. 집중냥을 찾아 허용한 뒤 돌아오세요.</Txt>}
+        {blocker.available && <Txt style={{ fontSize: 12, lineHeight: 18, color: C.sub }}>누르면 설정 화면이 열려요. 냥집중을 찾아 허용한 뒤 돌아오세요.</Txt>}
       </View>
       <View style={{ flex: 1 }} />
       <Btn onPress={finish} style={{ height: 56, borderRadius: 28, backgroundColor: all ? C.ink : C.disabled }}>

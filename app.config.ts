@@ -8,18 +8,18 @@ const full = flavor === 'full';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: full ? '집중냥' : '집중냥 데모',
-  slug: 'jibjungnyang',
-  version: '1.0.0',
+  name: full ? '냥집중' : '냥집중 데모',
+  slug: 'nyangjibjung',
+  version: '1.4.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
   backgroundColor: '#FBF6EE',
-  scheme: 'jibjungnyang',
-  ios: { supportsTablet: false, bundleIdentifier: full ? 'com.jibjungnyang.app' : 'com.jibjungnyang.demo' },
+  scheme: 'nyangjibjung',
+  ios: { supportsTablet: false, bundleIdentifier: full ? 'com.nyangjibjung.app' : 'com.nyangjibjung.demo' },
   android: {
-    package: full ? 'com.jibjungnyang.app' : 'com.jibjungnyang.demo',
-    versionCode: 1,
+    package: full ? 'com.nyangjibjung.app' : 'com.nyangjibjung.demo',
+    versionCode: 8,
     adaptiveIcon: {
       backgroundColor: '#E59A4C',
       foregroundImage: './assets/android-icon-foreground.png',
@@ -38,7 +38,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-audio', { microphonePermission: false, enableBackgroundPlayback: false }],
     'expo-sharing',
     ['expo-build-properties', { android: { minSdkVersion: 26 } }],
-    ...(full ? ['./plugins/withAppBlocker'] : []),
+    ...(full ? ['./plugins/withAppBlocker', ['expo-notifications', { color: '#E59A4C', defaultChannel: 'jjn_remind' }]] : []),
   ] as ExpoConfig['plugins'],
   extra: { flavor },
 });

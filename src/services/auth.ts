@@ -31,7 +31,7 @@ export class AuthError extends Error {}
 const KO: Record<string, string> = {
   'auth/invalid-email': '올바른 이메일 주소를 입력해 주세요.', 'auth/wrong-password': '비밀번호가 맞지 않아요.', 'auth/invalid-credential': '이메일 또는 비밀번호가 맞지 않아요.',
   'auth/too-many-requests': '시도가 너무 많아요. 잠시 후 다시 해 주세요.', 'auth/network-request-failed': '네트워크에 연결할 수 없어요.', 'auth/weak-password': '비밀번호는 6자 이상이어야 해요.',
-  'auth/email-already-in-use': '이미 가입된 이메일이에요.', 'auth/credential-already-in-use': '이미 다른 집중냥 계정에 연결된 계정이에요.', 'auth/requires-recent-login': '보안을 위해 다시 로그인한 뒤 시도해 주세요.',
+  'auth/email-already-in-use': '이미 가입된 이메일이에요.', 'auth/credential-already-in-use': '이미 다른 냥집중 계정에 연결된 계정이에요.', 'auth/requires-recent-login': '보안을 위해 다시 로그인한 뒤 시도해 주세요.',
 };
 const wrap = (e: any) => new AuthError(KO[e?.code] || e?.message || '로그인하지 못했어요.');
 

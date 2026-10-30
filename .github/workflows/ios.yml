@@ -1,0 +1,119 @@
+name: iOS
+
+# iOS 빌드는 Android와 따로 돈다 (macOS 러너, 다른 파일 이름, 다른 실행 기록).
+# 데모·정식 각각
+#   - nyangjibjung-ios[-demo]-<태그>.ipa      : 서명하지 않은 기기용 앱. AltStore·Sideloadly 같은 도구로 내 Apple ID 서명을 붙여 설치
+#   - nyangjibjung-ios[-demo]-simulator-<태그>.zip : Mac의 iOS 시뮬레이터에 끌어다 놓아 실행
+# release_tag를 주면 Android 워크플로가 만든 같은 태그의 릴리스에 iOS 파일을 붙인다 (릴리스는 함께, 빌드는 따로).
+# macOS 러너는 비싸고 느려서 main에 올라갈 때와 직접 실행할 때만 돈다.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['design/**', 'tools/**', '**.md']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'iOS 파일을 붙일 릴리스 태그 (예: v1.2.0). 비우면 빌드만 한다.'
+        required: false
+        default: ''
+  # Android 워크플로가 릴리스할 때 이 워크플로를 불러 iOS 파일을 같은 릴리스에 함께 싣는다
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [demo, full]
+    env:
+      APP_FLAVOR: ${{ matrix.flavor }}
+      EXPO_PUBLIC_FIREBASE_API_KEY: ${{ matrix.flavor == 'full' && secrets.FIREBASE_API_KEY || '' }}
+      EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ matrix.flavor == 'full' && secrets.FIREBASE_AUTH_DOMAIN || '' }}
+      EXPO_PUBLIC_FIREBASE_PROJECT_ID: ${{ matrix.flavor == 'full' && secrets.FIREBASE_PROJECT_ID || '' }}
+      EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ matrix.flavor == 'full' && secrets.FIREBASE_STORAGE_BUCKET || '' }}
+      EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ matrix.flavor == 'full' && secrets.FIREBASE_MESSAGING_SENDER_ID || '' }}
+      EXPO_PUBLIC_FIREBASE_APP_ID: ${{ matrix.flavor == 'full' && secrets.FIREBASE_APP_ID || '' }}
+      EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${{ matrix.flavor == 'full' && secrets.GOOGLE_WEB_CLIENT_ID || '' }}
+      NAME: ${{ matrix.flavor == 'full' && 'nyangjibjung-ios' || 'nyangjibjung-ios-demo' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use the newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | grep -v beta | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+          xcodebuild -version
+      - run: npm ci
+      - name: Generate native project
+        run: |
+          set -o pipefail
+          npx expo prebuild --platform ios 2>&1 | tee prebuild.log
+      - name: Build for device (unsigned)
+        run: |
+          set -o pipefail
+          WS=$(ls -d ios/*.xcworkspace | head -1); SCHEME=$(basename "$WS" .xcworkspace)
+          echo "workspace=$WS scheme=$SCHEME"
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build/device CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build > device.log 2>&1
+          tail -3 device.log
+          APP=$(ls -d build/device/Build/Products/Release-iphoneos/*.app | head -1)
+          mkdir -p out/Payload && cp -R "$APP" out/Payload/ && (cd out && zip -qry "$NAME.ipa" Payload && rm -rf Payload)
+      - name: Build for simulator
+        run: |
+          set -o pipefail
+          WS=$(ls -d ios/*.xcworkspace | head -1); SCHEME=$(basename "$WS" .xcworkspace)
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build > sim.log 2>&1
+          tail -3 sim.log
+          APP=$(ls -d build/sim/Build/Products/Release-iphonesimulator/*.app | head -1)
+          (cd "$(dirname "$APP")" && zip -qry "$GITHUB_WORKSPACE/out/$NAME-simulator.zip" "$(basename "$APP")")
+      - name: Report the failure
+        # 실행 로그 파일은 저장소 밖에서 받기 어려워서, 실패하면 마지막 줄들을 오류 표시로 남긴다
+        if: failure()
+        run: |
+          for f in prebuild.log device.log sim.log; do
+            [ -f "$f" ] || continue
+            msg=$(grep -E 'error|Error|failed' "$f" | tail -25; echo ---; tail -25 "$f")
+            msg=${msg//'%'/'%25'}; msg=${msg//$'\n'/'%0A'}
+            echo "::error title=$f::$msg"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    # 직접 실행했을 때만: 이미 있는 릴리스에 iOS 파일을 붙인다 (Android에서 불렀을 때는 Android 쪽 release가 함께 싣는다)
+    needs: build
+    # 불려 갔을 때는 github.event_name이 부른 쪽 것(workflow_dispatch)이라, 워크플로 이름으로 구분한다
+    if: github.workflow == 'iOS' && inputs.release_tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.release_tag }}
+        run: |
+          # Android 워크플로가 릴리스를 만들 때까지 기다린다 (최대 90분)
+          for i in $(seq 1 90); do gh release view "$TAG" >/dev/null 2>&1 && break; sleep 60; done
+          gh release view "$TAG" >/dev/null
+          cd out
+          for f in *; do mv "$f" "${f%.*}-$TAG.${f##*.}"; done
+          gh release upload "$TAG" --clobber \
+            "nyangjibjung-ios-$TAG.ipa#냥집중 iOS 정식 (서명 전 · 직접 서명해 설치)" \
+            "nyangjibjung-ios-demo-$TAG.ipa#냥집중 iOS 데모 (서명 전 · 직접 서명해 설치)" \
+            "nyangjibjung-ios-simulator-$TAG.zip#냥집중 iOS 정식 · 시뮬레이터용" \
+            "nyangjibjung-ios-demo-simulator-$TAG.zip#냥집중 iOS 데모 · 시뮬레이터용"

@@ -7,21 +7,24 @@ import React, { useEffect, useState } from 'react';
 import { AppState, BackHandler, PermissionsAndroid, Platform, View, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
-import { IS_FULL } from './src/config';
+import { DEMO_CHURU, IS_DEMO, IS_FULL } from './src/config';
 import { catById } from './src/data';
 import { AccountPicker, Login, Onboard, Splash, usePermSync } from './src/screens/Entry';
 import { Decor } from './src/screens/Decor';
-import { Home } from './src/screens/Home';
+import { FocusSettings, Home } from './src/screens/Home';
 import { Menu } from './src/screens/Menu';
 import { Nav } from './src/screens/Nav';
-import { AdView, AppSheet, Cert, Coach, Dialog, Gacha, HouseModal, PaySheet, Receipt, ShareCard, Toast, loadInstalledApps } from './src/screens/Overlays';
+import { AdView, AppSheet, Cert, Coach, Dialog, GachaPop, GachaResult, HouseModal, PaySheet, Receipt, ShareCard, Toast, loadInstalledApps } from './src/screens/Overlays';
 import { Done, Fail, Focus, Rest } from './src/screens/Session';
-import { Dex, Donate, Mailbox, Shelter, Shop, Stats } from './src/screens/Tabs';
+import { Dex, Donate, GachaTab, Mailbox, Shelter, Shop, Stats } from './src/screens/Tabs';
 import { coachRefs } from './src/screens/coach';
 import { authEnabled, toUser, watchAuth } from './src/services/auth';
 import { blocker } from './src/services/blocker';
 import { pullOnLogin, startSync } from './src/services/sync';
+import { initNotify, notifyGoal, syncReminders } from './src/services/notify';
+import { promptUpdate } from './src/services/update';
 import { initSfx } from './src/sfx';
+import { ErrorBoundary } from './src/screens/ErrorBoundary';
 import { S, getS, hooks, useApp } from './src/store';
 import { useC, useDark } from './src/theme';
 import { Txt } from './src/ui/kit';
@@ -37,6 +40,7 @@ hooks.onStart = s => {
   blocker.start({ endAt: s.endAt, packages: pkgs, names, strict: s.toggles.strict, catName: catById(s.catId).name, catImage: s.catId });
 };
 hooks.onStop = () => blocker.stop();
+hooks.onGoal = (goal, cat) => { notifyGoal(goal, cat); };
 
 // 네이티브 차단 화면에서 쌓인 기록(방해 시도 · 세션 포기)을 반영한다. 포기했으면 true.
 function pullBlockerEvents() {
@@ -51,8 +55,8 @@ function pullBlockerEvents() {
 function Root() {
   const C = useC(), dark = useDark(), ins = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const screen = useApp(s => s.screen), tab = useApp(s => s.tab), offline = useApp(s => s.offline);
-  const ov = useApp(useShallow(s => ({ sheet: s.sheet, house: s.house, pay: !!s.pay, rcpt: !!s.rcpt, ad: s.ad != null, dlg: !!s.dlg, coach: s.coach >= 0, share: s.share && !!s.last, cert: s.cert != null, gacha: !!s.gacha, acct: s.acct })));
+  const screen = useApp(s => s.screen), tab = useApp(s => s.tab), offline = useApp(s => s.offline), coachN = useApp(s => s.coach);
+  const ov = useApp(useShallow(s => ({ sheet: s.sheet, house: s.house, pay: !!s.pay, rcpt: !!s.rcpt, ad: s.ad != null, dlg: !!s.dlg, coach: s.coach >= 0, share: s.share && !!s.last, cert: s.cert != null, gachaPop: !!s.gachaPop, gachaRes: !!s.gachaRes, acct: s.acct, wheel: s.wheel })));
   const [hydrated, setHydrated] = useState(useApp.persist.hasHydrated());
   usePermSync();
 
@@ -61,10 +65,18 @@ function Root() {
   // 타이머 · 고양이 행동 · 뒤로가기
   useEffect(() => {
     const t = setInterval(() => getS().tick(), 250);
-    const m = setInterval(() => { if (AppState.currentState === 'active') { S(s => ({ msg: s.msg + 1 })); getS().markBeh(); } }, 6000);
+    const m = setInterval(() => { if (AppState.currentState === 'active' && !getS().wheel) { S(s => ({ msg: s.msg + 1 })); getS().markBeh(); } }, 6000);
     const bh = BackHandler.addEventListener('hardwareBackPress', () => getS().back());
     return () => { clearInterval(t); clearInterval(m); bh.remove(); };
   }, []);
+
+  // 데모: 테스트용 츄르 무제한 · 쓰면 바로 다시 채운다
+  useEffect(() => {
+    if (!IS_DEMO || !hydrated) return;
+    const top = () => { if (getS().churu < DEMO_CHURU) S({ churu: DEMO_CHURU }); };
+    top();
+    return useApp.subscribe(top);
+  }, [hydrated]);
 
   // 저장된 상태를 불러온 뒤: 집중 중에 앱이 강제 종료됐다면 복구 안내
   useEffect(() => {
@@ -78,6 +90,20 @@ function Root() {
       S({ screen: 'tabs', tab: 'home', remain: Math.max(0, (s.endAt - Date.now()) / 1000), dlg: { kind: 'recover' } });
     } else if (s.screen !== 'splash') S({ screen: 'splash' });
     if (blocker.available && !s.apps.some(a => a.pkg)) loadInstalledApps().catch(() => {});
+    getS().dailyMail();
+    promptUpdate(true).catch(() => {});
+  }, [hydrated]);
+
+  // 리마인더 알림을 설정에 맞춰 다시 예약하고, 앱으로 돌아올 때 새 날의 출석 우편을 확인한다
+  useEffect(() => {
+    if (!hydrated) return;
+    initNotify().then(() => syncReminders(getS())).catch(() => {});
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const un = useApp.subscribe((st, prev) => {
+      if (st.remind !== prev.remind || st.toggles.notif !== prev.toggles.notif || st.catId !== prev.catId) { clearTimeout(t); t = setTimeout(() => syncReminders(getS()).catch(() => {}), 800); }
+    });
+    const c = AppState.addEventListener('change', st => { if (st === 'active') { getS().dailyMail(); promptUpdate().catch(() => {}); } });
+    return () => { un(); c.remove(); clearTimeout(t); };
   }, [hydrated]);
 
   // 차단 화면에서 이벤트가 오거나 앱으로 돌아올 때마다 기록을 가져온다
@@ -113,7 +139,7 @@ function Root() {
   else if (screen === 'done') body = <Done width={width} height={height} />;
   else if (screen === 'fail') body = <Fail />;
   else if (screen === 'rest') body = <Rest />;
-  else body = tab === 'home' ? <Home width={width} /> : tab === 'dex' ? <Dex /> : tab === 'donate' ? <Donate /> : tab === 'shelter' ? <Shelter />
+  else body = tab === 'home' ? <Home width={width} /> : tab === 'gacha' ? <GachaTab /> : tab === 'dex' ? <Dex /> : tab === 'donate' ? <Donate /> : tab === 'shelter' ? <Shelter />
     : tab === 'mail' ? <Mailbox /> : tab === 'shop' ? <Shop /> : tab === 'stats' ? <Stats /> : <Menu width={width} />;
 
   return (
@@ -124,14 +150,16 @@ function Root() {
       <View ref={r => { coachRefs.root = r; }} collapsable={false} style={{ flex: 1 }}>
         <View style={{ flex: 1, backgroundColor: C.bg }}>{hydrated ? body : null}</View>
         {isTabs && <Nav />}
+        {ov.wheel && isTabs && tab === 'home' && <FocusSettings />}
         {ov.acct && <AccountPicker />}
         {ov.sheet && <AppSheet />}
-        {ov.gacha && <Gacha width={width} />}
+        {ov.gachaPop && <GachaPop />}
+        {ov.gachaRes && <GachaResult />}
         {ov.cert && <Cert />}
         {ov.pay && <PaySheet />}
         {ov.rcpt && <Receipt />}
         {ov.share && <ShareCard />}
-        {ov.coach && isTabs && tab === 'home' && <Coach height={height - ins.top - ins.bottom} />}
+        {ov.coach && isTabs && tab === 'home' && <Coach key={coachN} height={height - ins.top - ins.bottom} />}
         {ov.ad && <AdView />}
         {ov.dlg && <Dialog />}
         {ov.house && <HouseModal width={width} />}
@@ -146,5 +174,5 @@ export default function App() {
   const [fonts] = useFonts({ Jua_400Regular, GowunDodum_400Regular });
   useEffect(() => { initSfx(); }, []);
   if (!fonts) return <View style={{ flex: 1, backgroundColor: '#FBF6EE' }} />;
-  return <SafeAreaProvider><Root /></SafeAreaProvider>;
+  return <SafeAreaProvider><ErrorBoundary><Root /></ErrorBoundary></SafeAreaProvider>;
 }

@@ -1,18 +1,21 @@
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, View, useWindowDimensions } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
-import { IS_DEMO, IS_FULL } from '../config';
-import { APPS, DEFAULT_BLOCK_PKGS, MOODS, ROOM_DESC, catById, won } from '../data';
+import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
+import { openUpdate } from '../services/update';
+import { ANIMALS, APPS, CATS, DEFAULT_BLOCK_PKGS, GACHA_CATS, GACHA_COST, GACHA_PITY, MOODS, PG, ROOM_DESC, TIER, catById, won } from '../data';
 import { affOf, dkg, focusStreak } from '../derive';
-import { authEnabled, deleteAccount } from '../services/auth';
+import { authEnabled, deleteAccount, unlinkProvider } from '../services/auth';
 import { blocker } from '../services/blocker';
+import { receiptHtml, sharePdf } from '../services/pdf';
 import { deleteRemote, stopSync } from '../services/sync';
 import { FloorPlan, houseData } from '../stage/House';
-import { BlockApp, S, getS, useApp } from '../store';
+import { sfx } from '../sfx';
+import { BlockApp, S, getS, hooks, useApp } from '../store';
 import { FONT, useC } from '../theme';
 import { Anim, EZ } from '../ui/anim';
-import { Btn, CatFace, CatScene, Primary, Toggle, Txt } from '../ui/kit';
+import { Btn, CUTOUT, CatFace, ChuruBadge, Primary, Seg, Toggle, Txt } from '../ui/kit';
 import { coachRefs } from './coach';
 
 const FULL = { position: 'absolute' as const, left: 0, top: 0, right: 0, bottom: 0 };
@@ -42,8 +45,8 @@ export async function loadInstalledApps() {
 export function AppSheet() {
   const C = useC();
   const apps = useApp(s => s.apps), blocked = useApp(s => s.blocked);
-  const [busy, setBusy] = useState(false), [q, setQ] = useState('');
-  useEffect(() => { if (blocker.available) { setBusy(true); loadInstalledApps().finally(() => setBusy(false)); } }, []);
+  const [busy, setBusy] = useState(blocker.available), [q, setQ] = useState('');
+  useEffect(() => { if (blocker.available) loadInstalledApps().finally(() => setBusy(false)); }, []);
   const list = q ? apps.filter(a => a.name.toLowerCase().includes(q.toLowerCase())) : apps;
   return (
     <Scrim z={5} align="bottom" onClose={() => S({ sheet: false })}>
@@ -84,9 +87,9 @@ export function HouseModal({ width }: { width: number }) {
     if (dbl) { lastTap = null; S({ houseHint: false }); if (getS().rooms.includes(id)) getS().moveCat(id); else getS().toast('잠긴 방이에요. 아래 버튼으로 해금해 주세요'); }
   };
   const act = sel.locked
-    ? () => { if (!can) return; getS().log(sel.name + ' 해금', -sel.price); require('../sfx').sfx('buy'); S(st => ({ churu: st.churu - sel.price, rooms: [...st.rooms, sel.id] })); getS().toast(sel.name + '이(가) 열렸어요'); }
+    ? () => { if (!can) return; getS().log(sel.name + ' 해금', -sel.price); sfx('buy'); S(st => ({ churu: st.churu - sel.price, rooms: [...st.rooms, sel.id] })); getS().toast(sel.name + '이(가) 열렸어요'); }
     : () => { getS().switchRoom(sel.id); S({ house: false, screen: 'decor', preview: null, decorCat: 'wall' }); };
-  const expand = () => { if (s.churu < 200) return getS().toast('츄르가 ' + (200 - s.churu) + '개 부족해요'); getS().log('집 넓히기', -200); require('../sfx').sfx('buy'); S(st => ({ churu: st.churu - 200, extra: true, rooms: [...st.rooms, 'attic', 'study'] })); getS().toast('다락방과 서재가 생겼어요!'); };
+  const expand = () => { if (s.churu < 200) return getS().toast('츄르가 ' + (200 - s.churu) + '개 부족해요'); getS().log('집 넓히기', -200); sfx('buy'); S(st => ({ churu: st.churu - 200, extra: true, rooms: [...st.rooms, 'attic', 'study'] })); getS().toast('다락방과 서재가 생겼어요!'); };
   const rowH = 54;
   return (
     <Scrim z={13} dim={0.55} pad={14} onClose={() => S({ house: false })}>
@@ -140,7 +143,7 @@ export function PaySheet() {
   const C = useC();
   const pay = useApp(s => s.pay)!, sAmt = useApp(s => s.sAmt), sAnimal = useApp(s => s.sAnimal);
   const amt = [3000, 5000, 10000][sAmt], all = pay.agree.every(Boolean);
-  const name = require('../data').ANIMALS.find((x: any) => x.id === sAnimal).name;
+  const name = ANIMALS.find(x => x.id === sAnimal)!.name;
   const methods = ios ? ['Apple Pay', '신용·체크카드', '카카오페이'] : ['Google Play 결제', '신용·체크카드', '카카오페이', '토스페이'];
   const agree = ['전체 동의', '(필수) 결제 서비스 이용약관', '(필수) 후원 환불 정책 확인', '(필수) 개인정보 제3자 제공 동의 (보호소 전달용)'];
   return (
@@ -188,7 +191,11 @@ export function Receipt() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Txt jua style={{ fontSize: 16 }}>합계</Txt><Txt jua style={{ fontSize: 16 }}>{total}</Txt></View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Btn onPress={() => S({ rcpt: null })} style={{ flex: 1, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 15 }}>닫기</Txt></Btn>
-          <Btn onPress={() => { S({ rcpt: null }); getS().toast('PDF로 저장했어요 (데모)'); }} style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 15, color: C.bg }}>PDF로 저장</Txt></Btn>
+          <Btn onPress={async () => {
+            const title = s.rcpt === 'cum' ? '누적 후원 증명서' : '기부 영수증', d = new Date();
+            const html = receiptHtml({ title, sub: s.user.name + ' 님 · ' + (s.rcpt === 'cum' ? '집중과 후원의 누적 기록' : '결제 후원 내역'), rows: rows.length ? rows : [['내역이 없어요', '-']], total, issued: `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}` });
+            try { const ok = await sharePdf(html, title); S({ rcpt: null }); if (!ok) getS().toast('이 기기에서는 PDF를 공유할 수 없어요'); } catch { getS().toast('PDF를 만들지 못했어요'); }
+          }} style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 15, color: C.bg }}>PDF로 저장</Txt></Btn>
         </View>
       </Anim>
     </Scrim>
@@ -200,7 +207,7 @@ export function AdView() {
   const C = useC();
   const ad = useApp(s => s.ad)!;
   useEffect(() => { const t = setInterval(() => { const a = getS().ad; if (a == null || a <= 0) { clearInterval(t); return; } S({ ad: a - 1 }); }, 1000); return () => clearInterval(t); }, []);
-  const claim = () => { getS().log('광고 시청 보상', 5); require('../sfx').sfx('coin'); S(st => ({ ad: null, adLeft: st.adLeft - 1, churu: st.churu + 5, earnedTotal: st.earnedTotal + 5 })); getS().toast('츄르 5개를 받았어요'); };
+  const claim = () => { getS().log('광고 시청 보상', 5); sfx('coin'); S(st => ({ ad: null, adLeft: st.adLeft - 1, churu: st.churu + 5, earnedTotal: st.earnedTotal + 5 })); getS().toast('츄르 5개를 받았어요'); };
   return (
     <View style={[FULL, { zIndex: 10, backgroundColor: '#2B221D', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }]}>
       <Txt style={{ fontSize: 12, color: C.line }}>광고 (데모)</Txt>
@@ -223,7 +230,7 @@ export function Dialog() {
   const toLogin = () => S({ dlg: null, screen: 'login', menuPage: null, emailMode: false, loggedIn: false });
   const M: Record<string, () => { cat?: boolean; title: string; lines: string[]; btns: B[] }> = {
     unlink: () => ({ title: D.name + ' 연결을 해제할까요?', lines: ['해제하면 이 계정으로는 로그인할 수 없어요.', '다른 연결 계정이 있어 기록은 그대로 유지돼요.'], btns: [['취소', 'ghost', close], ['연결 해제', 'danger', async () => {
-      if (IS_FULL && authEnabled) { try { const r = await require('../services/auth').unlinkProvider(D.name); if (r) S({ linked: r.linked, dlg: null }); else close(); } catch (e: any) { close(); getS().toast(e?.message || '해제하지 못했어요'); } return; }
+      if (IS_FULL && authEnabled) { try { const r = await unlinkProvider(D.name!); if (r) S({ linked: r.linked, dlg: null }); else close(); } catch (e: any) { close(); getS().toast(e?.message || '해제하지 못했어요'); } return; }
       S(st => ({ dlg: null, linked: { ...st.linked, [D.name!]: false } }));
     }]] }),
     withdraw: () => ({ title: '정말 탈퇴할까요?', lines: ['고양이와 츄르, 기록이 모두 삭제돼요.', '이 작업은 되돌릴 수 없어요.'], btns: [['취소', 'ghost', close], ['탈퇴하기', 'danger', async () => {
@@ -232,16 +239,18 @@ export function Dialog() {
     }]] }),
     bye: () => ({ title: '탈퇴가 완료됐어요', lines: ['그동안 고마웠어요. 고양이도 기억할게요.'], btns: [['처음으로', 'primary', () => { getS().reset(); S({ dlg: null }); }]] }),
     expired: () => ({ title: '로그인이 만료됐어요', lines: ['보안을 위해 다시 로그인해 주세요.', '진행 중이던 기록은 안전하게 저장돼 있어요.'], btns: [['다시 로그인', 'primary', toLogin]] }),
-    conflict: () => ({ title: '이미 연결된 계정이에요', lines: ['이 Apple 계정은 다른 집중냥 계정에 연결돼 있어요.', '그 계정으로 전환하면 지금 기록은 이 기기에서 보이지 않아요.'], btns: [['취소', 'ghost', close], ['그 계정으로 전환', 'primary', () => { close(); getS().toast('계정을 전환했어요 (데모)'); }]] }),
+    conflict: () => ({ title: '이미 연결된 계정이에요', lines: ['이 Apple 계정은 다른 냥집중 계정에 연결돼 있어요.', '그 계정으로 전환하면 지금 기록은 이 기기에서 보이지 않아요.'], btns: [['취소', 'ghost', close], ['그 계정으로 전환', 'primary', () => { close(); getS().toast('계정을 전환했어요 (데모)'); }]] }),
     refund: () => { const r = s.sponsorships.find(x => x.id === D.id); return { title: (r ? r.animal : '') + ' 후원 환불을 요청할까요?', lines: ['전달 전이라면 영업일 3일 안에 환불돼요.', '환불을 요청하면 인증서가 취소돼요.'], btns: [['닫기', 'ghost', close], ['환불 요청', 'danger', () => { S(st => ({ dlg: null, sponsorships: st.sponsorships.map(x => (x.id === D.id ? { ...x, refunded: true } : x)) })); getS().toast('환불을 요청했어요'); }]] }; },
     refundinfo: () => ({ title: '취소·환불 안내', lines: ['결제 후원은 보호소로 전달되기 전(7일 이내)에 환불할 수 있어요.', '전달이 끝난 후원은 환불할 수 없어요.', '츄르 후원은 환불되지 않아요.', '그 밖의 문의는 문의하기에서 남겨 주세요.'], btns: [['확인', 'primary', close]] }),
     call: () => ({ cat: true, title: '전화가 왔어요', lines: ['집중 시간이 잠시 멈췄어요.', '통화 중에는 벌점이 없어요.'], btns: [['받기', 'primary', () => S({ dlg: { kind: 'incall' } })], ['거절', 'ghost', () => { close(); getS().resumeTimer(); }]] }),
     incall: () => ({ title: '통화 중', lines: ['타이머가 멈춰 있어요.'], btns: [['통화 종료', 'primary', () => { close(); getS().resumeTimer(); getS().toast('집중을 이어가요'); }]] }),
     alarm: () => ({ title: '알람이 울려요', lines: ['집중 시간이 잠시 멈췄어요.'], btns: [['알람 끄기', 'primary', () => { close(); getS().resumeTimer(); getS().toast('집중을 이어가요'); }]] }),
     recover: () => ({ cat: true, title: '집중이 중단됐어요', lines: ['앱이 종료되기 전에 ' + mm + '분이 남아 있었어요.', '3분 안에 돌아오면 벌점 없이 이어갈 수 있어요.'], btns: [
-      ['이어서 집중하기', 'primary', () => { S({ dlg: null, screen: 'focus' }); require('../store').hooks.onStart?.(getS()); }],
+      ['이어서 집중하기', 'primary', () => { S({ dlg: null, screen: 'focus' }); hooks.onStart?.(getS()); }],
       ['이번엔 쉬기', 'ghost', () => { S({ dlg: null, remain: 0, total: 0, screen: 'tabs' }); getS().toast('벌점 없이 종료했어요'); }]] }),
-    permlost: () => ({ title: '권한이 꺼져 있어요', lines: ['방해 앱을 막으려면 다시 허용해야 해요.', '설정 → ' + (ios ? '스크린 타임' : '사용 정보 접근') + ' → 집중냥 켜기'], btns: [
+    update: () => ({ title: '새 버전 ' + (s.update?.tag ?? '') + '이 나왔어요', lines: ['지금 버전 ' + APP_VERSION + ' → ' + (s.update?.tag ?? '').replace(/^v/, ''), ios ? '눌러서 릴리스 페이지에서 새 버전을 받아요.' : '받은 APK를 설치하면 기록은 그대로 이어져요.'], btns: [
+      ['지금 업데이트', 'primary', () => { close(); openUpdate(); }], ['나중에', 'ghost', close]] }),
+    permlost: () => ({ title: '권한이 꺼져 있어요', lines: ['방해 앱을 막으려면 다시 허용해야 해요.', '설정 → ' + (ios ? '스크린 타임' : '사용 정보 접근') + ' → 냥집중 켜기'], btns: [
       ['설정 열기', 'primary', () => { if (blocker.available) { close(); blocker.openUsage(); return; } S({ dlg: null, perm: { a: true, b: true } }); getS().toast('권한이 다시 켜졌어요'); }], ['나중에', 'ghost', close]] }),
   };
   const v = M[D.kind]?.(); if (!v) return null;
@@ -261,13 +270,12 @@ export function Dialog() {
 }
 
 // ── 첫 사용 코치마크 ──
-const CO = [['고양이 방', '탭하면 우리 집 전체를 평면도로 볼 수 있어요. 방 꾸미기는 오른쪽 아래 버튼으로 들어가요.'], ['집중 시간 정하기', '종료 시각 숫자를 눌러 설정해요. 24/12시간 형식은 위 버튼으로 바꿔요.'], ['방해 앱 차단', '집중하는 동안 열지 못하게 막을 앱을 골라요.'], ['집중 시작', '시작하면 고양이가 옆에서 지켜봐요. 완료하면 츄르와 친밀도를 받아요.']];
+const CO = [['고양이 방', '탭하면 우리 집 전체를 평면도로 볼 수 있어요. 방 꾸미기는 오른쪽 아래 버튼으로 들어가요.'], ['집중 설정', '시계를 누르면 종료 시각과 휴식 주기를 한 창에서 정해요.'], ['차단 제외 앱', '집중하는 동안에도 쓸 앱을 골라요. 나머지 방해 앱은 막아요.'], ['집중 시작', '시작하면 고양이가 옆에서 지켜봐요. 완료하면 츄르와 친밀도를 받아요.']];
 export function Coach({ height }: { height: number }) {
   const C = useC();
   const n = useApp(s => s.coach);
   const [r, setR] = useState<{ l: number; t: number; w: number; h: number } | null>(null);
   useEffect(() => {
-    setR(null);
     const el = coachRefs.items[n], sc = coachRefs.scroll, root = coachRefs.root;
     if (!el || !root) return;
     const t1 = setTimeout(() => {
@@ -310,7 +318,7 @@ export function ShareCard() {
   const cat = catById(s.catId), last = s.last!;
   const save = async () => {
     if (Platform.OS !== 'web') {
-      try { const uri = await captureRef(ref, { format: 'png', quality: 1 }); if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: '집중냥 공유 카드' }); S({ share: false }); return; } catch {}
+      try { const uri = await captureRef(ref, { format: 'png', quality: 1 }); if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: '냥집중 공유 카드' }); S({ share: false }); return; } catch {}
     }
     S({ share: false }); getS().toast('공유 카드를 저장했어요 (데모)');
   };
@@ -329,7 +337,7 @@ export function ShareCard() {
                 <View key={k} style={{ flex: 1, padding: 10, borderRadius: 14, backgroundColor: '#FFFFFF', alignItems: 'center' }}><Txt jua style={{ fontSize: 18, color: '#4A3428' }}>{v}</Txt><Txt style={{ fontSize: 11, color: '#7A6352' }}>{k}</Txt></View>
               ))}
             </View>
-            <Txt jua style={{ fontSize: 14, marginTop: 4, color: '#4A3428' }}>집중냥 · 집중하면 고양이가 자라요</Txt>
+            <Txt jua style={{ fontSize: 14, marginTop: 4, color: '#4A3428' }}>냥집중 · 집중하면 고양이가 자라요</Txt>
           </View>
         </Anim>
         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -369,21 +377,96 @@ export function Cert() {
 }
 
 // ── 새 고양이 등장 ──
-export function Gacha({ width }: { width: number }) {
+// 고양이 뽑기 창: 일반 뽑기(기본 고양이) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종), 1회 · 10회
+export function GachaPop() {
   const C = useC();
-  const id = useApp(s => s.gacha)!; const cat = catById(id);
+  const s = useApp(st => st);
+  const kind = s.gachaPop!, plus = kind === 'plus', cost = GACHA_COST[kind];
+  const cats = plus ? GACHA_CATS : CATS.filter(c => !c.plus);
+  const met = cats.filter(c => s.owned.includes(c.id)).length, left = GACHA_PITY - s.gachaPity;
+  const locked = plus && !s.plus;
+  const btn = (n: 1 | 10) => {
+    const price = n === 10 ? cost.ten : cost.one, ok = s.churu >= price;
+    return (
+      <Btn key={n} onPress={() => getS().gachaPull(kind, n)} accessibilityLabel={(plus ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회, 츄르 ' + price + '개'} style={{ flex: 1, height: 54, borderRadius: 27, backgroundColor: ok ? C.ink : C.disabled, gap: 0 }}>
+        <Txt jua style={{ fontSize: 17, color: C.bg }}>{n + '회 뽑기'}</Txt>
+        <Txt style={{ fontSize: 11, color: C.bg }}>{price + ' 츄르' + (n === 10 ? ' (10% 할인)' : '')}</Txt>
+      </Btn>
+    );
+  };
   return (
-    <View style={[FULL, { zIndex: 6, backgroundColor: 'rgba(43,34,29,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24 }]}>
-      <Anim name="pop" dur={0.5} loop={false} easing={EZ.out} style={{ width: '100%', backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 22, alignItems: 'center', gap: 12 }}>
-        <Txt style={{ fontSize: 13, color: C.sub }}>창밖에서 누가 찾아왔어요</Txt>
-        <CatScene cat={cat} width={width - 48 - 44} style={{ borderRadius: 18 }} />
-        <Txt jua style={{ fontSize: 24 }}>{cat.name}</Txt>
-        <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center' }}>{cat.desc}</Txt>
-        <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
-          <Btn onPress={() => S({ gacha: null })} style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 16 }}>도감에 두기</Txt></Btn>
-          <Btn onPress={() => S({ catId: id, gacha: null })} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>함께 지내기</Txt></Btn>
+    <Pressable onPress={() => S({ gachaPop: null })} accessibilityLabel="고양이 뽑기 닫기" style={[FULL, { zIndex: 5, backgroundColor: 'rgba(43,34,29,0.55)', alignItems: 'center', justifyContent: 'center', padding: 18 }]}>
+      <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 440, backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 18, gap: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Txt jua style={{ fontSize: 21 }}>고양이 뽑기</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <ChuruBadge n={s.churu} small />
+            <Btn onPress={() => S({ gachaPop: null })} accessibilityLabel="닫기" hitSlop={8} style={{ width: 36, height: 36 }}><Txt style={{ fontSize: 20 }}>✕</Txt></Btn>
+          </View>
         </View>
+        <Seg items={[['basic', '일반 뽑기'], ['plus', 'Plus 전용 뽑기']]} value={kind} onPick={k => S({ gachaPop: k })} h={38} />
+        <View style={{ padding: 14, borderRadius: 18, backgroundColor: plus ? '#F6E3C9' : C.card, gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Txt jua style={{ fontSize: 16, color: plus ? '#4A3428' : C.ink }}>{plus ? 'Plus 구독 전용 고양이 ' + cats.length + '종' : '기본 고양이 ' + cats.length + '종'}</Txt>
+            <Txt style={{ fontSize: 12, color: plus ? '#6B5444' : C.sub }}>{met + '/' + cats.length + ' 만남'}</Txt>
+          </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+            {cats.map(c => s.owned.includes(c.id) ? <CatFace key={c.id} cat={c} size={plus ? 34 : 44} border={1.5} />
+              : <View key={c.id} style={{ width: plus ? 34 : 44, height: plus ? 34 : 44, borderRadius: 22, borderWidth: 1.5, borderColor: plus ? '#C9B79F' : C.line, backgroundColor: plus ? '#EAD8BF' : C.card2, alignItems: 'center', justifyContent: 'center' }}>
+                <Image source={CUTOUT[c.id]} resizeMode="contain" style={{ width: '78%', height: '78%', tintColor: '#4A3428', opacity: 0.3 }} /></View>)}
+          </View>
+          <Txt style={{ fontSize: 11, lineHeight: 17, color: plus ? '#6B5444' : C.sub }}>{plus
+            ? `확률 · 일반 ${TIER[1].rate}% · 희귀 ${TIER[2].rate}% · 전설 ${TIER[3].rate}%\n${left <= 1 ? '다음 뽑기는 희귀 이상 보장!' : `희귀 이상 보장까지 ${left}번`} · 이미 만난 고양이는 츄르로 돌려받아요 (일반 ${TIER[1].refund} · 희귀 ${TIER[2].refund} · 전설 ${TIER[3].refund})`
+            : `기본 고양이 중 한 마리가 같은 확률로 나와요.\n이미 만난 고양이는 츄르 ${TIER[1].refund}개로 돌려받아요.`}</Txt>
+        </View>
+        {locked
+          ? <View style={{ gap: 8 }}>
+            <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center' }}>Plus 구독 중에만 뽑을 수 있어요. 만난 고양이는 도감에서 볼 수 있어요.</Txt>
+            <Primary h={52} label="Plus 구독하고 뽑기" bg="#C9772F" onPress={() => S({ gachaPop: null, tab: 'menu', menuPage: PG.plus, prevTab: 'gacha' })} />
+          </View>
+          : <View style={{ flexDirection: 'row', gap: 8 }}>{btn(1)}{btn(10)}</View>}
+      </Pressable>
+    </Pressable>
+  );
+}
+
+// 뽑기 결과: 1회는 크게, 10회는 5×2 칸. 새로 만난 고양이에는 NEW, 이미 만난 고양이는 돌려받은 츄르를 보여준다.
+export function GachaResult() {
+  const C = useC();
+  const { width: sw } = useWindowDimensions();
+  const res = useApp(s => s.gachaRes)!;
+  const one = res.length === 1, first = res[0];
+  const newOnes = res.filter(r => !r.dup);
+  const close = () => S({ gachaRes: null });
+  const cell = Math.floor((Math.min(440, sw - 36) - 36 - 4 * 6) / 5); // 카드 안쪽 폭(패딩 · 테두리 제외)을 5칸으로
+  const card = (r: (typeof res)[number], i: number, big: boolean) => {
+    const c = catById(r.id), t = TIER[r.tier], sz = big ? 212 : cell - 4, plusCat = !!c.tier;
+    return (
+      <Anim key={i} name="pop" dur={0.45} delay={big ? 0 : i * 0.08} loop={false} easing={EZ.out} style={{ width: big ? '100%' : cell, alignItems: 'center', gap: big ? 8 : 2, opacity: 0 }}>
+        <View style={{ borderRadius: big ? 28 : 12, borderWidth: 2, borderColor: plusCat ? t.color : C.ink, overflow: 'hidden' }}>
+          <CatFace cat={c} size={sz} border={0} round={false} bg={C.card} />
+          {r.tier === 3 && <View style={{ position: 'absolute', left: 4, right: 4, top: 4, bottom: 4, borderRadius: big ? 22 : 9, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFF3E0' }} />}
+          {!r.dup && <View style={{ position: 'absolute', top: big ? 10 : 2, right: big ? 10 : 2, paddingHorizontal: big ? 6 : 3, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: '#E07F7F' }}><Txt jua style={{ fontSize: big ? 13 : 8, color: '#FFFFFF' }}>NEW</Txt></View>}
+        </View>
+        <Txt jua numberOfLines={1} style={{ fontSize: big ? 24 : 10 }}>{c.name}</Txt>
+        {plusCat && <View style={{ paddingHorizontal: big ? 8 : 4, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: t.color }}><Txt style={{ fontSize: big ? 12 : 9, color: '#2B221D' }}>{t.name}</Txt></View>}
+        {r.dup ? <Txt style={{ fontSize: big ? 13 : 9, color: C.sub, textAlign: 'center' }}>{big ? '이미 만났어요 · 츄르 +' + t.refund : '츄르 +' + t.refund}</Txt>
+          : big ? <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 19 }}>{c.desc}</Txt> : null}
       </Anim>
+    );
+  };
+  return (
+    <View style={[FULL, { zIndex: 7, backgroundColor: 'rgba(43,34,29,0.6)', alignItems: 'center', justifyContent: 'center', padding: 18 }]}>
+      <View style={{ width: '100%', maxWidth: 440, backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 16, alignItems: 'center', gap: 14 }}>
+        <Txt jua style={{ fontSize: 18 }}>{one ? '뽑기 결과' : `뽑기 결과 · 새 고양이 ${newOnes.length}마리`}</Txt>
+        {one ? card(first, 0, true) : <View style={{ width: '100%', flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 10, justifyContent: 'center' }}>{res.map((r, i) => card(r, i, false))}</View>}
+        <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
+          {one && !first.dup ? <>
+            <Btn onPress={close} style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 16 }}>도감에 두기</Txt></Btn>
+            <Btn onPress={() => S({ catId: first.id, gachaRes: null, gachaPop: null })} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>함께 지내기</Txt></Btn>
+          </> : <Btn onPress={close} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>확인</Txt></Btn>}
+        </View>
+      </View>
     </View>
   );
 }

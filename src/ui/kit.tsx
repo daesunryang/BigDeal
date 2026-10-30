@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, Pressable, PressableProps, StyleProp, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
-import Svg, { Circle, Defs, Line, Pattern, Rect } from 'react-native-svg';
+import Svg, { Circle, Defs, Pattern, Rect } from 'react-native-svg';
 import { Cat, Fill, IMG_H, IMG_W, WIN } from '../data';
 import { tr } from '../i18n';
 import { useApp } from '../store';
@@ -10,6 +10,37 @@ export const CATS_IMG = require('../../assets/img/cats-all.jpg');
 export const CUTOUT: Record<string, number> = {
   cheese: require('../../assets/img/cat-cheese.png'), blue: require('../../assets/img/cat-blue.png'), calico: require('../../assets/img/cat-calico.png'), tux: require('../../assets/img/cat-tux.png'),
   ragdoll: require('../../assets/img/cat-ragdoll.png'), siam: require('../../assets/img/cat-siam.png'), persian: require('../../assets/img/cat-persian.png'), angora: require('../../assets/img/cat-angora.png'),
+  bombay: require('../../assets/img/gacha/cut-bombay.png'),
+  singapura: require('../../assets/img/gacha/cut-singapura.png'),
+  bsh: require('../../assets/img/gacha/cut-bsh.png'),
+  abyssinian: require('../../assets/img/gacha/cut-abyssinian.png'),
+  ash: require('../../assets/img/gacha/cut-ash.png'),
+  devon: require('../../assets/img/gacha/cut-devon.png'),
+  mau: require('../../assets/img/gacha/cut-mau.png'),
+  curl: require('../../assets/img/gacha/cut-curl.png'),
+  mainecoon: require('../../assets/img/gacha/cut-mainecoon.png'),
+  fold: require('../../assets/img/gacha/cut-fold.png'),
+  norwegian: require('../../assets/img/gacha/cut-norwegian.png'),
+  toyger: require('../../assets/img/gacha/cut-toyger.png'),
+  sphynx: require('../../assets/img/gacha/cut-sphynx.png'),
+  bengal: require('../../assets/img/gacha/cut-bengal.png'),
+};
+// 뽑기 고양이 초상 (보내준 일러스트에서 자른 정사각형 장면). 기본 고양이는 cats-all.jpg를 잘라 쓴다.
+export const FACE: Record<string, number> = {
+  bombay: require('../../assets/img/gacha/face-bombay.jpg'),
+  singapura: require('../../assets/img/gacha/face-singapura.jpg'),
+  bsh: require('../../assets/img/gacha/face-bsh.jpg'),
+  abyssinian: require('../../assets/img/gacha/face-abyssinian.jpg'),
+  ash: require('../../assets/img/gacha/face-ash.jpg'),
+  devon: require('../../assets/img/gacha/face-devon.jpg'),
+  mau: require('../../assets/img/gacha/face-mau.jpg'),
+  curl: require('../../assets/img/gacha/face-curl.jpg'),
+  mainecoon: require('../../assets/img/gacha/face-mainecoon.jpg'),
+  fold: require('../../assets/img/gacha/face-fold.jpg'),
+  norwegian: require('../../assets/img/gacha/face-norwegian.jpg'),
+  toyger: require('../../assets/img/gacha/face-toyger.jpg'),
+  sphynx: require('../../assets/img/gacha/face-sphynx.jpg'),
+  bengal: require('../../assets/img/gacha/face-bengal.jpg'),
 };
 
 // 글자. 문자열 자식은 선택한 언어로 바꾸고, 큰 글씨 설정이면 10% 키운다.
@@ -26,7 +57,7 @@ export function Txt({ style, jua, children, ...rest }: TextProps & { jua?: boole
 // 눌렀을 때 살짝 작아지는 버튼
 export function Btn({ style, children, onPress, disabled, ...rest }: PressableProps & { style?: StyleProp<ViewStyle>; children?: React.ReactNode }) {
   return (
-    <Pressable {...rest} disabled={disabled} onPress={onPress}
+    <Pressable accessibilityRole="button" {...rest} disabled={disabled} onPress={onPress}
       style={({ pressed }) => [{ alignItems: 'center', justifyContent: 'center' }, style as any, pressed && onPress ? { transform: [{ scale: 0.98 }], opacity: 0.92 } : null]}>
       {children as any}
     </Pressable>
@@ -49,7 +80,7 @@ export function Seg<T extends string>({ items, value, onPick, h = 34, jua = true
   return (
     <View style={{ flexDirection: 'row', gap: 2, padding: 3, borderRadius: 14, backgroundColor: C.line }}>
       {items.map(([k, label]) => (
-        <Btn key={k} onPress={() => onPick(k)} style={{ flex: 1, height: h, borderRadius: 11, backgroundColor: value === k ? C.bg : 'transparent' }}>
+        <Btn key={k} onPress={() => onPick(k)} accessibilityRole="tab" accessibilityState={{ selected: value === k }} style={{ flex: 1, height: h, borderRadius: 11, backgroundColor: value === k ? C.bg : 'transparent' }}>
           <Txt jua={jua} style={{ fontSize: fs }}>{label}</Txt>
         </Btn>
       ))}
@@ -60,7 +91,7 @@ export function Seg<T extends string>({ items, value, onPick, h = 34, jua = true
 export function Chip({ label, on, onPress, h = 30, fs = 13, jua, style }: { label: string; on: boolean; onPress: () => void; h?: number; fs?: number; jua?: boolean; style?: StyleProp<ViewStyle> }) {
   const C = useC();
   return (
-    <Btn onPress={onPress} style={[{ height: h, paddingHorizontal: 12, borderRadius: h / 2, borderWidth: 1.5, borderColor: C.ink, backgroundColor: on ? C.ink : C.bg }, style]}>
+    <Btn onPress={onPress} accessibilityState={{ selected: on }} style={[{ height: h, paddingHorizontal: 12, borderRadius: h / 2, borderWidth: 1.5, borderColor: C.ink, backgroundColor: on ? C.ink : C.bg }, style]}>
       <Txt jua={jua} style={{ fontSize: fs, color: on ? C.bg : C.ink }}>{label}</Txt>
     </Btn>
   );
@@ -87,7 +118,7 @@ export function Ghost({ label, onPress, h = 46, fs = 15, style, bg }: { label: s
 export function ChuruBadge({ n, small }: { n: number; small?: boolean }) {
   const C = useC();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: small ? 5 : 6, paddingHorizontal: small ? 10 : 12, borderRadius: 16, backgroundColor: C.chip1, borderWidth: 1.5, borderColor: C.ink }}>
+    <View accessible accessibilityLabel={`츄르 ${n}개`} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: small ? 5 : 6, paddingHorizontal: small ? 10 : 12, borderRadius: 16, backgroundColor: C.chip1, borderWidth: 1.5, borderColor: C.ink }}>
       <View style={{ width: 10, height: 10, transform: [{ rotate: '45deg' }], backgroundColor: '#E59A4C', borderWidth: 1.5, borderColor: C.ink }} />
       <Txt jua style={{ fontSize: small ? 13 : 15 }}>{n + ' 츄르'}</Txt>
     </View>
@@ -99,7 +130,7 @@ export function Header({ title, onBack, right, size = 24 }: { title: string; onB
   return (
     <View style={{ height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, flexShrink: 1 }}>
-        {onBack && <Btn onPress={onBack} style={{ width: 36, height: 40 }}><Txt style={{ fontSize: 26 }}>‹</Txt></Btn>}
+        {onBack && <Btn onPress={onBack} accessibilityLabel="뒤로" hitSlop={8} style={{ width: 36, height: 40 }}><Txt style={{ fontSize: 26 }}>‹</Txt></Btn>}
         <Txt jua style={{ fontSize: onBack && size === 24 ? 21 : size }} numberOfLines={1}>{title}</Txt>
       </View>
       {right}
@@ -113,7 +144,9 @@ export function CatFace({ cat, size, border = 2, round = true, style, dim, bg, s
   const s = size / WIN;
   return (
     <View style={[{ width: size, height: size, borderRadius: round ? size / 2 : 14, overflow: 'hidden', borderWidth: border, borderColor: C.ink, backgroundColor: bg ?? C.bg }, style]}>
-      <Image source={CATS_IMG} style={{ position: 'absolute', width: IMG_W * s, height: IMG_H * s, left: size / 2 - cat.c[0] * s - border, top: size / 2 - cat.c[1] * s - border, opacity: dim ?? 1 }} />
+      {FACE[cat.id]
+        ? <Image source={FACE[cat.id]} resizeMode="cover" style={{ position: 'absolute', left: -border, top: -border, width: size, height: size, opacity: dim ?? 1 }} />
+        : <Image source={CATS_IMG} style={{ position: 'absolute', width: IMG_W * s, height: IMG_H * s, left: size / 2 - cat.c[0] * s - border, top: size / 2 - cat.c[1] * s - border, opacity: dim ?? 1 }} />}
       {!!shade && <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: `rgba(0,0,0,${shade})` }} />}
     </View>
   );
@@ -125,7 +158,9 @@ export function CatScene({ cat, width, style }: { cat: Cat; width: number; style
   const h = width * 768 / 1376;
   return (
     <View style={[{ width, height: h, overflow: 'hidden', borderWidth: 2, borderColor: C.ink }, style]}>
-      <Image source={CATS_IMG} style={{ position: 'absolute', width: width * 2, height: h * 4, left: -cat.room[0] * width - 2, top: -cat.room[1] * h - 2 }} />
+      {FACE[cat.id]
+        ? <Image source={FACE[cat.id]} resizeMode="cover" style={{ position: 'absolute', left: -2, top: -2, width, height: h }} />
+        : <Image source={CATS_IMG} style={{ position: 'absolute', width: width * 2, height: h * 4, left: -cat.room[0] * width - 2, top: -cat.room[1] * h - 2 }} />}
     </View>
   );
 }
@@ -133,7 +168,7 @@ export function CatScene({ cat, width, style }: { cat: Cat; width: number; style
 // CSS 배경 무늬(줄무늬·도트·체크·격자)를 SVG 패턴으로
 export function FillView({ fill, style, radius = 0 }: { fill: Fill | string; style?: StyleProp<ViewStyle>; radius?: number }) {
   const f: Fill = typeof fill === 'string' ? { t: 'solid', c: fill } : fill;
-  const id = React.useMemo(() => 'p' + Math.random().toString(36).slice(2, 10), []);
+  const id = 'p' + React.useId().replace(/[^a-zA-Z0-9]/g, '');
   if (f.t === 'solid') return <View style={[{ backgroundColor: f.c, borderRadius: radius, overflow: 'hidden' }, style]} />;
   let pat: React.ReactNode = null, bg = 'transparent';
   if (f.t === 'stripesV' || f.t === 'stripesH') {
@@ -187,7 +222,7 @@ export function ListCard({ children, style }: { children: React.ReactNode; style
 export function ToggleRow({ label, desc, on, onPress }: { label: string; desc?: string; on: boolean; onPress: () => void }) {
   const C = useC(); const cb = useApp(s => s.cb);
   return (
-    <Btn onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 58, paddingVertical: 6, paddingHorizontal: 14, justifyContent: 'flex-start' }}>
+    <Btn onPress={onPress} accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: on }} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 58, paddingVertical: 6, paddingHorizontal: 14, justifyContent: 'flex-start' }}>
       <View style={{ flex: 1, gap: 2 }}>
         <Txt style={{ fontSize: 15 }}>{label}</Txt>
         {!!desc && <Txt style={{ fontSize: 11, color: C.sub, lineHeight: 15 }}>{desc}</Txt>}
@@ -205,5 +240,5 @@ export function Bar({ pct, h = 10, color = '#E59A4C', bg }: { pct: number; h?: n
 
 export function Hearts({ n, size = 20 }: { n: number; size?: number }) {
   const C = useC(); const cb = useApp(s => s.cb);
-  return <View style={{ flexDirection: 'row', gap: 2 }}>{[0, 1, 2, 3, 4].map(i => <Text key={i} style={{ fontSize: size, lineHeight: size * 1.1, color: i < n ? '#E07F7F' : C.line }}>{cb && i >= n ? '♡' : '♥'}</Text>)}</View>;
+  return <View accessible accessibilityLabel={`친밀도 하트 ${n}개`} style={{ flexDirection: 'row', gap: 2 }}>{[0, 1, 2, 3, 4].map(i => <Text key={i} style={{ fontSize: size, lineHeight: size * 1.1, color: i < n ? '#E07F7F' : C.line }}>{cb && i >= n ? '♡' : '♥'}</Text>)}</View>;
 }

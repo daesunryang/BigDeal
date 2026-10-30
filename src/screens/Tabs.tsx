@@ -1,17 +1,83 @@
-import React from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Image, Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
-import { ANIMALS, BEH, CATS, DECOR, DECOR_KINDS, FEED, FLOOR, LIMITED, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
+import { ALL_CATS, ANIMALS, BEH, CATS, DECOR, GACHA_CATS, GACHA_COST, SONGS, TIER, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
 import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
 import { S, getS, listOf, useApp } from '../store';
+import { sfx } from '../sfx';
 import { useC } from '../theme';
-import { Bar, Btn, CatFace, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
+import { useScrollMemory } from '../ui/scrollMemory';
+import { Bar, Btn, CUTOUT, CatFace, FACE, Chip, ChuruBadge, FillView, Header, PhotoSlot, Primary, Seg, Txt } from '../ui/kit';
 
 const pad = { paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18 };
-const back = () => S(st => ({ tab: st.prevTab === 'home' ? 'home' : 'menu', menuPage: null }));
+const back = () => { getS().back(); };
 
-// ── 도감 ──
+// Plus 구독 전용 고양이 (Plus 전용 뽑기로 만난다 · 도감에서만 보여준다)
+function PlusCats() {
+  const C = useC();
+  const s = useApp(st => st);
+  return (
+    <>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <Txt jua style={{ fontSize: 17 }}>Plus 구독 전용 고양이</Txt>
+        <Txt style={{ fontSize: 12, color: C.sub }}>{GACHA_CATS.filter(c => s.owned.includes(c.id)).length + '/' + GACHA_CATS.length + ' 만남'}</Txt>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        {GACHA_CATS.map(c => {
+          const o = s.owned.includes(c.id), t = TIER[c.tier!];
+          return (
+            <Btn key={c.id} onPress={() => (o ? S({ catId: c.id }) : getS().toast(s.plus ? 'Plus 전용 뽑기에서 만날 수 있어요 · ' + t.name + ' 등급' : 'Plus 구독 후 Plus 전용 뽑기에서 만날 수 있어요'))} accessibilityLabel={(o ? c.name : '아직 못 만난 고양이') + ', ' + t.name}
+              style={{ width: '31%', flexGrow: 1, alignItems: 'stretch', gap: 6, padding: 8, borderRadius: 16, borderWidth: c.id === s.catId ? 2.5 : 1.5, borderColor: c.id === s.catId ? C.ink : C.line, backgroundColor: C.bg }}>
+              <View style={{ aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' }}>
+                {o ? <Image source={FACE[c.id]} resizeMode="cover" accessibilityIgnoresInvertColors style={{ width: '100%', height: '100%' }} />
+                  : <Image source={CUTOUT[c.id]} resizeMode="contain" accessibilityLabel="아직 못 만난 고양이 실루엣" style={{ width: '82%', height: '82%', tintColor: C.ink, opacity: 0.3 }} />}
+              </View>
+              <Txt jua numberOfLines={1} style={{ fontSize: 12 }}>{o ? c.name : '???'}</Txt>
+              <View style={{ flexDirection: 'row', gap: 4 }}>
+                <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 7, backgroundColor: '#F6D58E' }}><Txt style={{ fontSize: 10, color: '#4A3428' }}>PLUS</Txt></View>
+                <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 7, backgroundColor: t.color }}><Txt style={{ fontSize: 10, color: '#2B221D' }}>{t.name}</Txt></View>
+              </View>
+            </Btn>
+          );
+        })}
+      </View>
+    </>
+  );
+}
+
+// ── 뽑기 (하단 탭) ── "새로운 고양이 만나기"의 버튼으로 뽑기 창(일반 · Plus 전용)을 연다
+export function GachaTab() {
+  const sm = useScrollMemory('gacha');
+  const C = useC();
+  const s = useApp(st => st);
+  const basic = CATS.filter(c => !c.plus), metB = basic.filter(c => s.owned.includes(c.id)).length, metP = GACHA_CATS.filter(c => s.owned.includes(c.id)).length;
+  return (
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+      <Header title="뽑기" right={<ChuruBadge n={s.churu} />} />
+      {IS_DEMO && <Txt style={{ fontSize: 12, color: C.sub }}>데모 버전 · 테스트용 츄르가 무제한이에요</Txt>}
+      <View style={{ gap: 12, padding: 18, borderRadius: 22, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.card }}>
+        <View style={{ flexDirection: 'row' }}>{[...basic.slice(0, 3), ...GACHA_CATS.filter(c => c.tier === 3)].map((c, i) => <CatFace key={c.id} cat={c} size={40} border={1.5} style={{ marginLeft: i ? -10 : 0 }} />)}</View>
+        <Txt jua style={{ fontSize: 20 }}>새로운 고양이 만나기</Txt>
+        <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>모은 츄르로 고양이를 뽑아요. 일반 뽑기는 기본 고양이, Plus 전용 뽑기는 Plus 구독 전용 고양이가 나와요.</Txt>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {([['basic', '일반 뽑기', `기본 고양이 ${metB}/${basic.length}`], ['plus', 'Plus 전용 뽑기', `Plus 고양이 ${metP}/${GACHA_CATS.length}`]] as const).map(([k, l, sub]) => (
+            <View key={k} style={{ flex: 1, padding: 10, borderRadius: 14, backgroundColor: k === 'plus' ? '#F6E3C9' : C.bg, gap: 2 }}>
+              <Txt jua style={{ fontSize: 14, color: k === 'plus' ? '#4A3428' : C.ink }}>{l}</Txt>
+              <Txt style={{ fontSize: 11, color: k === 'plus' ? '#6B5444' : C.sub }}>{sub + '\n' + GACHA_COST[k].one + ' 츄르부터'}</Txt>
+            </View>
+          ))}
+        </View>
+        <Primary h={54} label="고양이 뽑기" onPress={() => S({ gachaPop: 'basic' })} />
+      </View>
+    </ScrollView>
+  );
+}
+
+// ── 도감 ── (메뉴 › 고양이 도감에서 들어온다)
 export function Dex() {
+  const sm = useScrollMemory('dex');
+  // 도감을 떠나면 듣던 노래를 멈춘다
+  useEffect(() => () => { if (getS().playingSong != null) getS().stopSong(); }, []);
   const C = useC();
   const s = useApp(st => st);
   const isOwned = (k: string, id: string) => (DECOR as any)[k].single ? s.ownedDecor.includes(id) : s.items.includes(id);
@@ -20,11 +86,11 @@ export function Dex() {
     const items = listOf(k, s.dRoom).map(([id, name]) => { const o = isOwned(k, id); tot++; if (o) own++; return { id, nm: o ? name : '???', sw: k === 'wall' ? WALL[id] : k === 'floor' ? FLOOR[id] : SWATCH[id], op: o ? 1 : 0.25 }; });
     return { k, title: DECOR[k].label, count: items.filter(x => x.op === 1).length + '/' + items.length, items };
   });
-  const count = s.dexTab === 'cat' ? s.owned.length + '/4 만남' : s.dexTab === 'beh' ? s.seenBeh.length + '/7 수집' : own + '/' + tot + ' 보유';
+  const count = s.dexTab === 'cat' ? (s.owned.length + (s.plus ? CATS.filter(c => c.plus).length : 0)) + '/' + ALL_CATS.length + ' 만남' : s.dexTab === 'beh' ? s.seenBeh.length + '/7 수집' : s.dexTab === 'song' ? s.seenSongs.length + '/' + SONGS.length + ' 수집' : own + '/' + tot + ' 보유';
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
-      <Header title="도감" right={<Txt style={{ fontSize: 14, color: C.sub }}>{count}</Txt>} />
-      <Seg items={[['cat', '고양이'], ['beh', '행동'], ['item', '아이템']]} value={s.dexTab} onPick={k => S({ dexTab: k })} />
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+      <Header title="도감" onBack={back} right={<Txt style={{ fontSize: 14, color: C.sub }}>{count}</Txt>} />
+      <Seg items={[['cat', '고양이'], ['beh', '행동'], ['song', '노래'], ['item', '아이템']]} value={s.dexTab} onPick={k => S({ dexTab: k })} />
       {s.dexTab === 'cat' && <>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
           {CATS.map(c => {
@@ -34,10 +100,10 @@ export function Dex() {
                 style={{ width: '47.5%', flexGrow: 1, alignItems: 'stretch', gap: 8, padding: 10, borderRadius: 20, borderWidth: c.id === s.catId ? 2.5 : 1.5, borderColor: c.id === s.catId ? C.ink : C.line, backgroundColor: C.bg }}>
                 <View style={{ aspectRatio: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' }}>
                   {o || c.plus ? <CatFace cat={c} size={140} border={0} round={false} bg={C.card} dim={o ? 1 : 0.55} shade={o ? 0 : 0.36} style={{ borderRadius: 14 }} />
-                    : <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.18)' }} />}
+                    : <Image source={CUTOUT[c.id]} resizeMode="contain" accessibilityLabel="아직 못 만난 고양이 실루엣" style={{ width: '84%', height: '84%', tintColor: C.ink, opacity: 0.3 }} />}
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Txt jua style={{ fontSize: 15, flexShrink: 1 }} numberOfLines={1}>{o || c.plus ? c.name : '???'}</Txt>
+                  <Txt jua style={{ fontSize: 15, flexShrink: 1 }} numberOfLines={1}>{o ? c.name : '???'}</Txt>
                   <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: c.id === s.catId ? C.mint : c.plus && !o ? '#F6D58E' : C.card }}>
                     <Txt style={{ fontSize: 11, color: c.plus && !o ? '#4A3428' : C.ink }}>{o ? '♥ ' + Math.floor((s.aff[c.id] || 0) / 20) + (c.id === s.catId ? ' · 함께' : '') : c.plus ? 'PLUS' : '잠김'}</Txt>
                   </View>
@@ -47,11 +113,7 @@ export function Dex() {
             );
           })}
         </View>
-        <View style={{ gap: 10, padding: 16, borderRadius: 20, backgroundColor: C.card }}>
-          <Txt jua style={{ fontSize: 17 }}>새로운 고양이 만나기</Txt>
-          <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>츄르 30개로 창밖의 고양이를 불러요. 아직 못 만난 고양이만 나와요.</Txt>
-          <Primary h={50} label={s.owned.length >= 4 ? '모든 고양이를 만났어요' : s.churu >= 30 ? '츄르 30개로 부르기' : `츄르가 ${30 - s.churu}개 더 필요해요`} bg={s.churu >= 30 && s.owned.length < 4 ? C.ink : C.disabled} onPress={() => getS().pull()} />
-        </View>
+        <PlusCats />
       </>}
       {s.dexTab === 'beh' && <>
         <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>홈의 고양이는 6초마다 새로운 행동을 보여줘요. 한 번 본 행동은 여기에 기록돼요.</Txt>
@@ -61,6 +123,23 @@ export function Dex() {
               <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: on ? b.bg : C.card2, alignItems: 'center', justifyContent: 'center' }}><Txt jua style={{ fontSize: 20, color: '#4A3428' }}>{on ? b.g : '?'}</Txt></View>
               <View style={{ flexShrink: 1 }}><Txt jua style={{ fontSize: 15 }}>{on ? b.name : '???'}</Txt><Txt style={{ fontSize: 11, color: on ? C.gink : C.mute }}>{on ? '수집 완료' : '아직 못 봤어요'}</Txt></View>
             </View>); })}
+        </View>
+      </>}
+      {s.dexTab === 'song' && <>
+        <Txt style={{ fontSize: 13, lineHeight: 20, color: C.sub }}>{'홈에서 고양이를 누르면 노래를 불러요. 한 번 들은 노래는 여기서 다시 들을 수 있어요. 고양이마다 전용 노래도 한 곡씩 있어요.\n기본 5곡 모으면 츄르 20 · 전용 8곡 모으면 츄르 50' + (s.songBonus.basic ? ' · 기본 보상 받음' : '') + (s.songBonus.cat ? ' · 전용 보상 받음' : '')}</Txt>
+        <View style={{ gap: 8 }}>
+          {SONGS.map((x, i) => {
+            const on = s.seenSongs.includes(i), cc = x.cat ? catById(x.cat) : null, cOwn = !!cc && (s.owned.includes(cc.id) || (!!cc.plus && s.plus));
+            const tag = cc ? (cOwn ? cc.name + ' 전용' : '??? 전용') : '기본';
+            const lyric = on ? x.t : cc ? (cOwn ? cc.name + '와(과) 함께일 때 눌러 보세요' : '아직 못 만난 고양이의 노래예요') : '고양이를 눌러 들어 보세요';
+            return (
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, borderWidth: 1.5, borderColor: on ? C.ink : C.line, backgroundColor: C.bg }}>
+                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: on ? (cc ? C.chip1 : C.mint) : C.card2, alignItems: 'center', justifyContent: 'center' }}><Txt jua style={{ fontSize: 20 }}>{on ? (cc ? '♬' : '♪') : '?'}</Txt></View>
+                <View style={{ flex: 1, minWidth: 0 }}><Txt jua style={{ fontSize: 15 }}>{(on ? x.name : '???') + ' · ' + tag}</Txt><Txt style={{ fontSize: 12, color: C.sub }}>{lyric}</Txt></View>
+                {on && <Btn onPress={() => getS().sing(i)} accessibilityLabel={x.name + (s.playingSong === i ? ' 중지' : ' 듣기')} style={{ height: 34, minWidth: 74, paddingHorizontal: 12, borderRadius: 17, borderWidth: 1.5, borderColor: C.ink, backgroundColor: s.playingSong === i ? C.ink : C.chip1 }}><Txt jua style={{ fontSize: 13, color: s.playingSong === i ? C.bg : C.ink }}>{s.playingSong === i ? '■ 중지' : '▶ 듣기'}</Txt></Btn>}
+              </View>
+            );
+          })}
         </View>
       </>}
       {s.dexTab === 'item' && groups.map(g => (
@@ -83,12 +162,13 @@ export function Dex() {
 // ── 상점 · 꾸미기 ──
 const SHOP: [string, string, number][] = [['rug', '초록 러그', 0], ['scratch', '스크래처', 15], ['plant', '캣닢 화분', 20], ['yarn', '털실 장난감', 12], ['hammock', '창가 해먹', 40], ['cushion', '생선 쿠션', 25]];
 export function Shop() {
+  const sm = useScrollMemory('shop');
   const C = useC();
   const s = useApp(st => st);
   const cat = catById(s.catId);
   const watchAd = () => { if (s.adLeft <= 0) return getS().toast('오늘 광고 보상을 모두 받았어요'); S({ ad: 5 }); };
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 16 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 16 }]}>
       <Header title="상점 · 꾸미기" onBack={back} size={24} right={<ChuruBadge n={s.churu} />} />
       <Txt style={{ fontSize: 13, color: C.sub, lineHeight: 20 }}>{`방을 꾸미면 ${cat.name}의 친밀도가 조금 올라요. 장착한 아이템은 홈 방에 표시돼요.`}</Txt>
       <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -101,7 +181,7 @@ export function Shop() {
           const act = () => {
             const st = getS();
             if (own) return S({ equipped: eq ? st.equipped.filter(x => x !== id) : [...st.equipped, id] });
-            if (!can) return; st.log(name + ' 구매', -price); require('../sfx').sfx('buy');
+            if (!can) return; st.log(name + ' 구매', -price); sfx('buy');
             S({ churu: st.churu - price, items: [...st.items, id], equipped: [...st.equipped, id], aff: { ...st.aff, [st.catId]: Math.min(100, (st.aff[st.catId] || 0) + 2) } });
           };
           return (
@@ -124,6 +204,7 @@ export function Shop() {
 
 // ── 후원 ──
 export function Donate() {
+  const sm = useScrollMemory('donate');
   const C = useC();
   const s = useApp(st => st);
   const an = ANIMALS.find(x => x.id === s.sAnimal)!, cm = s.sMode === 'churu';
@@ -131,7 +212,7 @@ export function Donate() {
   const kg = dkg(s);
   const payMethod = Platform.OS === 'ios' ? 'Apple Pay' : 'Google Play 결제';
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
       <Header title="함께 후원" right={<Txt style={{ fontSize: 14, color: C.sub }}>{'내 후원 ' + kg + 'kg'}</Txt>} />
       <Seg items={[['give', '후원하기'], ['feed', '소식 피드'], ['mine', '내 후원']]} value={s.donTab} onPick={k => S({ donTab: k })} />
       {s.donTab === 'give' && <>
@@ -221,12 +302,13 @@ export function Donate() {
 }
 
 export function Shelter() {
+  const sm = useScrollMemory('shelter');
   const C = useC();
   const s = useApp(st => st);
   const i = s.shIdx, meta = SHD[i], m = SHELTER_META[i];
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
-      <Header title={m.name} onBack={() => S({ tab: 'donate' })} />
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 14 }]}>
+      <Header title={m.name} onBack={back} />
       <PhotoSlot label="보호소 전경 사진" style={{ height: 120, borderRadius: 16 }} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {[[String(m.cats), '보호 중'], [meta.since, '설립'], [s.shelters[i].kg.toFixed(1) + 'kg', '이번 달 사료']].map(([v, k]) => (
@@ -257,6 +339,7 @@ export function Shelter() {
 
 // ── 집중 기록 ──
 export function Stats() {
+  const sm = useScrollMemory('stats');
   const C = useC();
   const s = useApp(st => st);
   const wk = weekVals(s), lb = weekLabels();
@@ -264,7 +347,7 @@ export function Stats() {
   const mx = Math.max(1, ...tries.map(t => t[1]));
   const name = (k: string) => s.apps.find(a => a.id === k)?.name || ({ ig: '인스타그램', yt: '유튜브', tt: '숏폼 영상', kk: '메신저', wt: '웹툰', gm: '게임' } as Record<string, string>)[k] || k;
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 16 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 16 }]}>
       <Header title="집중 기록" onBack={back} size={24} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {[['오늘 집중', todayMin(s) + '분'], ['연속 달성', focusStreak(s) + '일']].map(([k, v]) => (
@@ -310,13 +393,14 @@ export function Stats() {
 // ── 우편함 ──
 const TYPES: Record<string, [string, string]> = { reward: ['보상', 'chip1'], report: ['후원', 'mint'], news: ['공지', 'card'], event: ['이벤트', 'pink'] };
 export function Mailbox() {
+  const sm = useScrollMemory('mail');
   const C = useC();
   const s = useApp(st => st);
   const inF = (m: { type: string }) => s.mailFilter === 'all' || m.type === s.mailFilter || (s.mailFilter === 'news' && m.type === 'event');
   const claimable = s.mails.filter(m => m.churu && !s.claimed.includes(m.id));
   const list = s.mails.filter(inF);
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 12 }]}>
+    <ScrollView {...sm} style={{ flex: 1 }} contentContainerStyle={[pad, { gap: 12 }]}>
       <Header title="우편함" right={
         <Btn onPress={() => getS().claimAll()} style={{ height: 34, paddingHorizontal: 12, borderRadius: 17, borderWidth: 1.5, borderColor: C.ink, backgroundColor: claimable.length ? C.ink : C.card2 }}>
           <Txt jua style={{ fontSize: 14, color: claimable.length ? C.bg : C.mute }}>{'모두 받기 ' + (claimable.length || '')}</Txt>

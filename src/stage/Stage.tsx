@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import { Image, PanResponder, Pressable, View } from 'react-native';
 import { BehId, Cat, FLOOR, Fill, WALL } from '../data';
 import { growth } from '../derive';
@@ -10,7 +10,8 @@ import { Dims, INK, Sh } from './Shape';
 const ROPE: Fill = { t: 'stripesH', a: '#D9B98C', b: '#C29D6E', wa: 4, wb: 2 };
 const B = 2;
 // 잘라낸 고양이 그림 크기 (contain + 아래 정렬 계산용)
-const CUT_DIM: Record<string, [number, number]> = { angora: [547, 574], blue: [565, 564], calico: [571, 544], cheese: [598, 550], persian: [599, 495], ragdoll: [627, 592], siam: [492, 604], tux: [544, 523] };
+const CUT_DIM: Record<string, [number, number]> = { angora: [547, 574], blue: [565, 564], calico: [571, 544], cheese: [598, 550], persian: [599, 495], ragdoll: [627, 592], siam: [492, 604], tux: [544, 523],
+  bombay: [435, 600], singapura: [340, 531], bsh: [359, 495], abyssinian: [435, 509], ash: [396, 600], devon: [344, 600], mau: [365, 600], curl: [364, 512], mainecoon: [600, 545], fold: [375, 538], norwegian: [495, 600], toyger: [389, 600], sphynx: [296, 535], bengal: [356, 600] };
 
 type Box = { l?: number; r?: number; t?: number; b?: number; w: number; h?: number; ar?: number };
 type Outer = { bg?: string | Fill; bd?: number; rad?: any; ell?: boolean; poly?: [number, number][] };
@@ -96,13 +97,13 @@ function boxPx(b: Box, [pw, ph]: Dims) {
 
 function Item({ id, dims, sc, drag, off }: { id: string; dims: Dims; sc: number; drag: boolean; off: [number, number] }) {
   const sp = ITEMS[id]; const sel = useApp(s => s.dragSel === id);
-  const p0 = useRef<[number, number]>([0, 0]);
-  const pr = useRef(PanResponder.create({
+  // 끌기 시작 위치는 PanResponder 안에만 두는 값이라 상태로 두지 않는다
+  const [pr] = useState(() => { const p0: { current: [number, number] } = { current: [0, 0] }; return PanResponder.create({
     onStartShouldSetPanResponder: () => true, onMoveShouldSetPanResponder: () => true, onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: () => { p0.current = (getS().pos[id] || [0, 0]) as [number, number]; getS().set({ dragSel: id }); },
     onPanResponderMove: (_, g) => { const cl = (v: number) => Math.max(-300, Math.min(300, v)); getS().set(st => ({ pos: { ...st.pos, [id]: [cl(p0.current[0] + g.dx / sc), cl(p0.current[1] + g.dy / sc)] } })); },
     onPanResponderRelease: () => getS().set({ dragSel: null }), onPanResponderTerminate: () => getS().set({ dragSel: null }),
-  })).current;
+  }); });
   const bx = boxPx(sp.box, dims), d: Dims = [bx.width, bx.height], o = sp.outer;
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, top: 0, width: dims[0], height: dims[1], zIndex: sel ? 5 : undefined, transform: [{ translateX: off[0] * sc }, { translateY: off[1] * sc }] }}>
@@ -118,7 +119,7 @@ function Item({ id, dims, sc, drag, off }: { id: string; dims: Dims; sc: number;
 }
 
 const BEH_ANIM: Record<string, [AnimName, number, ((t: number) => number)?]> = {
-  idle: ['bob', 3], nap: ['nap', 3.6], meow: ['meow', 2.4, EZ.out], stretch: ['stretch', 2.6], look: ['sway', 2], hop: ['hop', 0.9, EZ.out], purr: ['purr', 0.14, EZ.linear], sulky: ['nap', 5],
+  idle: ['bob', 3], nap: ['nap', 3.6], meow: ['meow', 2.4, EZ.out], stretch: ['stretch', 2.6], look: ['sway', 2], hop: ['hop', 0.9, EZ.out], purr: ['purr', 0.14, EZ.linear], sulky: ['nap', 5], sing: ['meow', 0.7],
 };
 
 export function Outfit({ o, cid, d }: { o: string; cid: string; d: Dims }) {
@@ -136,7 +137,7 @@ function Fx({ ch, style, anim, dur, delay = 0, vars, color = INK, size }: { ch: 
   </Anim>;
 }
 
-function CatSprite({ cat, w, H, drag, beh, outfit }: { cat: Cat; w: number; H: number; drag: boolean; beh: BehId; outfit: string }) {
+function CatSprite({ cat, w, H, drag, beh, outfit, onCat }: { cat: Cat; w: number; H: number; drag: boolean; beh: BehId; outfit: string; onCat?: () => void }) {
   const gf = useApp(s => growth(s).f), nextBehavior = useApp(s => s.nextBehavior);
   const size = Math.round(Math.min(w * 0.42, H * 0.62));
   const cw = Math.round(size * 1.1 * gf), chh = Math.round(size * 0.98 * gf), L = Math.round((w - cw) / 2), Bt = Math.round(H * 0.06);
@@ -158,8 +159,16 @@ function CatSprite({ cat, w, H, drag, beh, outfit }: { cat: Cat; w: number; H: n
       {beh === 'idle' && [0, 1].map(i => <Fx key={'n' + i} ch="♪" size={fs + 2} color="#7E9CC8" anim="note" dur={2.6} delay={i * 1.3} style={{ right: i ? '14%' : '2%', top: '8%' }} />)}
       {beh === 'stretch' && [0, 1].map(i => <Fx key={'s' + i} ch="✦" size={fs + 2} color="#E59A4C" anim="spark" dur={1.6} delay={i * 0.5} style={{ left: i ? '4%' : '82%', top: i ? '30%' : '16%' }} />)}
       {beh === 'hop' && <Fx ch="✦" size={fs + 2} color="#E59A4C" anim="spark" dur={1.2} style={{ left: '8%', top: '6%' }} />}
+      {beh === 'sing' && <Anim name="bubblepop" dur={1.6} easing={EZ.out} pointerEvents="none" style={{ position: 'absolute', right: '-10%', top: '-8%', paddingVertical: 4, paddingHorizontal: 10, borderTopLeftRadius: 12, borderTopRightRadius: 12, borderBottomRightRadius: 12, borderBottomLeftRadius: 3, backgroundColor: '#FBF6EE', borderWidth: 1.5, borderColor: INK, transformOrigin: '0% 100%' } as any}>
+        <Txt jua style={{ fontSize: fs, color: INK }}>야옹야옹♪</Txt></Anim>}
+      {beh === 'sing' && ([[-18, 0, '♪'], [14, 0.5, '♫'], [-4, 1, '♪'], [22, 1.4, '♬']] as [number, number, string][]).map(([dx, dl, n], i) =>
+        <Fx key={'sg' + i} ch={n} size={fs + 2} anim="songnote" dur={1.6} delay={dl} vars={{ x: dx }} style={{ left: (20 + i * 16) + '%', top: '6%' }} />)}
     </Anim>
   );
+  if (!drag && onCat) return <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: H }}>
+    {body}
+    <Pressable onPress={onCat} accessibilityRole="button" accessibilityLabel={cat.name + ' 노래 듣기'} style={{ position: 'absolute', left: L, top: H - Bt - chh, width: cw, height: chh }} />
+  </View>;
   if (!drag) return <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: H }}>{body}</View>;
   return <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: H }}>
     {body}
@@ -187,10 +196,11 @@ function Win({ struct, w, H }: { struct: string; w: number; H: number }) {
 }
 
 // 고양이 방 한 장면 (프로토타입 stage(w, H, d, items, cat, drag, pos, showCat))
-export function Stage({ w, H, decor, items, cat, drag = false, pos, showCat = true }: {
+export function Stage({ w, H, decor, items, cat, drag = false, pos, showCat = true, onCat }: {
   w: number; H: number; decor: { wall: string; floor: string; struct: string; outfit?: string }; items: string[]; cat: Cat; drag?: boolean; pos: Record<string, [number, number]>; showCat?: boolean;
+  onCat?: () => void; // 고양이를 누를 때 (홈: 노래). 없으면 방 전체 터치가 그대로 지나간다
 }) {
-  const beh = useApp(s => { s.msg; s.behOff; s.sulky; s.fedUntil; return s.behavior().id; });
+  const beh = useApp(s => s.behavior().id);
   const ft = Math.round(H * 0.64), sc = w / 360, dims: Dims = [w, H];
   const has = (id: string) => items.includes(id);
   const it = (id: string) => has(id) && ITEMS[id] ? <Item key={id} id={id} dims={dims} sc={sc} drag={drag} off={(pos[id] || [0, 0]) as [number, number]} /> : null;
@@ -205,7 +215,7 @@ export function Stage({ w, H, decor, items, cat, drag = false, pos, showCat = tr
       </View>
       {decor.struct !== 'none' && <Win struct={decor.struct} w={w} H={H} />}
       {BEHIND.map(it)}
-      {showCat && <CatSprite key={'cat-' + beh} cat={cat} w={w} H={H} drag={drag} beh={beh} outfit={decor.outfit || 'none'} />}
+      {showCat && <CatSprite key={'cat-' + beh} cat={cat} w={w} H={H} drag={drag} beh={beh} outfit={decor.outfit || 'none'} onCat={onCat} />}
       {FRONT.map(it)}
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: w, height: H }}>
         <FillView fill={{ t: 'diag', a: 'rgba(74,52,40,0.04)', b: 'transparent', wa: 2, wb: 3, angle: 25 }} style={{ width: w, height: H }} />

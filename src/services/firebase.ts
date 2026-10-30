@@ -15,6 +15,7 @@ export function fb() {
     if (Platform.OS === 'web') auth = getAuth(app);
     else {
       // getReactNativePersistence는 @firebase/auth의 react-native 빌드에만 있다 (타입 정의에는 없음)
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { getReactNativePersistence } = require('@firebase/auth') as any;
       try { auth = initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) }); } catch { auth = getAuth(app); }
     }
