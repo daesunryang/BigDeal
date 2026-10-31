@@ -2,7 +2,7 @@
 
 버전마다 바뀐 항목과 그에 대한 반응을 모아 두는 곳이에요. 반응은 **웹 체크리스트**에서 고르는 게 기본이고, 이 파일은 그 기록을 Git에 남겨 두는 사본이에요.
 
-- 웹 체크리스트 (PC · 휴대폰): https://claude.ai/artifact/TbHNt1WHm9w85JrnqcSxdz
+- 웹 체크리스트 (PC · 휴대폰): https://claude.ai/artifact/K3Q5LRoPJqWMRgkE9Go4HA
 - 상태 값: `좋아요` · `수정 필요` · `보류` · `-`(아직 안 고름) · `처리 완료 vX.Y.Z`
 
 ## 쓰는 법

@@ -29,7 +29,8 @@ if (fs.existsSync(fontRoot)) {
   fs.rmSync(fontRoot, { recursive: true, force: true });
 }
 
-fs.writeFileSync(path.join(OUT, 'index.html'), `<title>냥집중 미리보기</title>
+fs.writeFileSync(path.join(OUT, 'index.html'), `<!DOCTYPE html>
+<title>냥집중 미리보기</title>
 <style>
   :root { --bg: #FBF6EE; color-scheme: light; }
   html, body { height: 100%; }

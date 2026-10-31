@@ -36,7 +36,9 @@ Run lint and typecheck before declaring any task done.
 
 ## Feedback loop
 
-- The user reacts to changes in the web checklist artifact https://claude.ai/artifact/TbHNt1WHm9w85JrnqcSxdz (source `tools/feedback/index.html`, db collections `items` and `reactions`, same doc ids). `FEEDBACK.md` is the Git copy.
+- The user reacts to changes in the web checklist artifact https://claude.ai/artifact/K3Q5LRoPJqWMRgkE9Go4HA (source `tools/feedback/index.html`, db collections `items` and `reactions`, same doc ids). `FEEDBACK.md` is the Git copy.
+- The repo moved to `daesunryang/BigDeal` on 2026-10-31, and the three artifacts (checklist, canvas, web preview) were recreated in this account from the Git copies. The checklist's db rules: `items` written by editors only (`admin`), `reactions` by contributors (`interact`). The old artifacts' `reply` texts and the canvas's two image notes were not carried over.
+- Artifact tools want the slug (UUID): checklist `921a3427-e93c-4207-bf9b-fd8ee4c8f2f5`, canvas `fe80e0ce-e23e-4946-a4c1-79413222bb39`, web preview `a25de99b-a982-48fa-9f96-350a770d6a45`. Files to upload or publish must be inside the repo (use the git-ignored `.scratch/`), not `/tmp`.
 - When asked to apply feedback ("피드백 반영해 줘"): read `reactions` (and `items`) with the ArtifactData tool, copy status and memo into `FEEDBACK.md`, implement the `수정 필요` items on a new version branch (never on `main` or an older version branch), then set `done: "vX.Y.Z"` and a short Korean `reply` on each handled item and add the new version's changes as new `items` (ids `X.Y.Z-n`, `order` lower than the previous round's). If `FEEDBACK.md` was edited by hand, merge: the later edit wins; ask when unclear.
 - Claude Design history lives in the same checklist as items `D<round>-<n>` (round title `디자인 라운드 N · …`, `order` 300+, `source: "design"`). When a new Claude Design handoff bundle arrives, import any new rounds from its `집중냥 업데이트 내역.dc.html` the same way, then port the changed screens to the app.
 - Reply to the user in Korean.
@@ -44,7 +46,7 @@ Run lint and typecheck before declaring any task done.
 
 ## Claude Design canvas (keep in sync)
 
-- The design lives in the Claude Design canvas https://claude.ai/artifact/LbTzdZDAH86SSkY6qHicu6 (it replaces the old claude.ai/design project, which Claude Code can't write to). Its source is kept in `design/canvas/project/` (`canvas.json`, `Main.dc.html` = the interactive prototype, `RealApp.dc.html` = screenshots of the real app).
+- The design lives in the Claude Design canvas https://claude.ai/artifact/YRmziXS7tpmG28nnQRcszp (it replaces the old claude.ai/design project, which Claude Code can't write to). Its source is kept in `design/canvas/project/` (`canvas.json`, `Main.dc.html` = the interactive prototype, `RealApp.dc.html` = screenshots of the real app).
 - Before changing the canvas, read the live `project/*.dc.html` from the artifact (the user may have edited it) and merge into `design/canvas/project/`. Images are canvas assets (`/_blob/<id>`); `Main.dc.html` references them through the CSS variables `--ca` and `--cut-<cat>` in its `<helmet>`.
 - After every change that affects UI or behaviour, in the same task:
   1. Port the change into `Main.dc.html` (same rules as the app, e.g. navigation history) and bump the version text in the 앱 정보 page and the notes column.
@@ -54,7 +56,7 @@ Run lint and typecheck before declaring any task done.
 
 ## Web preview artifact (instead of APK builds for now)
 
-- The demo app's real web build lives in the Claude artifact https://claude.ai/artifact/2hgCXSazaRgTDrYjjun6rW (냥집중 미리보기). The user checks changes there.
+- The demo app's real web build lives in the Claude artifact https://claude.ai/artifact/M3tMtQZFTS1erEVaZRReGk (냥집중 미리보기). The user checks changes there.
 - After every change that affects UI or behaviour: `node scripts/web-artifact.js <scratch dir>/webart`, then publish `<scratch dir>/webart/index.html` to that URL with `root` = that folder and `files` = the map in `<scratch dir>/webart-files.json` (drop files the new build no longer has with `null`).
 - GitHub Actions builds (`android-apk.yml`, `ios.yml`) no longer run on branch pushes or PRs (paused 2026-10-30 to save Actions minutes). Run them only when the user asks: Actions › Run workflow (`workflow_dispatch`) or a `v*` tag.
 
