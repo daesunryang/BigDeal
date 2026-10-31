@@ -29,30 +29,8 @@
     "page": "proto",
     "view": "canvas"
   },
-  "noteOrder": [
-    "image-vwnk65",
-    "image-whx4fc"
-  ],
-  "notes": {
-    "image-vwnk65": {
-      "alt": "KakaoTalk_20261030_022635694",
-      "h": 896,
-      "kind": "image",
-      "src": "/_blob/ea64eb230be6ca8603b1b5cb715e6483",
-      "w": 1200,
-      "x": 1011,
-      "y": -1075
-    },
-    "image-whx4fc": {
-      "alt": "KakaoTalk_20261030_022635694_01",
-      "h": 896,
-      "kind": "image",
-      "src": "/_blob/70a1145d79bb772fcd06b7d413e448d2",
-      "w": 1200,
-      "x": -2829,
-      "y": -1075
-    }
-  },
+  "noteOrder": [],
+  "notes": {},
   "order": [
     "RealApp.dc.html",
     "Main.dc.html"
