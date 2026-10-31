@@ -52,6 +52,12 @@ Run lint and typecheck before declaring any task done.
   3. Publish the changed files to the canvas (root = folder holding `project/`), copy them back to `design/canvas/project/`, and commit.
 - When the user edits the design on the canvas, diff the live `Main.dc.html` against `design/canvas/project/Main.dc.html` and port the differences to the app.
 
+## Web preview artifact (instead of APK builds for now)
+
+- The demo app's real web build lives in the Claude artifact https://claude.ai/artifact/2hgCXSazaRgTDrYjjun6rW (냥집중 미리보기). The user checks changes there.
+- After every change that affects UI or behaviour: `node scripts/web-artifact.js <scratch dir>/webart`, then publish `<scratch dir>/webart/index.html` to that URL with `root` = that folder and `files` = the map in `<scratch dir>/webart-files.json` (drop files the new build no longer has with `null`).
+- GitHub Actions builds (`android-apk.yml`, `ios.yml`) no longer run on branch pushes or PRs (paused 2026-10-30 to save Actions minutes). Run them only when the user asks: Actions › Run workflow (`workflow_dispatch`) or a `v*` tag.
+
 ## Building with EAS
 
 Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.

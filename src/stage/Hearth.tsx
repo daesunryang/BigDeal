@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, RadialGradient, Rect, Stop } from 'react-native-svg';
-import { SPRITE_H, SPRITE_W, runsOf } from './pixelCat';
+import { spotsOf } from '../spots';
+import { spotSeed, useApp } from '../store';
+import { SPRITE_H, SPRITE_W, paletteOf, runsOf } from './pixelCat';
 
 // 집중 화면의 "불멍" 장면: 어두운 방, 타닥타닥 타는 벽난로, 창밖 별, 그리고 도트 고양이.
 // 고양이는 느긋하게 걷다가 불 앞에 앉아 꼬리를 흔들고, 털을 고르고, 식빵을 굽다가 잠들어요.
@@ -103,7 +105,9 @@ function Room() {
 }
 
 function CatSprite({ catId, c, frame }: { catId: string; c: CatState; frame: string }) {
-  const runs = runsOf(frame, catId);
+  const seed = useApp(s => spotSeed(s, catId));
+  const sp = useMemo(() => ({ seed, sp: spotsOf(seed, paletteOf(catId).B) }), [seed, catId]);
+  const runs = runsOf(frame, catId, sp);
   const x = Math.round(c.x - SPRITE_W / 2), y = FEET_Y - SPRITE_H;
   // 앉은 그림은 정면이라 뒤집지 않는다
   const flip = c.dir < 0 && (frame.startsWith('walk') || frame === 'loaf' || frame.startsWith('sleep') || frame === 'stretch');

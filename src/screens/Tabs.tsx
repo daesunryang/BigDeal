@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Image, Platform, ScrollView, View } from 'react-native';
 import { IS_DEMO } from '../config';
-import { ALL_CATS, ANIMALS, BEH, CATS, DECOR, GACHA_CATS, GACHA_COST, SONGS, TIER, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, reward, won } from '../data';
+import { ALL_CATS, ANIMALS, BEH, CATS, DECOR, GACHA_CATS, GACHA_COST, SONGS, TIER, DECOR_KINDS, FEED, FLOOR, PG, SHD, SHELTER_META, SWATCH, WALL, catById, plusMul, reward, won } from '../data';
 import { dkg, focusStreak, todayMin, weekLabels, weekVals } from '../derive';
 import { S, getS, listOf, useApp } from '../store';
 import { sfx } from '../sfx';
@@ -172,7 +172,7 @@ export function Shop() {
       <Header title="상점 · 꾸미기" onBack={back} size={24} right={<ChuruBadge n={s.churu} />} />
       <Txt style={{ fontSize: 13, color: C.sub, lineHeight: 20 }}>{`방을 꾸미면 ${cat.name}의 친밀도가 조금 올라요. 장착한 아이템은 홈 방에 표시돼요.`}</Txt>
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Btn onPress={watchAd} style={{ flex: 1, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.chip1 }}><Txt jua style={{ fontSize: 14 }}>{'광고 보고 츄르 5개 (' + s.adLeft + '/3)'}</Txt></Btn>
+        <Btn onPress={watchAd} style={{ flex: 1, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.chip1 }}><Txt jua style={{ fontSize: 14 }}>{'광고 보고 츄르 ' + 5 * plusMul(s.plus) + '개 (' + s.adLeft + '/3)'}</Txt></Btn>
         <Btn onPress={() => S({ tab: 'menu', menuPage: PG.ledger, prevTab: 'shop' })} style={{ height: 44, paddingHorizontal: 16, borderRadius: 22, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 14 }}>츄르 내역 ›</Txt></Btn>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>

@@ -4,7 +4,11 @@ import { ActivityIndicator, Image, Platform, Pressable, ScrollView, TextInput, V
 import { captureRef } from 'react-native-view-shot';
 import { APP_VERSION, IS_DEMO, IS_FULL } from '../config';
 import { openUpdate } from '../services/update';
-import { ANIMALS, APPS, CATS, DEFAULT_BLOCK_PKGS, GACHA_CATS, GACHA_COST, GACHA_PITY, MOODS, PG, ROOM_DESC, TIER, catById, won } from '../data';
+import { ANIMALS, APPS, CATS, CHURU_PACKS, DEFAULT_BLOCK_PKGS, GACHA_CATS, GACHA_COST, GACHA_PITY, MOODS, PG, ROOM_DESC, TIER, catById, plusMul, won } from '../data';
+import { SPOT_COST, spotsOf } from '../spots';
+import { CUT_DIM } from '../stage/Stage';
+import { paletteOf } from '../stage/pixelCat';
+import { CatSpots } from '../ui/CatSpots';
 import { affOf, dkg, focusStreak } from '../derive';
 import { authEnabled, deleteAccount, unlinkProvider } from '../services/auth';
 import { blocker } from '../services/blocker';
@@ -12,7 +16,7 @@ import { receiptHtml, sharePdf } from '../services/pdf';
 import { deleteRemote, stopSync } from '../services/sync';
 import { FloorPlan, houseData } from '../stage/House';
 import { sfx } from '../sfx';
-import { BlockApp, S, getS, hooks, useApp } from '../store';
+import { BlockApp, S, getS, hooks, spotSeed, useApp } from '../store';
 import { FONT, useC } from '../theme';
 import { Anim, EZ } from '../ui/anim';
 import { Btn, CUTOUT, CatFace, ChuruBadge, Primary, Seg, Toggle, Txt } from '../ui/kit';
@@ -142,16 +146,18 @@ export function HouseModal({ width }: { width: number }) {
 export function PaySheet() {
   const C = useC();
   const pay = useApp(s => s.pay)!, sAmt = useApp(s => s.sAmt), sAnimal = useApp(s => s.sAnimal);
-  const amt = [3000, 5000, 10000][sAmt], all = pay.agree.every(Boolean);
-  const name = ANIMALS.find(x => x.id === sAnimal)!.name;
+  // pay.pack이 있으면 츄르 충전, 없으면 보호소 후원 결제
+  const pk = pay.pack != null ? CHURU_PACKS[pay.pack] : null;
+  const amt = pk ? pk[2] : [3000, 5000, 10000][sAmt], all = pay.agree.every(Boolean);
+  const name = pk ? '츄르 ' + pk[0] + (pk[1] ? ' + 보너스 ' + pk[1] : '') : ANIMALS.find(x => x.id === sAnimal)!.name + ' 후원';
   const methods = ios ? ['Apple Pay', '신용·체크카드', '카카오페이'] : ['Google Play 결제', '신용·체크카드', '카카오페이', '토스페이'];
-  const agree = ['전체 동의', '(필수) 결제 서비스 이용약관', '(필수) 후원 환불 정책 확인', '(필수) 개인정보 제3자 제공 동의 (보호소 전달용)'];
+  const agree = pk ? ['전체 동의', '(필수) 결제 서비스 이용약관', '(필수) 츄르는 현금으로 환급되지 않고, 쓰지 않은 츄르는 7일 안에 청약철회할 수 있어요'] : ['전체 동의', '(필수) 결제 서비스 이용약관', '(필수) 후원 환불 정책 확인', '(필수) 개인정보 제3자 제공 동의 (보호소 전달용)'];
   return (
     <Scrim z={8} align="bottom" dim={0.5} onClose={() => S({ pay: null })}>
       <ScrollView style={{ maxHeight: '92%' }} contentContainerStyle={{ backgroundColor: C.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingHorizontal: 20, paddingBottom: 24, gap: 8 }}>
         <Grab />
         <Txt jua style={{ fontSize: 20 }}>결제하기</Txt>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.card }}><Txt style={{ fontSize: 14 }}>{name + ' 후원'}</Txt><Txt style={{ fontSize: 14, fontWeight: '700' }}>{won(amt)}</Txt></View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: C.card }}><Txt style={{ fontSize: 14 }}>{name}</Txt><Txt style={{ fontSize: 14, fontWeight: '700' }}>{won(amt)}</Txt></View>
         <Txt style={{ fontSize: 12, color: C.sub, marginTop: 4 }}>결제 수단</Txt>
         {methods.map(m => (
           <Btn key={m} onPress={() => S(st => ({ pay: { ...st.pay!, method: m } }))} style={{ flexDirection: 'row', gap: 10, height: 48, paddingHorizontal: 12, borderRadius: 14, borderWidth: pay.method === m ? 2 : 1.5, borderColor: pay.method === m ? C.ink : C.line, backgroundColor: C.white, justifyContent: 'flex-start' }}>
@@ -166,9 +172,71 @@ export function PaySheet() {
             <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: C.ink, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? C.ink : '#FFFFFF' }}><Txt style={{ fontSize: 13, fontWeight: '700', color: C.bg, fontFamily: undefined }}>{on ? '✓' : ''}</Txt></View>
             <Txt style={{ fontSize: 13, fontWeight: i ? '400' : '700', flexShrink: 1 }}>{l}</Txt>
           </Btn>); })}
-        <Primary label={all ? won(amt) + ' 결제하기' : '약관에 동의해 주세요'} bg={all ? C.ink : C.disabled} style={{ marginTop: 8 }} onPress={() => { if (!all) return; getS().sponsor(); S({ pay: null }); }} />
+        <Primary label={all ? won(amt) + ' 결제하기' : '약관에 동의해 주세요'} bg={all ? C.ink : C.disabled} style={{ marginTop: 8 }} onPress={() => { if (!all) return; if (pk) return getS().buyChuru(pay.pack!); getS().sponsor(); S({ pay: null }); }} />
         <Txt style={{ fontSize: 11, color: C.mute, textAlign: 'center' }}>데모 결제예요. 실제로 돈이 나가지 않아요.</Txt>
       </ScrollView>
+    </Scrim>
+  );
+}
+
+// ── 츄르 충전 ── 츄르 배지 · 메뉴 › 츄르 충전 · 츄르가 모자랄 때 열린다. 상품을 고르면 결제창(PaySheet)으로
+export function ChuruShop() {
+  const C = useC();
+  const churu = useApp(s => s.churu);
+  const methods = ios ? 'Apple Pay' : 'Google Play 결제';
+  return (
+    <Scrim z={8} align="bottom" dim={0.5} onClose={() => S({ churuShop: false })}>
+      <View style={{ backgroundColor: C.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingHorizontal: 20, paddingBottom: 24, gap: 10 }}>
+        <Grab />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Txt jua style={{ fontSize: 20 }}>츄르 충전</Txt>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 10, height: 10, transform: [{ rotate: '45deg' }], backgroundColor: '#E59A4C', borderWidth: 1.5, borderColor: C.ink }} /><Txt jua style={{ fontSize: 15 }}>{'보유 ' + churu}</Txt></View>
+        </View>
+        <Txt style={{ fontSize: 12, lineHeight: 18, color: C.sub }}>츄르는 집중하면 모을 수 있어요. 더 빨리 모으고 싶을 때 충전해요.</Txt>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          {CHURU_PACKS.map(([n, bonus, price], i) => (
+            <Btn key={n} onPress={() => S({ churuShop: false, pay: { method: methods, agree: [0, 0], pack: i } })} accessibilityLabel={'츄르 ' + (n + bonus) + '개, ' + won(price)}
+              style={{ width: '47%', flexGrow: 1, alignItems: 'flex-start', gap: 4, padding: 14, borderRadius: 18, borderWidth: 1.5, borderColor: bonus ? C.ink : C.line, backgroundColor: bonus ? C.chip1 : C.card }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                {Array.from({ length: Math.min(4, i + 1) }, (_, k) => <View key={k} style={{ width: 9, height: 9, marginLeft: k ? -3 : 0, transform: [{ rotate: '45deg' }], backgroundColor: '#E59A4C', borderWidth: 1.2, borderColor: C.ink }} />)}
+              </View>
+              <Txt jua style={{ fontSize: 18 }}>{n.toLocaleString('ko-KR') + ' 츄르'}</Txt>
+              <Txt style={{ fontSize: 11, color: bonus ? '#C9772F' : C.sub }}>{bonus ? '+ 보너스 ' + bonus : ' '}</Txt>
+              <View style={{ alignSelf: 'stretch', marginTop: 4, height: 32, borderRadius: 16, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center' }}><Txt jua style={{ fontSize: 14, color: C.bg }}>{won(price)}</Txt></View>
+            </Btn>
+          ))}
+        </View>
+        <Txt style={{ fontSize: 11, color: C.mute, textAlign: 'center' }}>{IS_FULL ? '스토어 결제를 준비하고 있어요' : '데모 결제예요. 실제로 돈이 나가지 않아요.'}</Txt>
+      </View>
+    </Scrim>
+  );
+}
+
+// ── 고양이 얼룩 ── 홈의 "얼룩" 버튼으로 연다. 지금 함께하는 고양이의 얼룩을 보고 츄르로 다시 뽑는다
+export function SpotPop() {
+  const C = useC();
+  const id = useApp(st => st.catId), seed = useApp(st => spotSeed(st, id)), churu = useApp(st => st.churu);
+  const cat = catById(id), sp = spotsOf(seed, paletteOf(id).B);
+  const [iw, ih] = CUT_DIM[id] || [580, 560], k = Math.min(150 / iw, 150 / ih), w = Math.round(iw * k), h = Math.round(ih * k);
+  const close = () => S({ spotPop: false });
+  return (
+    <Scrim z={8} dim={0.5} onClose={close}>
+      <Anim name="pop" dur={0.35} loop={false} easing={EZ.out} style={{ backgroundColor: C.bg, borderRadius: 24, borderWidth: 2, borderColor: C.ink, padding: 20, gap: 12, alignItems: 'center' }}>
+        <Txt jua style={{ fontSize: 20 }}>{cat.name + '의 얼룩'}</Txt>
+        <View style={{ width: 170, height: 170, borderRadius: 20, backgroundColor: C.card, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 8 }}>
+          <View style={{ width: w, height: h }}>
+            <Image source={CUTOUT[id]} accessibilityLabel={cat.name + ' · ' + sp.name} style={{ width: w, height: h }} />
+            <CatSpots id={id} w={w} h={h} />
+          </View>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: sp.color, borderWidth: 1.5, borderColor: C.ink }} />
+          <Txt style={{ fontSize: 13, color: C.sub }}>{sp.name + ' · 고양이마다 랜덤으로 생겨요'}</Txt>
+        </View>
+        <Txt style={{ fontSize: 12, lineHeight: 18, color: C.sub, textAlign: 'center' }}>{'홈 방과 집중 화면의 고양이에 보여요.\n도감은 원래 그림 그대로예요.'}</Txt>
+        <Primary h={48} fs={16} style={{ alignSelf: 'stretch' }} label={'얼룩 다시 뽑기 · ' + SPOT_COST + ' 츄르'} onPress={() => (churu < SPOT_COST ? getS().needChuru(SPOT_COST - churu) : S({ dlg: { kind: 'spots' } }))} />
+        <Btn onPress={close} style={{ alignSelf: 'stretch', height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: C.ink }}><Txt jua style={{ fontSize: 15 }}>닫기</Txt></Btn>
+      </Anim>
     </Scrim>
   );
 }
@@ -207,7 +275,7 @@ export function AdView() {
   const C = useC();
   const ad = useApp(s => s.ad)!;
   useEffect(() => { const t = setInterval(() => { const a = getS().ad; if (a == null || a <= 0) { clearInterval(t); return; } S({ ad: a - 1 }); }, 1000); return () => clearInterval(t); }, []);
-  const claim = () => { getS().log('광고 시청 보상', 5); sfx('coin'); S(st => ({ ad: null, adLeft: st.adLeft - 1, churu: st.churu + 5, earnedTotal: st.earnedTotal + 5 })); getS().toast('츄르 5개를 받았어요'); };
+  const claim = () => { const g = 5 * plusMul(getS().plus); getS().log('광고 시청 보상', g); sfx('coin'); S(st => ({ ad: null, adLeft: st.adLeft - 1, churu: st.churu + g, earnedTotal: st.earnedTotal + g })); getS().toast('츄르 ' + g + '개를 받았어요'); };
   return (
     <View style={[FULL, { zIndex: 10, backgroundColor: '#2B221D', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }]}>
       <Txt style={{ fontSize: 12, color: C.line }}>광고 (데모)</Txt>
@@ -241,6 +309,8 @@ export function Dialog() {
     expired: () => ({ title: '로그인이 만료됐어요', lines: ['보안을 위해 다시 로그인해 주세요.', '진행 중이던 기록은 안전하게 저장돼 있어요.'], btns: [['다시 로그인', 'primary', toLogin]] }),
     conflict: () => ({ title: '이미 연결된 계정이에요', lines: ['이 Apple 계정은 다른 냥집중 계정에 연결돼 있어요.', '그 계정으로 전환하면 지금 기록은 이 기기에서 보이지 않아요.'], btns: [['취소', 'ghost', close], ['그 계정으로 전환', 'primary', () => { close(); getS().toast('계정을 전환했어요 (데모)'); }]] }),
     refund: () => { const r = s.sponsorships.find(x => x.id === D.id); return { title: (r ? r.animal : '') + ' 후원 환불을 요청할까요?', lines: ['전달 전이라면 영업일 3일 안에 환불돼요.', '환불을 요청하면 인증서가 취소돼요.'], btns: [['닫기', 'ghost', close], ['환불 요청', 'danger', () => { S(st => ({ dlg: null, sponsorships: st.sponsorships.map(x => (x.id === D.id ? { ...x, refunded: true } : x)) })); getS().toast('환불을 요청했어요'); }]] }; },
+    nochuru: () => ({ title: '츄르가 ' + (D.id ?? 0) + '개 더 필요해요', lines: ['집중하면 츄르를 모을 수 있어요.', '지금 바로 충전할 수도 있어요.'], btns: [['츄르 충전하기', 'primary', () => S({ dlg: null, churuShop: true, gachaPop: null })], ['닫기', 'ghost', close]] }),
+    spots: () => ({ cat: true, title: cat.name + '의 얼룩을 다시 뽑을까요?', lines: ['츄르 ' + SPOT_COST + '개로 새 얼룩이 랜덤으로 생겨요.', '지금 얼룩으로는 되돌릴 수 없어요.'], btns: [['취소', 'ghost', close], ['다시 뽑기', 'primary', () => { close(); getS().rerollSpots(cat.id); }]] }),
     refundinfo: () => ({ title: '취소·환불 안내', lines: ['결제 후원은 보호소로 전달되기 전(7일 이내)에 환불할 수 있어요.', '전달이 끝난 후원은 환불할 수 없어요.', '츄르 후원은 환불되지 않아요.', '그 밖의 문의는 문의하기에서 남겨 주세요.'], btns: [['확인', 'primary', close]] }),
     call: () => ({ cat: true, title: '전화가 왔어요', lines: ['집중 시간이 잠시 멈췄어요.', '통화 중에는 벌점이 없어요.'], btns: [['받기', 'primary', () => S({ dlg: { kind: 'incall' } })], ['거절', 'ghost', () => { close(); getS().resumeTimer(); }]] }),
     incall: () => ({ title: '통화 중', lines: ['타이머가 멈춰 있어요.'], btns: [['통화 종료', 'primary', () => { close(); getS().resumeTimer(); getS().toast('집중을 이어가요'); }]] }),
@@ -386,7 +456,7 @@ export function GachaPop() {
   const met = cats.filter(c => s.owned.includes(c.id)).length, left = GACHA_PITY - s.gachaPity;
   const locked = plus && !s.plus;
   const btn = (n: 1 | 10) => {
-    const price = n === 10 ? cost.ten : cost.one, ok = s.churu >= price;
+    const price = n === 10 ? cost.ten : cost.one, ok = s.churu >= price && cats.length - met >= n;
     return (
       <Btn key={n} onPress={() => getS().gachaPull(kind, n)} accessibilityLabel={(plus ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회, 츄르 ' + price + '개'} style={{ flex: 1, height: 54, borderRadius: 27, backgroundColor: ok ? C.ink : C.disabled, gap: 0 }}>
         <Txt jua style={{ fontSize: 17, color: C.bg }}>{n + '회 뽑기'}</Txt>
@@ -416,8 +486,8 @@ export function GachaPop() {
                 <Image source={CUTOUT[c.id]} resizeMode="contain" style={{ width: '78%', height: '78%', tintColor: '#4A3428', opacity: 0.3 }} /></View>)}
           </View>
           <Txt style={{ fontSize: 11, lineHeight: 17, color: plus ? '#6B5444' : C.sub }}>{plus
-            ? `확률 · 일반 ${TIER[1].rate}% · 희귀 ${TIER[2].rate}% · 전설 ${TIER[3].rate}%\n${left <= 1 ? '다음 뽑기는 희귀 이상 보장!' : `희귀 이상 보장까지 ${left}번`} · 이미 만난 고양이는 츄르로 돌려받아요 (일반 ${TIER[1].refund} · 희귀 ${TIER[2].refund} · 전설 ${TIER[3].refund})`
-            : `기본 고양이 중 한 마리가 같은 확률로 나와요.\n이미 만난 고양이는 츄르 ${TIER[1].refund}개로 돌려받아요.`}</Txt>
+            ? `확률 · 일반 ${TIER[1].rate}% · 희귀 ${TIER[2].rate}% · 전설 ${TIER[3].rate}%\n${left <= 1 ? '다음 뽑기는 희귀 이상 보장!' : `희귀 이상 보장까지 ${left}번`} · 이미 만난 고양이는 나오지 않아요`
+            : `기본 고양이 중 한 마리가 같은 확률로 나와요.\n이미 만난 고양이는 나오지 않아요.`}</Txt>
         </View>
         {locked
           ? <View style={{ gap: 8 }}>
@@ -430,13 +500,12 @@ export function GachaPop() {
   );
 }
 
-// 뽑기 결과: 1회는 크게, 10회는 5×2 칸. 새로 만난 고양이에는 NEW, 이미 만난 고양이는 돌려받은 츄르를 보여준다.
+// 뽑기 결과: 1회는 크게, 10회는 5×2 칸. 새로 만난 고양이에는 NEW를 붙인다.
 export function GachaResult() {
   const C = useC();
   const { width: sw } = useWindowDimensions();
   const res = useApp(s => s.gachaRes)!;
   const one = res.length === 1, first = res[0];
-  const newOnes = res.filter(r => !r.dup);
   const close = () => S({ gachaRes: null });
   const cell = Math.floor((Math.min(440, sw - 36) - 36 - 4 * 6) / 5); // 카드 안쪽 폭(패딩 · 테두리 제외)을 5칸으로
   const card = (r: (typeof res)[number], i: number, big: boolean) => {
@@ -446,22 +515,21 @@ export function GachaResult() {
         <View style={{ borderRadius: big ? 28 : 12, borderWidth: 2, borderColor: plusCat ? t.color : C.ink, overflow: 'hidden' }}>
           <CatFace cat={c} size={sz} border={0} round={false} bg={C.card} />
           {r.tier === 3 && <View style={{ position: 'absolute', left: 4, right: 4, top: 4, bottom: 4, borderRadius: big ? 22 : 9, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFF3E0' }} />}
-          {!r.dup && <View style={{ position: 'absolute', top: big ? 10 : 2, right: big ? 10 : 2, paddingHorizontal: big ? 6 : 3, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: '#E07F7F' }}><Txt jua style={{ fontSize: big ? 13 : 8, color: '#FFFFFF' }}>NEW</Txt></View>}
+          <View style={{ position: 'absolute', top: big ? 10 : 2, right: big ? 10 : 2, paddingHorizontal: big ? 6 : 3, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: '#E07F7F' }}><Txt jua style={{ fontSize: big ? 13 : 8, color: '#FFFFFF' }}>NEW</Txt></View>
         </View>
         <Txt jua numberOfLines={1} style={{ fontSize: big ? 24 : 10 }}>{c.name}</Txt>
         {plusCat && <View style={{ paddingHorizontal: big ? 8 : 4, paddingVertical: big ? 1 : 0, borderRadius: 8, backgroundColor: t.color }}><Txt style={{ fontSize: big ? 12 : 9, color: '#2B221D' }}>{t.name}</Txt></View>}
-        {r.dup ? <Txt style={{ fontSize: big ? 13 : 9, color: C.sub, textAlign: 'center' }}>{big ? '이미 만났어요 · 츄르 +' + t.refund : '츄르 +' + t.refund}</Txt>
-          : big ? <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 19 }}>{c.desc}</Txt> : null}
+        {big ? <Txt style={{ fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 19 }}>{c.desc}</Txt> : null}
       </Anim>
     );
   };
   return (
     <View style={[FULL, { zIndex: 7, backgroundColor: 'rgba(43,34,29,0.6)', alignItems: 'center', justifyContent: 'center', padding: 18 }]}>
       <View style={{ width: '100%', maxWidth: 440, backgroundColor: C.bg, borderRadius: 28, borderWidth: 2, borderColor: C.ink, padding: 16, alignItems: 'center', gap: 14 }}>
-        <Txt jua style={{ fontSize: 18 }}>{one ? '뽑기 결과' : `뽑기 결과 · 새 고양이 ${newOnes.length}마리`}</Txt>
+        <Txt jua style={{ fontSize: 18 }}>{one ? '뽑기 결과' : `뽑기 결과 · 새 고양이 ${res.length}마리`}</Txt>
         {one ? card(first, 0, true) : <View style={{ width: '100%', flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 10, justifyContent: 'center' }}>{res.map((r, i) => card(r, i, false))}</View>}
         <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
-          {one && !first.dup ? <>
+          {one ? <>
             <Btn onPress={close} style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: C.ink, backgroundColor: C.bg }}><Txt jua style={{ fontSize: 16 }}>도감에 두기</Txt></Btn>
             <Btn onPress={() => S({ catId: first.id, gachaRes: null, gachaPop: null })} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>함께 지내기</Txt></Btn>
           </> : <Btn onPress={close} style={{ flex: 1, height: 48, borderRadius: 24, backgroundColor: C.ink }}><Txt jua style={{ fontSize: 16, color: C.bg }}>확인</Txt></Btn>}

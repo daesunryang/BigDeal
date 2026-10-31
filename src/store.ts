@@ -1,16 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { IS_DEMO } from './config';
+import { IS_DEMO, IS_FULL } from './config';
 import {
   APPS, CATS, DECOR, DecorKind, FRIENDS, MAILS, Mail, ROOMS, ROOM_DEF, SHN, ANIMALS, BEH, BehId,
-  Cat, GachaKind, catById, isoDay, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
+  Cat, GachaKind, CHURU_PACKS, catById, isoDay, streakOf, plusMul, reward, growthOf, won, SPECIAL, SONGS, songMs, GACHA_CATS, GACHA_COST, GACHA_PITY, TIER,
 } from './data';
 import type { Lang } from './i18n';
+import { SPOT_COST, hashSeed } from './spots';
 import { markBack, scrollKey } from './ui/scrollMemory';
 
 export type Screen = 'splash' | 'login' | 'onboard' | 'tabs' | 'decor' | 'focus' | 'done' | 'fail' | 'rest';
-export type GachaHit = { id: string; tier: 1 | 2 | 3; dup: boolean };
+export type GachaHit = { id: string; tier: 1 | 2 | 3 };
 export type Tab = 'home' | 'gacha' | 'dex' | 'donate' | 'mail' | 'menu' | 'shop' | 'stats' | 'shelter';
 export type Decor = { wall: string; floor: string; struct: string; outfit: string };
 export type RoomData = { decor: Omit<Decor, 'outfit'> & { outfit?: string }; equipped: string[]; pos: Record<string, [number, number]> };
@@ -32,7 +33,7 @@ export type State = {
   restOn: boolean; restEvery: number; restLen: number; midRest: boolean;
   remain: number; total: number; endAt: number; pauseAt: number; fast: boolean;
   blocked: Record<string, boolean>; apps: BlockApp[];
-  sessions: Session[]; last: null | { grow: boolean; goal: boolean; tag: string; min: number; churu: number; aff: number; up: boolean };
+  sessions: Session[]; last: null | { grow: boolean; goal: boolean; tag: string; min: number; churu: number; aff: number; up: boolean; parts: string[] };
   showBlocked: boolean; holding: boolean; failPen: number; rest: number; blockedNow: number; blockedApp: string;
   // 고양이
   churu: number; earnedTotal: number; catId: string; owned: string[]; aff: Record<string, number>; sulky: boolean;
@@ -42,6 +43,8 @@ export type State = {
   playingSong: number | null; // 도감에서 ▶ 듣기로 재생 중인 노래
   // 고양이 뽑기: gachaPity = 희귀 이상이 안 나온 연속 횟수, gachaRes = 방금 뽑은 결과(결과 창)
   gachaPity: number; gachaTotal: number; gachaRes: null | GachaHit[]; gachaPop: GachaKind | null; // 뽑기 결과 · 열린 뽑기 창
+  // 얼룩: spots = 츄르로 다시 뽑은 고양이의 얼룩 씨앗, spotSalt = 이 기기(계정)만의 처음 얼룩 씨앗 (spotSeed)
+  spots: Record<string, number>; spotSalt: number;
   // 방 · 집
   decor: Decor; ownedDecor: string[]; items: string[]; equipped: string[]; pos: Record<string, [number, number]>;
   decorCat: DecorKind; preview: null | { kind: DecorKind; id: string }; dragSel: string | null;
@@ -50,7 +53,8 @@ export type State = {
   // 후원
   shelters: { kg: number }[]; donated: number; pick: number; thanks: string; donTab: 'give' | 'feed' | 'mine';
   sAnimal: string; sMode: 'churu' | 'cash'; sAmt: number; sponsorships: Sponsorship[]; cert: number | null; shIdx: number;
-  pay: null | { method: string; agree: number[] }; rcpt: null | 'cum' | 'rcpt';
+  pay: null | { method: string; agree: number[]; pack?: number }; rcpt: null | 'cum' | 'rcpt'; // pack = 츄르 충전 상품 번호 (없으면 후원 결제)
+  churuShop: boolean; spotPop: boolean; // 츄르 충전 창 · 얼룩 창
   // 우편
   mails: Mail[]; mailRead: number[]; claimed: number[]; mailFilter: 'all' | 'reward' | 'report' | 'news'; openMail: number | null;
   // 메뉴 · 설정
@@ -87,6 +91,7 @@ function initial(): State {
     sessions: [], last: null, showBlocked: false, holding: false, failPen: 3, rest: 0, blockedNow: 0, blockedApp: '인스타그램',
     churu: demo ? 124 : 0, earnedTotal: demo ? 144 : 0, catId: 'cheese', owned: ['cheese'], aff: { cheese: demo ? 34 : 0 }, sulky: false,
     msg: 0, behOff: 0, seenBeh: ['idle'], fedUntil: 0, singUntil: 0, songText: '', seenSongs: [0], songBonus: { basic: false, cat: false }, playingSong: null, gachaPity: 0, gachaTotal: 0, gachaRes: null, gachaPop: null,
+    spots: {}, spotSalt: Math.floor(Math.random() * 2 ** 31), churuShop: false, spotPop: false,
     decor: { wall: 'cream', floor: 'wood', struct: 'basic', outfit: 'none' }, ownedDecor: ['cream', 'wood', 'basic', 'none'], items: ['rug'], equipped: ['rug'], pos: {},
     decorCat: 'wall', preview: null, dragSel: null,
     house: false, hs: 'liv', rooms: ['liv', 'nap'], catRoom: 'liv', jumping: false, pinUntil: 0, rstore: {}, dRoom: 'liv', roomNames: {}, extra: false, houseHint: true, renaming: false, nameDraft: '',
@@ -108,12 +113,12 @@ function initial(): State {
 
 // 저장하지 않는 화면 상태
 const TRANSIENT: (keyof State)[] = ['tab', 'prevTab', 'menuPage', 'wheel', 'midRest', 'singUntil', 'songText', 'playingSong', 'gachaRes', 'showBlocked', 'holding', 'msg', 'behOff', 'preview', 'dragSel', 'house', 'jumping', 'renaming', 'nameDraft',
-  'thanks', 'cert', 'pay', 'rcpt', 'openMail', 'sheet', 'gachaPop', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
+  'thanks', 'cert', 'pay', 'rcpt', 'churuShop', 'spotPop', 'openMail', 'sheet', 'gachaPop', 'share', 'coach', 'ad', 'dlg', 'toastMsg', 'acct', 'emailMode', 'pw', 'loginErr', 'lastBack', 'update', 'friendErr', 'friendCode', 'offline', 'nick'];
 
 // 동기화(백업)에 올릴 게임 데이터
 export const SYNC_KEYS: (keyof State)[] = ['user', 'linked', 'churu', 'earnedTotal', 'catId', 'owned', 'aff', 'sulky', 'seenBeh', 'decor', 'ownedDecor', 'items', 'equipped', 'pos', 'rooms', 'catRoom', 'rstore', 'dRoom', 'roomNames', 'extra',
   'donated', 'pick', 'sponsorships', 'mails', 'mailRead', 'claimed', 'plus', 'plusKind', 'toggles', 'themeMode', 'lang', 'big', 'cb', 'haptic', 'goal', 'goalNotify', 'remind', 'avatarCat', 'ledger', 'friends', 'myCode', 'tries', 'att', 'fdays',
-  'sessions', 'blocked', 'tag', 'restOn', 'restEvery', 'restLen', 'seenSongs', 'songBonus', 'gachaPity', 'gachaTotal', 'coachSeen', 'houseHint', 'mailDay'];
+  'sessions', 'blocked', 'tag', 'restOn', 'restEvery', 'restLen', 'seenSongs', 'songBonus', 'gachaPity', 'gachaTotal', 'spots', 'spotSalt', 'coachSeen', 'houseHint', 'mailDay'];
 
 type Actions = {
   set: (p: Partial<State> | ((s: State) => Partial<State> | null)) => void;
@@ -144,6 +149,9 @@ type Actions = {
   claimMail: (id: number) => void;
   claimAll: () => void;
   gachaPull: (kind: GachaKind, n: 1 | 10, rnd?: () => number) => void;
+  rerollSpots: (id: string, rnd?: () => number) => void;
+  needChuru: (n: number) => void;
+  buyChuru: (pack: number) => void;
   back: () => boolean;
   reset: () => void;
   afterLogin: (u: User, linked: Record<string, boolean>) => void;
@@ -205,16 +213,25 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     const td = today();
     const todayMin = [{ min, ok: true, at: Date.now() }, ...s.sessions].filter(x => x.ok && isoDay(0) === dayOf(x.at)).reduce((a, x) => a + x.min, 0);
     const goalNow = todayMin >= s.goal && s.goalHit !== td;
-    get().log('집중 ' + min + '분 완료', rw.churu); sfx('done');
+    // 집중 보상 + 보너스(오늘 첫 집중 · 목표 달성 · 60분 이상 · 3일 연속). Plus는 합계의 2배.
+    const fd = s.fdays.includes(td) ? s.fdays : [...s.fdays, td];
+    const bonus: [string, number][] = [];
+    if (!s.sessions.some(x => x.ok && dayOf(x.at) === td)) bonus.push(['오늘 첫 집중', 5]);
+    if (goalNow) bonus.push(['목표 달성', 10]);
+    if (min >= 60) bonus.push(['60분 이상 집중', 5]);
+    if (streakOf(fd) >= 3) bonus.push(['3일 연속 집중', 3]);
+    const mul = plusMul(s.plus), gained = (rw.churu + bonus.reduce((a, b) => a + b[1], 0)) * mul;
+    const parts = [...bonus.map(b => b[0] + ' +' + b[1] * mul), ...(s.plus ? ['Plus 2배'] : [])];
+    get().log('집중 ' + min + '분 완료', rw.churu * mul); bonus.forEach(b => get().log(b[0], b[1] * mul)); sfx('done');
     const up = Math.floor(a1 / 20) > Math.floor(a0 / 20);
     hooks.onStop?.();
     set({
       screen: 'done', fdays: s.fdays.includes(td) ? s.fdays : [...s.fdays, td], remain: 0, goalHit: goalNow ? td : s.goalHit,
-      churu: s.churu + rw.churu, earnedTotal: s.earnedTotal + rw.churu, aff: { ...s.aff, [s.catId]: a1 }, sulky: false, showBlocked: false,
+      churu: s.churu + gained, earnedTotal: s.earnedTotal + gained, aff: { ...s.aff, [s.catId]: a1 }, sulky: false, showBlocked: false,
       mails: [...(up ? [{ id: Date.now() + 7, type: 'reward' as const, title: catById(s.catId).name + '와 친밀도 ♥' + Math.floor(a1 / 20) + ' 달성!', body: '표정이 한 단계 부드러워졌어요. 축하 선물을 보내요.', churu: 5, date: mmdd(), exp: '7일 후 만료' }] : []),
         { id: Date.now(), type: 'report' as const, title: '기부 완료 · 사료 100g', body: `${SHN[s.pick]}에 파트너가 사료 100g을 기부했어요. ${min}분 집중해 줘서 고마워요!`, date: mmdd() }, ...s.mails],
       donated: s.donated + 1, shelters: s.shelters.map((x, j) => (j === s.pick ? { kg: x.kg + 0.1 } : x)),
-      last: { grow: growthOf(a1).idx > growthOf(a0).idx, goal: goalNow && s.goalNotify, tag: s.tag, min, churu: rw.churu, aff: rw.aff, up },
+      last: { grow: growthOf(a1).idx > growthOf(a0).idx, goal: goalNow && s.goalNotify, tag: s.tag, min, churu: gained, aff: rw.aff, up, parts },
       sessions: [{ min, ok: true, tag: s.tag, at: Date.now() }, ...s.sessions].slice(0, 500),
     });
     if (goalNow && s.goalNotify) hooks.onGoal?.(s.goal, catById(s.catId).name);
@@ -265,7 +282,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
     const sg = SONGS[k], dur = songMs(sg);
     const isNew = !st.seenSongs.includes(k), ns = isNew ? [...st.seenSongs, k] : st.seenSongs;
     const basicAll = SONGS.every((x, i) => x.cat || ns.includes(i)), catAll = SONGS.every((x, i) => !x.cat || ns.includes(i));
-    const bonus = (isNew && basicAll && !st.songBonus.basic ? 20 : 0) + (isNew && catAll && !st.songBonus.cat ? 50 : 0);
+    const bonus = plusMul(st.plus) * ((isNew && basicAll && !st.songBonus.basic ? 20 : 0) + (isNew && catAll && !st.songBonus.cat ? 50 : 0));
     set({ singUntil: Date.now() + dur, songText: sg.t, seenSongs: ns, songBonus: { basic: st.songBonus.basic || basicAll, cat: st.songBonus.cat || catAll }, churu: st.churu + bonus, earnedTotal: st.earnedTotal + bonus });
     if (isNew) get().toast('새 노래 · ' + sg.name + ' 수집!');
     if (bonus) {
@@ -337,45 +354,72 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   },
   claimMail: id => {
     const st = get(), m = st.mails.find(x => x.id === id); if (!m || !m.churu || st.claimed.includes(id)) return;
-    get().log(m.title, m.churu); sfx('coin');
-    set({ churu: st.churu + m.churu, earnedTotal: st.earnedTotal + m.churu, claimed: [...st.claimed, id], mailRead: st.mailRead.includes(id) ? st.mailRead : [...st.mailRead, id] });
+    const g = m.churu * plusMul(st.plus); get().log(m.title, g); sfx('coin');
+    set({ churu: st.churu + g, earnedTotal: st.earnedTotal + g, claimed: [...st.claimed, id], mailRead: st.mailRead.includes(id) ? st.mailRead : [...st.mailRead, id] });
   },
   claimAll: () => {
     const st = get(), cl = st.mails.filter(m => m.churu && !st.claimed.includes(m.id)); if (!cl.length) return;
-    cl.forEach(m => get().log(m.title, m.churu!)); sfx('coin');
-    const sum = cl.reduce((a, m) => a + (m.churu || 0), 0);
+    const mul = plusMul(st.plus); cl.forEach(m => get().log(m.title, m.churu! * mul)); sfx('coin');
+    const sum = cl.reduce((a, m) => a + (m.churu || 0), 0) * mul;
     set({ churu: st.churu + sum, earnedTotal: st.earnedTotal + sum, claimed: [...st.claimed, ...cl.map(m => m.id)], mailRead: [...st.mailRead, ...cl.map(m => m.id)] });
   },
 
 
-  // 고양이 뽑기: 1회 40 츄르, 5회 180 츄르. 일반 65% · 희귀 28% · 전설 7%, 10번째마다 희귀 이상 보장.
-  // 이미 만난 고양이가 나오면 등급에 따라 츄르를 돌려준다(일반 10 · 희귀 20 · 전설 40).
+  // 고양이 뽑기: 일반 뽑기(기본 고양이) · Plus 전용 뽑기(Plus 구독 전용 고양이 14종), 1회 · 10회.
+  // Plus 전용은 일반 65% · 희귀 28% · 전설 7%, 10번째마다 희귀 이상 보장.
+  // 이미 만난 고양이는 나오지 않는다. 고른 등급이 다 모였으면 남은 고양이 중에서 나온다.
   gachaPull: (kind, n, rnd = Math.random) => {
     const st = get(), cost = n === 10 ? GACHA_COST[kind].ten : GACHA_COST[kind].one;
     if (kind === 'plus' && !st.plus) { get().toast('Plus 전용 뽑기는 Plus 구독 중에 할 수 있어요'); return; }
-    if (st.churu < cost) { get().toast('츄르가 ' + (cost - st.churu) + '개 더 필요해요 · 집중하면 모을 수 있어요'); return; }
-    let pity = st.gachaPity, refund = 0;
+    const all: Cat[] = kind === 'plus' ? GACHA_CATS : CATS.filter(c => !c.plus), left = all.filter(c => !st.owned.includes(c.id)).length;
+    if (left === 0) { get().toast('이 뽑기의 고양이를 모두 만났어요'); return; }
+    if (left < n) { get().toast('아직 못 만난 고양이가 ' + left + '마리라 ' + n + '회는 뽑을 수 없어요'); return; }
+    if (st.churu < cost) { get().needChuru(cost - st.churu); return; }
+    let pity = st.gachaPity;
     const owned = [...st.owned], res: GachaHit[] = [];
-    const basic = CATS.filter(c => !c.plus);
     for (let i = 0; i < n; i++) {
+      const fresh = all.filter(c => !owned.includes(c.id));
       let tier: 1 | 2 | 3 = 1, c: Cat;
-      if (kind === 'basic') c = basic[Math.floor(rnd() * basic.length) % basic.length];
+      if (kind === 'basic') c = fresh[Math.floor(rnd() * fresh.length) % fresh.length];
       else {
         pity++;
         const r = rnd() * 100;
         tier = r < TIER[3].rate ? 3 : r < TIER[3].rate + TIER[2].rate ? 2 : 1;
         if (pity >= GACHA_PITY && tier < 2) tier = 2;
-        if (tier >= 2) pity = 0;
-        const pool = GACHA_CATS.filter(g => g.tier === tier);
+        let pool = fresh.filter(g => g.tier === tier);
+        if (!pool.length) pool = fresh.filter(g => (g.tier || 1) > tier);
+        if (!pool.length) pool = fresh;
         c = pool[Math.floor(rnd() * pool.length) % pool.length];
+        tier = (c.tier || 1) as 1 | 2 | 3;
+        if (tier >= 2) pity = 0;
       }
-      const dup = owned.includes(c.id);
-      if (dup) refund += TIER[tier].refund; else owned.push(c.id);
-      res.push({ id: c.id, tier, dup });
+      owned.push(c.id); res.push({ id: c.id, tier });
     }
-    get().log((kind === 'plus' ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회', -cost); if (refund) get().log('이미 만난 고양이 · 츄르 돌려받기', refund);
+    get().log((kind === 'plus' ? 'Plus 전용 뽑기 ' : '일반 뽑기 ') + n + '회', -cost);
     sfx('coin');
-    set({ churu: st.churu - cost + refund, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
+    set({ churu: st.churu - cost, owned, gachaPity: pity, gachaTotal: st.gachaTotal + n, gachaRes: res });
+  },
+  // 얼룩 다시 뽑기: 200 츄르로 고양이의 얼룩을 새로 정한다 (만난 고양이만)
+  rerollSpots: (id, rnd = Math.random) => {
+    const st = get(), c = catById(id);
+    if (!st.owned.includes(id) && !(c.plus && st.plus)) return;
+    if (st.churu < SPOT_COST) { get().needChuru(SPOT_COST - st.churu); return; }
+    const old = spotSeed(st, id);
+    let seed = Math.floor(rnd() * 2 ** 31); if (seed === old) seed = (seed + 1) % 2 ** 31;
+    get().log(c.name + ' 얼룩 다시 뽑기', -SPOT_COST); sfx('coin');
+    set({ churu: st.churu - SPOT_COST, spots: { ...st.spots, [id]: seed } });
+    get().toast(c.name + '에게 새 얼룩이 생겼어요');
+  },
+  // 츄르가 모자랄 때: 모자란 개수를 알려 주고 츄르 충전으로 바로 갈 수 있는 창
+  needChuru: n => set({ dlg: { kind: 'nochuru', id: n } }),
+  // 츄르 충전 (데모 결제). 정식 빌드는 스토어 결제를 붙이기 전까지 막아 둔다
+  buyChuru: pack => {
+    const p = CHURU_PACKS[pack]; if (!p) return;
+    if (IS_FULL) { get().toast('츄르 충전은 곧 열려요'); set({ pay: null }); return; }
+    const n = p[0] + p[1];
+    get().log('츄르 충전 ' + p[0] + (p[1] ? ' + 보너스 ' + p[1] : ''), n); sfx('coin');
+    set(st => ({ churu: st.churu + n, pay: null, churuShop: false }));
+    get().toast('츄르 ' + n + '개를 충전했어요 (데모)');
   },
 
 
@@ -383,7 +427,7 @@ export const useApp = create<State & Actions>()(persist((set, get) => ({
   back: () => {
     const s = get(), S = (p: Partial<State>) => { set(p); return true; };
     if (s.dlg) { if (['bye', 'expired'].includes(s.dlg.kind)) return true; return S({ dlg: null }); }
-    if (s.pay) return S({ pay: null }); if (s.rcpt) return S({ rcpt: null }); if (s.cert) return S({ cert: null });
+    if (s.pay) return S({ pay: null }); if (s.churuShop) return S({ churuShop: false }); if (s.spotPop) return S({ spotPop: false }); if (s.rcpt) return S({ rcpt: null }); if (s.cert) return S({ cert: null });
     if (s.ad != null) return S({ ad: null }); if (s.share) return S({ share: false }); if (s.gachaRes) return S({ gachaRes: null }); if (s.gachaPop) return S({ gachaPop: null });
     if (s.wheel) return S({ wheel: false });
     if (s.sheet) return S({ sheet: false }); if (s.acct) return S({ acct: false }); if (s.house) return S({ house: false });
@@ -469,6 +513,9 @@ useApp.subscribe((s, prev) => {
   navStack.push(a);
   if (navStack.length > 40) navStack.shift();
 });
+
+// 고양이의 지금 얼룩 씨앗: 다시 뽑았으면 그 값, 아니면 이 기기만의 처음 얼룩
+export const spotSeed = (s: Pick<State, 'spots' | 'spotSalt'>, id: string) => s.spots[id] ?? hashSeed(id + ':' + s.spotSalt);
 
 export const getS = () => useApp.getState();
 export const S = (p: Partial<State> | ((s: State) => Partial<State> | null)) => useApp.getState().set(p);

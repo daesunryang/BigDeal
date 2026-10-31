@@ -69,9 +69,14 @@ export function Home({ width }: { width: number }) {
               <View pointerEvents="none" style={{ position: 'absolute', left: 12, top: 12, maxWidth: 150, paddingVertical: 8, paddingHorizontal: 12, borderTopLeftRadius: 14, borderTopRightRadius: 14, borderBottomRightRadius: 14, borderBottomLeftRadius: 4, backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.ink }}>
                 <Txt style={{ fontSize: 13, lineHeight: 17 }}>{s.behavior().text}</Txt>
               </View>
-              <Btn onPress={openDecor} style={{ position: 'absolute', right: 10, bottom: 10, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 12, backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.ink }}>
-                <Txt jua style={{ fontSize: 13 }}>방 꾸미기 ›</Txt>
-              </Btn>
+              <View style={{ position: 'absolute', right: 10, bottom: 10, flexDirection: 'row', gap: 6 }}>
+                <Btn onPress={() => S({ spotPop: true })} accessibilityLabel="고양이 얼룩 보기" style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 12, backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.ink }}>
+                  <Txt jua style={{ fontSize: 13 }}>얼룩 ›</Txt>
+                </Btn>
+                <Btn onPress={openDecor} style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 12, backgroundColor: C.bg, borderWidth: 1.5, borderColor: C.ink }}>
+                  <Txt jua style={{ fontSize: 13 }}>방 꾸미기 ›</Txt>
+                </Btn>
+              </View>
             </Pressable>
           </View>
         </View>

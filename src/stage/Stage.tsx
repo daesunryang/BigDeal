@@ -5,12 +5,13 @@ import { growth } from '../derive';
 import { getS, useApp } from '../store';
 import { Anim, AnimName, EZ } from '../ui/anim';
 import { CUTOUT, FillView, Txt } from '../ui/kit';
+import { CatSpots } from '../ui/CatSpots';
 import { Dims, INK, Sh } from './Shape';
 
 const ROPE: Fill = { t: 'stripesH', a: '#D9B98C', b: '#C29D6E', wa: 4, wb: 2 };
 const B = 2;
 // 잘라낸 고양이 그림 크기 (contain + 아래 정렬 계산용)
-const CUT_DIM: Record<string, [number, number]> = { angora: [547, 574], blue: [565, 564], calico: [571, 544], cheese: [598, 550], persian: [599, 495], ragdoll: [627, 592], siam: [492, 604], tux: [544, 523],
+export const CUT_DIM: Record<string, [number, number]> = { angora: [547, 574], blue: [565, 564], calico: [571, 544], cheese: [598, 550], persian: [599, 495], ragdoll: [627, 592], siam: [492, 604], tux: [544, 523],
   bombay: [435, 600], singapura: [340, 531], bsh: [359, 495], abyssinian: [435, 509], ash: [396, 600], devon: [344, 600], mau: [365, 600], curl: [364, 512], mainecoon: [600, 545], fold: [375, 538], norwegian: [495, 600], toyger: [389, 600], sphynx: [296, 535], bengal: [356, 600] };
 
 type Box = { l?: number; r?: number; t?: number; b?: number; w: number; h?: number; ar?: number };
@@ -149,6 +150,7 @@ function CatSprite({ cat, w, H, drag, beh, outfit, onCat }: { cat: Cat; w: numbe
       {beh === 'hop' && <View style={{ position: 'absolute', left: '28%', right: '28%', bottom: -4, height: 8, borderRadius: 999, backgroundColor: 'rgba(74,52,40,0.18)' }} />}
       <Anim name={an} dur={du} easing={ez} style={{ position: 'absolute', left: 0, top: 0, width: cw, height: chh, transformOrigin: '50% 100%' } as any}>
         <Image source={CUTOUT[cat.id]} style={{ position: 'absolute', left: (cw - dw) / 2, top: chh - dh, width: dw, height: dh, opacity: beh === 'nap' || beh === 'sulky' ? 0.94 : 1 }} />
+        <View pointerEvents="none" style={{ position: 'absolute', left: (cw - dw) / 2, top: chh - dh, width: dw, height: dh }}><CatSpots id={cat.id} w={dw} h={dh} /></View>
         <Outfit o={outfit} cid={cat.id} d={[cw, chh]} />
       </Anim>
       {beh === 'nap' && [0, 1, 2].map(i => <Fx key={'z' + i} ch="z" size={fs + i * 3} anim="zfloat" dur={2.4} delay={i * 0.8} style={{ right: '8%', top: '4%' }} />)}

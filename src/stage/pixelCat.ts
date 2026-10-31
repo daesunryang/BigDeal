@@ -4,6 +4,8 @@
 //       W 흰 털(가슴·발끝) · E 눈 · N 코·귀 안쪽 · . 투명
 // 모든 그림은 오른쪽을 본다. 왼쪽으로 갈 때는 좌우를 뒤집어 그린다.
 
+import { Spots, inSpot } from '../spots';
+
 export type PixelKey = 'O' | 'B' | 'S' | 'P' | 'Q' | 'W' | 'E' | 'N';
 export type Palette = Record<PixelKey, string>;
 
@@ -238,17 +240,18 @@ function earMod(rows: string[], kind?: 'fold' | 'curl') {
 // 같은 색이 이어지는 칸을 한 줄로 묶어 그리기 비용을 줄인다: [x, y, 길이, 색]
 export type Run = [number, number, number, string];
 const cache: Record<string, Run[]> = {};
-export function runsOf(frame: string, id: string): Run[] {
-  const key = frame + '|' + id;
+// spots: 고양이의 얼룩(spots.ts). 기본 털(B) 칸 중 얼룩 안에 드는 칸을 얼룩 색으로 칠한다.
+export function runsOf(frame: string, id: string, spots?: { seed: number; sp: Spots }): Run[] {
+  const key = frame + '|' + id + '|' + (spots ? spots.seed : '');
   if (cache[key]) return cache[key];
   const p = paletteOf(id), rows = earMod(FRAMES[frame] || FRAMES.sit, EAR[id]), out: Run[] = [];
+  const col = (ch: string, x: number, y: number) => ch === '.' ? null : ch === 'B' && spots && inSpot(spots.sp, (x + 0.5) / SPRITE_W, (y + 0.5) / SPRITE_H) ? spots.sp.color : p[ch as PixelKey] || INK;
   rows.forEach((row, y) => {
     let x = 0;
     while (x < row.length) {
-      const ch = row[x];
-      if (ch === '.') { x++; continue; }
-      const c = p[ch as PixelKey] || INK;
-      let n = 1; while (x + n < row.length && (p[row[x + n] as PixelKey] || (row[x + n] === '.' ? null : INK)) === c) n++;
+      const c = col(row[x], x, y);
+      if (c === null) { x++; continue; }
+      let n = 1; while (x + n < row.length && col(row[x + n], x + n, y) === c) n++;
       out.push([x, y, n, c]); x += n;
     }
   });
